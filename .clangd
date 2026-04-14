@@ -1,0 +1,6 @@
+If:
+  PathMatch: windows/.*
+CompileFlags:
+  Remove: [-W*]
+Diagnostics:
+  Suppress: "*"

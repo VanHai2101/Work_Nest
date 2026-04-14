@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "973317817673",
+    "project_id": "worknest-94c2c",
+    "storage_bucket": "worknest-94c2c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:973317817673:android:239ca9f92e8837f12a4698",
+        "android_client_info": {
+          "package_name": "com.example.work_nest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-Jhd6nkmxGMFJUIgpGm5jFwKKlH7KwaM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:973317817673:android:0de0129ec8f5ab6c2a4698",
+        "android_client_info": {
+          "package_name": "com.example.worknest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-Jhd6nkmxGMFJUIgpGm5jFwKKlH7KwaM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:973317817673:android:28b34630216147162a4698",
+        "android_client_info": {
+          "package_name": "com.worknest.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-Jhd6nkmxGMFJUIgpGm5jFwKKlH7KwaM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,25 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "worknest-94c2c",
+                    "appId": "1:973317817673:android:239ca9f92e8837f12a4698",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "worknest-94c2c",
+                    "configurations": {
+                        "android": "1:973317817673:android:239ca9f92e8837f12a4698",
+                        "ios": "1:973317817673:ios:0ff986551b0435cd2a4698",
+                        "macos": "1:973317817673:ios:0ff986551b0435cd2a4698",
+                        "web": "1:973317817673:web:4cb4862e0d0d1dcb2a4698",
+                        "windows": "1:973317817673:web:4d99f7e6b070e9f92a4698"
+                    }
+                }
+            }
+        }
+    }
+}
