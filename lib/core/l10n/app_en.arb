@@ -1,0 +1,7 @@
+{
+  "@@locale": "en",
+  "helloWorld": "Hello World!",
+  "appTitle": "My Awesome App",
+  "welcomeMessage": "Welcome back to the application",
+  "loginButton": "Login to your account"
+}

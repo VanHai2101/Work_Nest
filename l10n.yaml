@@ -1,0 +1,23 @@
+# Cấu hình đường dẫn
+arb-dir: lib/core/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+
+# ---- CẤU HÌNH AI AUTO TRANSLATOR ----
+translator:
+  targets: # Các ngôn ngữ bạn muốn AI tự động dịch sang
+    - vi # Tiếng Việt
+    - ja # Tiếng Nhật
+    - fr # Tiếng Pháp
+
+  # Cấu hình dùng Google Translate, ChatGPT (OpenAI) hoặc DeepL (Ở đây mình ví dụ Google hoặc OpenAI)
+
+  # NẾU DÙNG GOOGLE TRANSLATE (Miễn phí, dễ nhất)
+  provider: google
+
+  # ====================================================
+  # Hoặc NẾU DÙNG CHATGPT (OPEN_AI) - Dịch thông minh hơn
+  # provider: openai
+  # model: gpt-3.5-turbo
+  # api_key: "ĐIỀN-KEY-OPEN-AI-CỦA-BẠN-VÀO-ĐÂY"
+  # ====================================================

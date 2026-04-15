@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../../application/exceptions/auth_exceptions.dart'; // Import lỗi mình vừa tạo
+import '../../application/exceptions/auth_exceptions.dart';
 
 class FirebaseAuthRepository implements AuthRepository {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -20,13 +20,11 @@ class FirebaseAuthRepository implements AuthRepository {
     String fullName,
   ) async {
     try {
-      // 1. Tạo user trên Firebase Auth
       final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // 2. Lưu thông tin bổ sung vào Firestore
       await _firestore.collection('users').doc(credential.user!.uid).set({
         'uid': credential.user!.uid,
         'displayName': fullName,
@@ -41,9 +39,9 @@ class FirebaseAuthRepository implements AuthRepository {
         fullName: fullName,
       );
     } on FirebaseAuthException catch (e) {
-      // 3. Bắt lỗi từ Firebase và ném ra Exception của mình
-      if (e.code == 'email-already-in-use')
+      if (e.code == 'email-already-in-use') {
         throw const EmailAlreadyInUseException();
+      }
       if (e.code == 'weak-password') throw const WeakPasswordException();
       throw UnknownAuthException();
     } catch (e) {
@@ -60,7 +58,6 @@ class FirebaseAuthRepository implements AuthRepository {
       );
       return AuthUser(id: credential.user!.uid, email: email);
     } on FirebaseAuthException catch (e) {
-      // Bắt lỗi sai tài khoản/mật khẩu
       if (e.code == 'user-not-found' ||
           e.code == 'wrong-password' ||
           e.code == 'invalid-credential') {
