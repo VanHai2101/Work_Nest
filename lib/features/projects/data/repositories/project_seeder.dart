@@ -1,6 +1,6 @@
 import 'package:uuid/uuid.dart';
-import 'package:work_nest/core/domain/entities/project_entity.dart';
-import 'package:work_nest/core/theme/app_colors.dart';
+import 'package:work_nest/core/domain/entities/index.dart';
+import 'package:work_nest/core/theme/index.dart';
 import 'package:work_nest/features/projects/domain/repositories/project_repository.dart';
 
 class ProjectSeeder {

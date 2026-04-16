@@ -5,8 +5,8 @@
 library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:work_nest/core/utils/parser.dart';
-import '../../domain/entities/call_entity.dart';
+import 'package:work_nest/core/utils/index.dart';
+import '../../domain/entities/index.dart';
 
 class CallModel {
   final String id;

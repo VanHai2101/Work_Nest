@@ -46,3 +46,10 @@ app.*.map.json
 
 # Auto Translator Keys
 translator_keys
+
+# Firebase — DO NOT commit API keys to version control
+# ⚠️ firebase_options.dart contains sensitive credentials
+# Use environment variables or FlutterFire CLI to regenerate locally
+lib/firebase_options.dart
+google-services.json
+GoogleService-Info.plist

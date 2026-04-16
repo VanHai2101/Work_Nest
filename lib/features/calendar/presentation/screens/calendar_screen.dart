@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/core/theme/index.dart';
@@ -5,11 +7,8 @@ import '../providers/calendar_provider.dart';
 import '../widgets/calendar_header.dart';
 import '../widgets/calendar_month.dart';
 import '../widgets/calendar_week.dart';
-import 'package:uuid/uuid.dart';
-import '../../domain/entities/calendar_event.dart';
 import '../../data/repositories/firebase_calendar_repository.dart';
 import '../widgets/calendar_day.dart';
-
 
 class CalendarScreen extends ConsumerWidget {
   const CalendarScreen({super.key});
@@ -23,12 +22,8 @@ class CalendarScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // ── Header: tiêu đề tháng + điều hướng + chuyển chế độ xem ──
             const CalendarHeader(),
-
             const SizedBox(height: 8),
-
-            // ── Phần nội dung chính theo chế độ xem ──
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 250),
@@ -44,18 +39,18 @@ class CalendarScreen extends ConsumerWidget {
         ),
       ),
 
-      // ── FAB: Thêm sự kiện mới ──
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           try {
-            // -- TÌM MỘT PROJECT ID CÓ SẴN CỦA USER ĐỂ TEST --
-            final uid = ref.read(calendarRepositoryProvider); // Lấy ref provider
-            
-            // Do cần import FirebaseAuth / Firestore, thay vì parse phức tạp,
-            // mình mở màn hình nhắc nhở để user đổi sang form thật.
+            // ignore: unused_local_variable
+            final uid = ref.read(
+              calendarRepositoryProvider,
+            ); // Lấy ref provider
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: const Text('Tính năng test đã khoá. Vui lòng thêm Task từ trang công việc của Project để đúng chuẩn dữ liệu!'),
+                content: const Text(
+                  'Tính năng test đã khoá. Vui lòng thêm Task từ trang công việc của Project để đúng chuẩn dữ liệu!',
+                ),
                 backgroundColor: AppColors.warning,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
@@ -64,7 +59,6 @@ class CalendarScreen extends ConsumerWidget {
               ),
             );
             return;
-            
           } catch (e) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(

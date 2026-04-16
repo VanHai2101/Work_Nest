@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/domain/states/operation_state.dart';
+import '../../../../core/domain/states/index.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../exceptions/auth_exceptions.dart';
 import '../providers/auth_providers.dart';

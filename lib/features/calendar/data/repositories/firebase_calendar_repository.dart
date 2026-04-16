@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/entities/calendar_event.dart';
 import '../../domain/repositories/calendar_repository.dart';
-import 'package:work_nest/core/data/models/task_model.dart';
+import 'package:work_nest/core/data/models/index.dart';
 import 'package:work_nest/core/theme/index.dart';
 
 class FirebaseCalendarRepository implements ICalendarRepository {

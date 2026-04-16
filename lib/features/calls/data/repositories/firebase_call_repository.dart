@@ -4,7 +4,7 @@ library;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/call_model.dart';
 import '../models/ice_candidate_model.dart';
-import '../../domain/entities/call_entity.dart';
+import '../../domain/entities/index.dart';
 import '../../domain/repositories/call_repository.dart';
 
 class FirebaseCallRepository implements CallRepository {

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:work_nest/features/home/presentation/widgets/auth_gate.dart';
 import 'package:work_nest/features/calls/presentation/widgets/incoming_call_overlay.dart';
+import 'package:work_nest/app/index.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +20,9 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Work Nest',
       theme: ThemeData.dark(useMaterial3: true),
+      initialRoute: '/splash',
+      onGenerateRoute: AppRouter.generateRoute,
       builder: (context, child) => IncomingCallOverlay(child: child!),
-      home: const AuthGate(),
     );
   }
 }

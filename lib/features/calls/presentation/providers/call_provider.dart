@@ -8,6 +8,7 @@ import '../../domain/entities/index.dart';
 import '../../domain/repositories/call_repository.dart';
 import '../../data/repositories/firebase_call_repository.dart';
 import '../../data/models/ice_candidate_model.dart';
+import '../../../../core/providers/index.dart';
 import '../../../../core/providers/auth_provider.dart';
 
 /// State of the active call, including streams and connection status.

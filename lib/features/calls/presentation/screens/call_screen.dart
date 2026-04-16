@@ -1,125 +1,206 @@
-/// Active call screen showing local and remote video streams.
-library;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_webrtc/flutter_webrtc.dart';
-import '../providers/call_provider.dart';
-import '../../domain/entities/call_entity.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/domain/models/index.dart';
+import '../../../../core/providers/index.dart';
+import '../../../../core/constants/index.dart';
+import '../../../../core/utils/index.dart';
 
-class CallScreen extends ConsumerWidget {
-  const CallScreen({super.key});
+class CallScreen extends ConsumerStatefulWidget {
+  final String callId;
+  final String remoteUserId;
+
+  const CallScreen({
+    required this.callId,
+    required this.remoteUserId,
+    Key? key,
+  }) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final callState = ref.watch(callProvider);
-    final call = callState.call;
-
-    if (call == null) {
-      return const Scaffold(
-        body: Center(child: Text('Call Ended')),
-      );
-    }
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          // Remote Video
-          RTCVideoView(
-            callState.remoteRenderer,
-            objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-          ),
-
-          // Local Video (Miniature)
-          if (call.type == CallType.video)
-            Positioned(
-              right: 20,
-              top: MediaQuery.of(context).padding.top + 20,
-              width: 120,
-              height: 180,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  color: Colors.black26,
-                  child: RTCVideoView(
-                    callState.localRenderer,
-                    mirror: true,
-                    objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
-                  ),
-                ),
-              ),
-            ),
-
-          // Call Info & Controls
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 40,
-            child: Column(
-              children: [
-                Text(
-                  call.status == CallStatus.accepted ? 'In Call' : 'Ringing...',
-                  style: const TextStyle(color: Colors.white70, fontSize: 16),
-                ),
-                const SizedBox(height: 30),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _ControlButton(
-                      icon: callState.isMicOn ? Icons.mic : Icons.mic_off,
-                      onPressed: () => ref.read(callProvider.notifier).toggleMic(),
-                      color: callState.isMicOn ? Colors.white24 : Colors.red,
-                    ),
-                    _ControlButton(
-                      icon: Icons.call_end,
-                      onPressed: () => ref.read(callProvider.notifier).hangUp(),
-                      color: Colors.red,
-                      size: 70,
-                    ),
-                    if (call.type == CallType.video)
-                      _ControlButton(
-                        icon: callState.isCameraOn ? Icons.videocam : Icons.videocam_off,
-                        onPressed: () => ref.read(callProvider.notifier).toggleCamera(),
-                        color: callState.isCameraOn ? Colors.white24 : Colors.red,
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  ConsumerState<CallScreen> createState() => _CallScreenState();
 }
 
-class _ControlButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onPressed;
-  final Color color;
-  final double size;
-
-  const _ControlButton({
-    required this.icon,
-    required this.onPressed,
-    required this.color,
-    this.size = 56,
-  });
+class _CallScreenState extends ConsumerState<CallScreen> {
+  bool _isMuted = false;
+  bool _isCameraOff = false;
+  bool _isSpeakerOn = false;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
+    final callAsync = ref.watch(callProvider(widget.callId));
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    return Scaffold(
+      body: callAsync.when(
+        data: (call) {
+          if (call == null) {
+            return const Center(child: Text('Call not found'));
+          }
+
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              // Remote video
+              Container(
+                color: Colors.black,
+                child: const Center(
+                  child: CircleAvatar(
+                    radius: 80,
+                    child: Icon(Icons.person, size: 80),
+                  ),
+                ),
+              ),
+              // Local video (small)
+              Positioned(
+                bottom: 100,
+                right: AppPadding.medium,
+                child: Container(
+                  width: AppSize.videoMiniWidth,
+                  height: AppSize.videoMiniHeight,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade800,
+                    borderRadius: AppBorderRadius.medium,
+                  ),
+                  child: const Center(
+                    child: CircleAvatar(
+                      child: Icon(Icons.person, size: 40),
+                    ),
+                  ),
+                ),
+              ),
+              // Call info
+              Positioned(
+                top: 60,
+                left: AppPadding.medium,
+                right: AppPadding.medium,
+                child: Column(
+                  children: [
+                    Text(
+                      'Calling ${widget.remoteUserId}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    AppLayout.gapSmall,
+                    _buildCallDuration(call),
+                  ],
+                ),
+              ),
+              // Controls
+              Positioned(
+                bottom: AppPadding.large,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Mute button
+                      _buildControlButton(
+                        icon: _isMuted ? Icons.mic_off : Icons.mic,
+                        label: _isMuted ? 'Unmute' : 'Mute',
+                        onPressed: () {
+                          setState(() => _isMuted = !_isMuted);
+                        },
+                        color: _isMuted ? Colors.red : Colors.white,
+                      ),
+                      AppLayout.horizontalGapMedium,
+                      // Camera toggle
+                      _buildControlButton(
+                        icon: _isCameraOff ? Icons.videocam_off : Icons.videocam,
+                        label: _isCameraOff ? 'Camera Off' : 'Camera',
+                        onPressed: () {
+                          setState(() => _isCameraOff = !_isCameraOff);
+                        },
+                        color: _isCameraOff ? Colors.red : Colors.white,
+                      ),
+                      AppLayout.horizontalGapMedium,
+                      // Speaker toggle
+                      _buildControlButton(
+                        icon: _isSpeakerOn ? Icons.volume_up : Icons.volume_mute,
+                        label: _isSpeakerOn ? 'Speaker' : 'Speaker',
+                        onPressed: () {
+                          setState(() => _isSpeakerOn = !_isSpeakerOn);
+                        },
+                        color: _isSpeakerOn ? Colors.white : Colors.grey,
+                      ),
+                      AppLayout.horizontalGapMedium,
+                      // End call
+                      _buildControlButton(
+                        icon: Icons.call_end,
+                        label: AppStrings.endCall,
+                        onPressed: () async {
+                          await ref
+                              .read(callRepositoryProvider)
+                              .updateCallStatus(widget.callId, CallStatus.ended);
+                          if (mounted) {
+                            Navigator.of(context).pop();
+                          }
+                        },
+                        backgroundColor: Colors.red,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+        loading: () => const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        ),
+        error: (err, stack) => Scaffold(
+          body: Center(child: Text('Error: $err')),
+        ),
       ),
-      child: IconButton(
-        icon: Icon(icon, color: Colors.white, size: size * 0.5),
-        onPressed: onPressed,
-      ),
+    );
+  }
+
+  Widget _buildControlButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    Color? backgroundColor,
+    Color? color,
+  }) {
+    return Column(
+      children: [
+        FloatingActionButton(
+          onPressed: onPressed,
+          backgroundColor: backgroundColor ?? Colors.grey.shade700,
+          child: Icon(icon, color: color ?? Colors.white),
+        ),
+        AppLayout.gapSmall,
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white, fontSize: 12),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCallDuration(Call call) {
+    if (call.status == CallStatus.ringing) {
+      return const Text(
+        AppStrings.ringing,
+        style: TextStyle(color: Colors.white70, fontSize: 14),
+      );
+    }
+
+    return StreamBuilder<Duration>(
+      stream: Stream.periodic(const Duration(seconds: 1), (_) {
+        return DateTime.now().difference(call.createdAt);
+      }),
+      builder: (context, snapshot) {
+        final duration = snapshot.data ?? call.duration;
+        return Text(
+          TimeFormatUtils.formatDuration(duration),
+          style: const TextStyle(color: Colors.white70, fontSize: 14),
+        );
+      },
     );
   }
 }

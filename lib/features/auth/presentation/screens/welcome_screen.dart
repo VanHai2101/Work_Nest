@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
-import 'signup_screen.dart';
+import 'index.dart';
 import 'package:work_nest/bubble_background_wrapper.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -71,7 +70,7 @@ class WelcomeScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const SignUpScreen(),
+                        builder: (context) => const SignupScreen(),
                       ),
                     );
                   },

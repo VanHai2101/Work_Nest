@@ -19,8 +19,8 @@ service cloud.firestore {
     }
 
     function getUserPlan() {
-  		return getUserData().planExpiresAt == null || getUserData().planExpiresAt > request.time? getUserData().plan : 'free';
-		}
+      return getUserData().planExpiresAt == null || getUserData().planExpiresAt > request.time ? getUserData().plan : 'free';
+    }
 
     function isPro() {
       return getUserPlan() in ['pro', 'business'];
@@ -237,7 +237,7 @@ service cloud.firestore {
         && request.auth.uid in resource.data.adminIds
         && notChanging(['createdAt'])
         // 🔒 Vẫn giữ giới hạn member khi update
-        && (isBusiness() || resource.data.memberIds.size() <= 20);
+        && (isBusiness() || request.resource.data.memberIds.size() <= 20);
 
       allow delete: if isSignedIn()
         && request.auth.uid in resource.data.adminIds;
@@ -279,14 +279,8 @@ service cloud.firestore {
       allow read: if isSignedIn()
         && resource.data.userId == request.auth.uid;
 
-      // 🔒 Chỉ Cloud Function mới nên tạo notification
-      // Tạm thời cho phép client tạo, sau thay bằng Cloud Function
-      allow create: if isSignedIn()
-        && hasValidFields(
-          ['userId', 'type', 'title', 'body', 'actorId',
-           'actorName', 'actorPhotoURL', 'isRead', 'createdAt'],
-          ['relatedEntityId', 'relatedEntityType']
-        );
+      // 🔒 Chỉ Cloud Function mới tạo notification — chặn client
+      allow create: if false;
 
       // 🔒 Chỉ được đánh dấu đã đọc, không đổi nội dung
       allow update: if isSignedIn()
@@ -376,16 +370,34 @@ service cloud.firestore {
         
         allow delete: if false;
       }
-      match /calleeCandidates/{candidataId} {
-      	allow read: if isSignedIn ()
-        	&& (
-          	get(/databases/$(database)/documents/calls/$(callId)).data.callerUid == request.auth.uid ||
-            get(/databases/$(database)/documents/calls/$(callId)).data.calleeUid == request.auth.uid   
+      match /calleeCandidates/{candidateId} {
+        allow read: if isSignedIn()
+          && (
+            get(/databases/$(database)/documents/calls/$(callId)).data.callerUid == request.auth.uid ||
+            get(/databases/$(database)/documents/calls/$(callId)).data.calleeUid == request.auth.uid
           );
+
         allow create: if isSignedIn()
+          && get(/databases/$(database)/documents/calls/$(callId)).data.calleeUid == request.auth.uid;
+
+        allow update: if false
           	&& get (/databases/$(database)/documents/calls/$(callId)).data.calleeUid == request.auth.uid;
         allow delete: if false;
       } 
+    }
+
+    // ========================================
+    // COLLECTION GROUP RULES (Tasks across all projects)
+    // ========================================
+    match /{path=**}/tasks/{taskId} {
+      // Cho phép đọc nếu user là người tạo hoặc người được giao
+      allow read: if isSignedIn() && (
+        resource.data.creatorId == request.auth.uid ||
+        request.auth.uid in resource.data.assigneeIds
+      );
+      
+      // Chặn mọi hành động ghi trực tiếp qua collection group
+      allow write: if false;
     }
   }
 }

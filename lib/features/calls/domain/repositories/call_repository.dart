@@ -1,7 +1,7 @@
 /// Domain repository interface for Video/Audio calls.
 library;
 
-import '../entities/call_entity.dart';
+import '../entities/index.dart';
 import '../../data/models/ice_candidate_model.dart';
 
 abstract class CallRepository {
