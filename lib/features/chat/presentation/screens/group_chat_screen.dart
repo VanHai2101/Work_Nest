@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../../core/providers/index.dart';
+import '../providers/chat_providers.dart';
+import '../../domain/entities/message_entity.dart';
+import '../../domain/entities/group_entity.dart';
 
 class GroupChatScreen extends ConsumerStatefulWidget {
   final String groupId;
@@ -27,10 +29,36 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
     super.dispose();
   }
 
+  Future<void> _handleSend() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    final newMessage = MessageEntity(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      senderId: currentUser.uid,
+      text: text,
+      sentAt: DateTime.now(),
+    );
+
+    try {
+      await ref.read(chatRepositoryProvider).sendGroupMessage(widget.groupId, newMessage);
+      _controller.clear();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error sending message: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final messagesAsync = ref.watch(groupMessagesProvider(widget.groupId));
-    final groupAsync = ref.watch(groupProvider(widget.groupId));
+    final groupAsync = ref.watch(groupByIdProvider(widget.groupId));
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
@@ -49,9 +77,7 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
             child: messagesAsync.when(
               data: (messages) {
                 if (messages.isEmpty) {
-                  return const Center(
-                    child: Text('No messages yet'),
-                  );
+                  return const Center(child: Text('No messages yet'));
                 }
 
                 return ListView.builder(
@@ -76,11 +102,11 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
                           children: [
                             if (!isOwn)
                               Text(
-                                message.senderName,
+                                'User ${message.senderId.substring(0, 4)}', // Ideally use a sender name provider
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: isOwn ? Colors.white : Colors.black54,
+                                  color: Colors.black54,
                                 ),
                               ),
                             Text(
@@ -120,6 +146,7 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
+                    onSubmitted: (_) => _handleSend(),
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
                       border: OutlineInputBorder(
@@ -130,15 +157,9 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                FloatingActionButton(
-                  mini: true,
-                  onPressed: () async {
-                    if (_controller.text.isEmpty) return;
-
-                    await ref.read(sendGroupMessageProvider((widget.groupId, _controller.text)).future);
-                    _controller.clear();
-                  },
-                  child: const Icon(Icons.send),
+                IconButton(
+                  onPressed: _handleSend,
+                  icon: const Icon(Icons.send, color: Colors.blue),
                 ),
               ],
             ),

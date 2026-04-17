@@ -27,7 +27,9 @@ class Chat {
       participantIds: List<String>.from(map['participantIds'] ?? []),
       lastMessage: map['lastMessage'] ?? '',
       lastMessageAt: map['lastMessageAt']?.toDate() ?? DateTime.now(),
-      unreadCount: Map<String, int>.from(map['unreadCount'] ?? {}),
+      unreadCount: map['unreadCount'] is Map
+          ? Map<String, int>.from(map['unreadCount'])
+          : {},
       createdAt: map['createdAt']?.toDate() ?? DateTime.now(),
       updatedAt: map['updatedAt']?.toDate(),
     );

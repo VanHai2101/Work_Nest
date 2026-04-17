@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/index.dart';
-import '../../../../core/domain/entities/index.dart';
+import '../../domain/entities/project_entity.dart';
 
 class ProjectHeader extends StatelessWidget {
   final ProjectEntity project;

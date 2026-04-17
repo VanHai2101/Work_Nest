@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../../core/constants/index.dart';
-import '../../../../core/data/repositories/index.dart';
+import 'package:work_nest/core/constants/index.dart';
+import '../../../../core/theme/index.dart'
+    show AppLayout, AppBorderRadius, AppSize;
+import '../../../../features/auth/presentation/providers/auth_providers.dart';
 
-class EditProfileScreen extends StatefulWidget {
+class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({Key? key}) : super(key: key);
 
   @override
-  State<EditProfileScreen> createState() => _EditProfileScreenState();
+  ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  final userRepo = UserRepository();
   late String currentUserId;
   bool _isLoading = false;
 
@@ -25,6 +27,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _loadUserData() async {
+    final userRepo = ref.read(userRepositoryProvider);
     final user = await userRepo.getUserById(currentUserId);
     if (user != null) {
       _nameController.text = user.displayName;
@@ -43,6 +46,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final userRepo = ref.read(userRepositoryProvider);
       await userRepo.updateUserProfile(
         uid: currentUserId,
         displayName: _nameController.text.trim(),
@@ -56,9 +60,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     } finally {
       if (mounted) {
@@ -70,10 +74,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Edit Profile'), centerTitle: true),
       body: SingleChildScrollView(
         padding: AppLayout.paddingMedium,
         child: Form(
@@ -95,11 +96,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   prefixIcon: const Icon(Icons.person_outlined),
                   border: OutlineInputBorder(
                     borderRadius: AppBorderRadius.medium,
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    borderSide: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: AppBorderRadius.medium,
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    borderSide: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: AppBorderRadius.medium,
@@ -119,16 +124,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 decoration: BoxDecoration(
                   color: Colors.blue.withOpacity(0.1),
                   borderRadius: AppBorderRadius.medium,
-                  border: Border.all(
-                    color: Colors.blue.withOpacity(0.3),
-                  ),
+                  border: Border.all(color: Colors.blue.withOpacity(0.3)),
                 ),
                 child: Text(
                   'Profile photo updates coming soon. Email cannot be changed.',
-                  style: TextStyle(
-                    color: Colors.blue.shade300,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: Colors.blue.shade300, fontSize: 13),
                 ),
               ),
               AppLayout.gapXLarge,
@@ -140,7 +140,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   onPressed: _isLoading ? null : _handleSave,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green.shade600,
-                    disabledBackgroundColor: Colors.green.shade600.withOpacity(0.5),
+                    disabledBackgroundColor: Colors.green.shade600.withOpacity(
+                      0.5,
+                    ),
                   ),
                   child: _isLoading
                       ? const SizedBox(

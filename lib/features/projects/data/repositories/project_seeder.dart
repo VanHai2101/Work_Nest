@@ -3,6 +3,8 @@ import 'package:work_nest/core/domain/entities/index.dart';
 import 'package:work_nest/core/theme/index.dart';
 import 'package:work_nest/features/projects/domain/repositories/project_repository.dart';
 
+import '../../domain/entities/project_entity.dart';
+
 class ProjectSeeder {
   final ProjectRepository _repository;
 
@@ -27,13 +29,15 @@ class ProjectSeeder {
         dueDate: now.add(const Duration(days: 30)),
         createdAt: now,
         updatedAt: now,
-        color: '#${colors[0].value.toRadixString(16).substring(2).toUpperCase()}',
+        color:
+            '#${colors[0].value.toRadixString(16).substring(2).toUpperCase()}',
         tags: ['development', 'internal'],
       ),
       ProjectEntity(
         id: uuid.v4(),
         title: 'WorkNest Mobile App',
-        description: 'Working on the cross-platform mobile application using Flutter.',
+        description:
+            'Working on the cross-platform mobile application using Flutter.',
         ownerId: currentUserId,
         memberIds: [currentUserId],
         status: 'ongoing',
@@ -41,7 +45,8 @@ class ProjectSeeder {
         dueDate: now.add(const Duration(days: 60)),
         createdAt: now,
         updatedAt: now,
-        color: '#${colors[5].value.toRadixString(16).substring(2).toUpperCase()}',
+        color:
+            '#${colors[5].value.toRadixString(16).substring(2).toUpperCase()}',
         tags: ['design', 'mobile'],
       ),
       ProjectEntity(
@@ -55,7 +60,8 @@ class ProjectSeeder {
         dueDate: now.add(const Duration(days: 15)),
         createdAt: now,
         updatedAt: now,
-        color: '#${colors[3].value.toRadixString(16).substring(2).toUpperCase()}',
+        color:
+            '#${colors[3].value.toRadixString(16).substring(2).toUpperCase()}',
         tags: ['marketing', 'brand'],
       ),
     ];

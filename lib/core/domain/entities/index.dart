@@ -1,9 +1,3 @@
 export 'call_entity.dart';
-export 'chat_entity.dart';
 export 'event_entity.dart';
-export 'group_entity.dart';
-export 'message_entity.dart';
 export 'notification_entity.dart';
-export 'project_entity.dart';
-export 'task_entity.dart';
-export 'user_entity.dart';

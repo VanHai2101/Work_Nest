@@ -1,4 +1,6 @@
-import 'package:work_nest/core/domain/entities/index.dart';
+import '../entities/chat_entity.dart';
+import '../entities/message_entity.dart';
+import '../entities/group_entity.dart';
 
 abstract class IChatRepository {
   // ==========================================
@@ -14,6 +16,12 @@ abstract class IChatRepository {
   /// Lắng nghe danh sách Group Chat của user
   Stream<List<GroupEntity>> watchGroups(String userId);
   
+  /// Lắng nghe thông tin 1 phòng Chat 1-1
+  Stream<ChatEntity?> watchChat(String chatId);
+
+  /// Lắng nghe thông tin 1 Group Chat
+  Stream<GroupEntity?> watchGroup(String groupId);
+
   /// Lắng nghe tin nhắn trong 1 Group Chat
   Stream<List<MessageEntity>> watchGroupMessages(String groupId);
 

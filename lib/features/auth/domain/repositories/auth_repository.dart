@@ -1,11 +1,11 @@
-import 'package:work_nest/features/auth/domain/entities/user_entity.dart';
+import '../entities/user_entity.dart';
 
-abstract class AuthRepository {
-  Stream<AuthUser?> get authStateChanges;
+abstract class IAuthRepository {
+  Stream<UserEntity?> get authStateChanges;
 
-  Future<AuthUser> signUp(String email, String password, String fullName);
+  Future<UserEntity?> signUp(String email, String password, String fullName);
 
-  Future<AuthUser> signIn(String email, String password);
+  Future<UserEntity?> signIn(String email, String password);
 
   Future<void> signOut();
 }

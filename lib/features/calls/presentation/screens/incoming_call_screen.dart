@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../../core/domain/models/index.dart';
-import '../../../../core/providers/index.dart';
+import '../../domain/entities/call_entity.dart';
+import '../providers/call_provider.dart';
 import 'call_screen.dart';
 
 class IncomingCallScreen extends ConsumerWidget {
@@ -79,7 +79,7 @@ class IncomingCallScreen extends ConsumerWidget {
                       onPressed: () async {
                         await ref
                             .read(callRepositoryProvider)
-                            .updateCallStatus(callId, CallStatus.rejected);
+                            .rejectCall(callId);
                         if (context.mounted) {
                           Navigator.of(context).pop();
                         }
@@ -94,19 +94,22 @@ class IncomingCallScreen extends ConsumerWidget {
                     // Accept button
                     FloatingActionButton.large(
                       onPressed: () async {
-                        await ref
-                            .read(callRepositoryProvider)
-                            .updateCallStatus(callId, CallStatus.accepted);
+                        // The actual acceptance and WebRTC setup is handled by the callProvider's notifier
+                        // We fetch the call entity from the stream and pass it to the notifier
+                        final call = await ref.read(incomingCallStreamProvider.future);
+                        if (call != null) {
+                          await ref.read(callProvider.notifier).acceptCall(call);
 
-                        if (context.mounted) {
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(
-                              builder: (_) => CallScreen(
-                                callId: callId,
-                                remoteUserId: callerName,
+                          if (context.mounted) {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(
+                                builder: (_) => CallScreen(
+                                  callId: callId,
+                                  remoteUserId: callerName,
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          }
                         }
                       },
                       backgroundColor: Colors.green,

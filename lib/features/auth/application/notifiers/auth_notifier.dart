@@ -2,10 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/states/index.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../exceptions/auth_exceptions.dart';
-import '../providers/auth_providers.dart';
+import '../../presentation/providers/auth_providers.dart';
 
 class AuthNotifier extends StateNotifier<OperationState> {
-  final AuthRepository _repository;
+  final IAuthRepository _repository;
 
   AuthNotifier(this._repository) : super(const OperationInitial());
 
@@ -29,7 +29,17 @@ class AuthNotifier extends StateNotifier<OperationState> {
     } on AuthException catch (e) {
       state = OperationFailure(e.message);
     } catch (e) {
-      state = const OperationFailure('Sai tài khoản hoặc mật khẩu');
+      state = const OperationFailure('Lỗi kết nối, vui lòng thử lại');
+    }
+  }
+
+  Future<void> signOut() async {
+    state = const OperationLoading();
+    try {
+      await _repository.signOut();
+      state = const OperationInitial();
+    } catch (e) {
+      state = const OperationFailure('Không thể đăng xuất, vui lòng thử lại');
     }
   }
 }

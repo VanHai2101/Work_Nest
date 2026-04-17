@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/index.dart';
 import '../../../../core/constants/index.dart';
-import '../../data/repositories/firebase_auth_repository.dart';
 import '../../application/exceptions/auth_exceptions.dart';
-import 'index.dart';
+import '../providers/auth_providers.dart';
+import 'login_screen.dart';
 
 /// Signup screen for user registration
-class SignupScreen extends StatefulWidget {
+class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
 
   @override
-  State<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -48,9 +48,8 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     try {
-      // Create user account and profile using repository
-      // No longer calling Firestore directly here to maintain data consistency
-      await FirebaseAuthRepository().signUp(
+      final authRepo = ref.read(authRepositoryProvider);
+      await authRepo.signUp(
         _emailController.text.trim(),
         _passwordController.text,
         _nameController.text.trim(),
@@ -59,17 +58,13 @@ class _SignupScreenState extends State<SignupScreen> {
       if (mounted) {
         Navigator.of(context).pushReplacementNamed('/home');
       }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message ?? AppErrors.genericError;
-      });
     } on EmailAlreadyInUseException {
       setState(() => _errorMessage = 'Email already in use');
     } on WeakPasswordException {
       setState(() => _errorMessage = 'Password is too weak');
     } catch (e) {
       setState(() {
-        _errorMessage = AppErrors.genericError;
+        _errorMessage = e.toString().replaceAll('Exception: ', '');
       });
     } finally {
       if (mounted) {
@@ -81,207 +76,208 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1A1C1E), Color(0xFF0D0E10)],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: AppLayout.paddingMedium,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppLayout.gapXLarge,
-                // Title
-                Text(
-                  'Create Account',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
+      backgroundColor: AppColors.primaryBackground,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: AppLayout.paddingMedium,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppLayout.gapXLarge,
+              // Title
+              Text(
+                'Create Account',
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w900,
                 ),
-                AppLayout.gapSmall,
-                Text(
-                  'Join us today',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 16,
-                  ),
-                ),
-                AppLayout.gapXLarge,
+              ),
+              AppLayout.gapSmall,
+              Text(
+                'Join us today',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+              ),
+              AppLayout.gapXLarge,
 
-                // Form
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Name field
-                      _buildTextFormField(
-                        controller: _nameController,
-                        label: 'Full Name',
-                        hint: 'Enter your full name',
-                        icon: Icons.person_outlined,
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) return 'Name is required';
-                          return null;
+              // Form
+              Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Name field
+                    _buildTextFormField(
+                      controller: _nameController,
+                      label: 'Full Name',
+                      hint: 'Enter your full name',
+                      icon: Icons.person_outlined,
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) return 'Name is required';
+                        return null;
+                      },
+                    ),
+                    AppLayout.gapMedium,
+
+                    // Email field
+                    _buildTextFormField(
+                      controller: _emailController,
+                      label: 'Email',
+                      hint: 'Enter your email',
+                      icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value?.isEmpty ?? true) return 'Email is required';
+                        if (!value!.contains('@')) return 'Invalid email';
+                        return null;
+                      },
+                    ),
+                    AppLayout.gapMedium,
+
+                    // Password field
+                    _buildTextFormField(
+                      controller: _passwordController,
+                      label: 'Password',
+                      hint: 'Enter your password',
+                      icon: Icons.lock_outlined,
+                      obscureText: _obscurePassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: AppColors.textTertiary,
+                        ),
+                        onPressed: () {
+                          setState(() => _obscurePassword = !_obscurePassword);
                         },
                       ),
-                      AppLayout.gapMedium,
+                      validator: (value) {
+                        if (value?.isEmpty ?? true)
+                          return 'Password is required';
+                        if (value!.length < 6)
+                          return 'Password must be at least 6 characters';
+                        return null;
+                      },
+                    ),
+                    AppLayout.gapMedium,
 
-                      // Email field
-                      _buildTextFormField(
-                        controller: _emailController,
-                        label: 'Email',
-                        hint: 'Enter your email',
-                        icon: Icons.email_outlined,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) return 'Email is required';
-                          if (!value!.contains('@')) return 'Invalid email';
-                          return null;
-                        },
-                      ),
-                      AppLayout.gapMedium,
-
-                      // Password field
-                      _buildTextFormField(
-                        controller: _passwordController,
-                        label: 'Password',
-                        hint: 'Enter your password',
-                        icon: Icons.lock_outlined,
-                        obscureText: _obscurePassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                            color: Colors.white.withOpacity(0.5),
-                          ),
-                          onPressed: () {
-                            setState(() => _obscurePassword = !_obscurePassword);
-                          },
+                    // Confirm Password field
+                    _buildTextFormField(
+                      controller: _confirmPasswordController,
+                      label: 'Confirm Password',
+                      hint: 'Re-enter your password',
+                      icon: Icons.lock_outlined,
+                      obscureText: _obscureConfirmPassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirmPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: AppColors.textTertiary,
                         ),
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) return 'Password is required';
-                          if (value!.length < 6) return 'Password must be at least 6 characters';
-                          return null;
-                        },
-                      ),
-                      AppLayout.gapMedium,
-
-                      // Confirm Password field
-                      _buildTextFormField(
-                        controller: _confirmPasswordController,
-                        label: 'Confirm Password',
-                        hint: 'Re-enter your password',
-                        icon: Icons.lock_outlined,
-                        obscureText: _obscureConfirmPassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
-                            color: Colors.white.withOpacity(0.5),
-                          ),
-                          onPressed: () {
-                            setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
-                          },
-                        ),
-                        validator: (value) {
-                          if (value?.isEmpty ?? true) return 'Please confirm password';
-                          return null;
-                        },
-                      ),
-                      AppLayout.gapLarge,
-
-                      // Error message
-                      if (_errorMessage != null)
-                        Container(
-                          padding: AppLayout.paddingMedium,
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.2),
-                            borderRadius: AppBorderRadius.medium,
-                            border: Border.all(
-                              color: Colors.red.withOpacity(0.5),
-                            ),
-                          ),
-                          child: Text(
-                            _errorMessage!,
-                            style: const TextStyle(
-                              color: Colors.red,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      if (_errorMessage != null) AppLayout.gapMedium,
-
-                      // Signup button
-                      SizedBox(
-                        height: AppSize.buttonHeight,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _handleSignup,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade600,
-                            disabledBackgroundColor: Colors.green.shade600.withOpacity(0.5),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: AppBorderRadius.medium,
-                            ),
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation(Colors.white),
-                                  ),
-                                )
-                              : const Text(
-                                  'Create Account',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                AppLayout.gapXLarge,
-
-                // Sign in link
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Already have an account? ',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        onPressed: () {
+                          setState(
+                            () => _obscureConfirmPassword =
+                                !_obscureConfirmPassword,
                           );
                         },
+                      ),
+                      validator: (value) {
+                        if (value?.isEmpty ?? true)
+                          return 'Please confirm password';
+                        return null;
+                      },
+                    ),
+                    AppLayout.gapLarge,
+
+                    // Error message
+                    if (_errorMessage != null)
+                      Container(
+                        padding: AppLayout.paddingMedium,
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withOpacity(0.1),
+                          borderRadius: AppBorderRadius.medium,
+                          border: Border.all(
+                            color: AppColors.error.withOpacity(0.3),
+                          ),
+                        ),
                         child: Text(
-                          'Sign In',
+                          _errorMessage!,
                           style: TextStyle(
-                            color: Colors.blue.shade300,
-                            fontWeight: FontWeight.w600,
+                            color: AppColors.error,
+                            fontSize: 14,
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    if (_errorMessage != null) AppLayout.gapMedium,
+
+                    // Signup button
+                    SizedBox(
+                      height: AppSize.buttonHeight,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _handleSignup,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: Colors.black87,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: AppBorderRadius.medium,
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    Colors.black87,
+                                  ),
+                                ),
+                              )
+                            : const Text(
+                                'Create Account',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              AppLayout.gapXLarge,
+
+              // Sign in link
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Already have an account? ',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (_) => const LoginScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Sign In',
+                        style: TextStyle(
+                          color: AppColors.info,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -302,33 +298,34 @@ class _SignupScreenState extends State<SignupScreen> {
       controller: controller,
       keyboardType: keyboardType,
       obscureText: obscureText,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: AppColors.textPrimary),
       validator: validator,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-        labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
-        prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.5)),
+        hintStyle: TextStyle(color: AppColors.textTertiary),
+        labelStyle: TextStyle(color: AppColors.textSecondary),
+        prefixIcon: Icon(icon, color: AppColors.textTertiary),
         suffixIcon: suffixIcon,
+        filled: true,
+        fillColor: AppColors.surface,
         border: OutlineInputBorder(
           borderRadius: AppBorderRadius.medium,
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: AppBorderRadius.medium,
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppBorderRadius.medium,
-          borderSide: BorderSide(color: Colors.green.shade300),
+          borderSide: BorderSide(color: AppColors.accent),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: AppBorderRadius.medium,
-          borderSide: const BorderSide(color: Colors.red),
+          borderSide: BorderSide(color: AppColors.error),
         ),
       ),
     );
   }
 }
-

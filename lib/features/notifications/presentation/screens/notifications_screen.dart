@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/providers/index.dart';
-import '../../../../core/domain/models/index.dart';
-import '../../../../core/constants/index.dart';
+import 'package:work_nest/core/constants/index.dart';
+import '../../../../core/theme/index.dart' show AppLayout, AppSize;
 import '../../../../core/utils/index.dart';
+import '../../../../features/notifications/domain/entities/notification_entity.dart';
+import '../../../../features/notifications/presentation/providers/notification_providers.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
@@ -13,18 +14,6 @@ class NotificationsScreen extends ConsumerWidget {
     final notificationsAsync = ref.watch(userNotificationsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppStrings.notifications),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.done_all),
-            onPressed: () async {
-              // Mark all as read logic would go here
-            },
-          ),
-        ],
-      ),
       body: notificationsAsync.when(
         data: (notifications) {
           if (notifications.isEmpty) {
@@ -39,7 +28,7 @@ class NotificationsScreen extends ConsumerWidget {
                   ),
                   AppLayout.gapMedium,
                   Text(
-                    AppStrings.noNotifications,
+                    'No notifications yet',
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
                   ),
                 ],
@@ -56,22 +45,26 @@ class NotificationsScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('${AppErrors.loadingFailed}: $err')),
+        error: (err, stack) =>
+            Center(child: Text('Failed to load notifications: $err')),
       ),
     );
   }
 }
 
 class NotificationTile extends ConsumerWidget {
-  final AppNotification notification;
+  final NotificationEntity notification;
 
-  const NotificationTile({required this.notification, Key? key}) : super(key: key);
+  const NotificationTile({required this.notification, Key? key})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final typeColor = NotificationUtils.getTypeColor(notification.type);
     final typeIcon = NotificationUtils.getTypeIcon(notification.type);
-    final backgroundColor = NotificationUtils.getBackgroundColor(notification.type);
+    final backgroundColor = NotificationUtils.getBackgroundColor(
+      notification.type,
+    );
 
     return ListTile(
       onTap: () {

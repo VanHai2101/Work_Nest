@@ -40,11 +40,35 @@ class AppNotification {
     this.relatedEntityType,
   });
 
+  static NotificationType _parseType(String? typeStr) {
+    if (typeStr == null) return NotificationType.other;
+    switch (typeStr) {
+      case 'task_assigned':
+      case 'taskAssigned':
+        return NotificationType.taskAssigned;
+      case 'task_completed':
+      case 'taskCompleted':
+        return NotificationType.taskCompleted;
+      case 'new_message':
+      case 'messageReceived':
+        return NotificationType.messageReceived;
+      case 'group_message':
+      case 'groupMessageReceived':
+        return NotificationType.groupMessageReceived;
+      default:
+        try {
+          return NotificationType.values.byName(typeStr);
+        } catch (_) {
+          return NotificationType.other;
+        }
+    }
+  }
+
   factory AppNotification.fromMap(Map<String, dynamic> map, String id) {
     return AppNotification(
       id: id,
       userId: map['userId'] ?? '',
-      type: NotificationType.values.byName(map['type'] ?? 'other'),
+      type: _parseType(map['type']),
       title: map['title'] ?? '',
       body: map['body'] ?? '',
       actorId: map['actorId'] ?? '',

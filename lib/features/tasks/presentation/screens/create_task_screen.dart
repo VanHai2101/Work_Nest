@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/index.dart';
-import '../../../../core/data/repositories/index.dart';
+import '../../../../core/data/repositories/index.dart'; // Still needed for NotificationRepository for now
+import '../providers/tasks_provider.dart';
 
-class CreateTaskScreen extends StatefulWidget {
+class CreateTaskScreen extends ConsumerStatefulWidget {
   final String? projectId;
 
-  const CreateTaskScreen({
-    this.projectId,
-    super.key,
-  });
+  const CreateTaskScreen({this.projectId, super.key});
 
   @override
-  State<CreateTaskScreen> createState() => _CreateTaskScreenState();
+  ConsumerState<CreateTaskScreen> createState() => _CreateTaskScreenState();
 }
 
-class _CreateTaskScreenState extends State<CreateTaskScreen> {
+class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  final taskRepo = TaskRepository();
 
   late String currentUserId;
   bool _isLoading = false;
@@ -46,6 +44,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final taskRepo = ref.read(taskRepositoryProvider);
       final taskId = await taskRepo.createTask(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
@@ -58,6 +57,24 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
         tags: [],
       );
 
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final actorName = currentUser?.displayName ?? 'Someone';
+      final actorPhotoURL = currentUser?.photoURL;
+
+      // TODO: Refactor NotificationRepository to feature-based architecture later
+      await NotificationRepository().createNotification(
+        userId: currentUserId,
+        type: 'task_assigned',
+        title: 'New Task Assigned',
+        body:
+            '$actorName assigned you a new task: "${_titleController.text.trim()}"',
+        actorId: currentUserId,
+        actorName: actorName,
+        actorPhotoURL: actorPhotoURL,
+        relatedEntityId: taskId,
+        relatedEntityType: 'task',
+      );
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Task created successfully')),
@@ -66,9 +83,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     } finally {
       if (mounted) {
@@ -87,7 +104,8 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     );
     if (picked != null) {
       setState(() {
-        _selectedDueTime = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+        _selectedDueTime =
+            '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
       });
     }
   }
@@ -95,10 +113,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Task'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Create Task'), centerTitle: true),
       body: SingleChildScrollView(
         padding: AppLayout.paddingMedium,
         child: Form(
@@ -120,11 +135,15 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                   prefixIcon: const Icon(Icons.task_outlined),
                   border: OutlineInputBorder(
                     borderRadius: AppBorderRadius.medium,
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    borderSide: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: AppBorderRadius.medium,
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    borderSide: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: AppBorderRadius.medium,
@@ -150,11 +169,15 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                   labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
                   border: OutlineInputBorder(
                     borderRadius: AppBorderRadius.medium,
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    borderSide: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: AppBorderRadius.medium,
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    borderSide: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: AppBorderRadius.medium,
@@ -179,18 +202,24 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                   prefixIcon: const Icon(Icons.flag_outlined),
                   border: OutlineInputBorder(
                     borderRadius: AppBorderRadius.medium,
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    borderSide: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: AppBorderRadius.medium,
-                    borderSide: BorderSide(color: Colors.white.withOpacity(0.2)),
+                    borderSide: BorderSide(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
                   ),
                 ),
                 items: ['low', 'medium', 'high']
-                    .map((priority) => DropdownMenuItem(
-                          value: priority,
-                          child: Text(priority),
-                        ))
+                    .map(
+                      (priority) => DropdownMenuItem(
+                        value: priority,
+                        child: Text(priority),
+                      ),
+                    )
                     .toList(),
                 onChanged: (value) {
                   if (value != null) setState(() => _selectedPriority = value);
@@ -235,7 +264,9 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                   onPressed: _isLoading ? null : _handleCreate,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green.shade600,
-                    disabledBackgroundColor: Colors.green.shade600.withOpacity(0.5),
+                    disabledBackgroundColor: Colors.green.shade600.withOpacity(
+                      0.5,
+                    ),
                   ),
                   child: _isLoading
                       ? const SizedBox(

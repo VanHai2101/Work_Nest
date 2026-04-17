@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/index.dart';
-import '../../../../core/domain/entities/index.dart';
-import '../../../../core/data/repositories/index.dart';
+import '../../domain/entities/task_entity.dart';
+import '../providers/tasks_provider.dart';
 
-class TaskDetailScreen extends StatefulWidget {
+class TaskDetailScreen extends ConsumerStatefulWidget {
   final String taskId;
+  final String? projectId;
 
   const TaskDetailScreen({
     required this.taskId,
+    this.projectId,
     Key? key,
   }) : super(key: key);
 
   @override
-  State<TaskDetailScreen> createState() => _TaskDetailScreenState();
+  ConsumerState<TaskDetailScreen> createState() => _TaskDetailScreenState();
 }
 
-class _TaskDetailScreenState extends State<TaskDetailScreen> {
-  final taskRepo = TaskRepository();
-
+class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
   @override
   Widget build(BuildContext context) {
+    final taskAsync = ref.watch(taskProvider((taskId: widget.taskId, projectId: widget.projectId)));
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Task Details'),
@@ -28,7 +31,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              // TODO: Navigate to edit task screen
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Edit feature coming soon')),
               );
@@ -40,18 +42,13 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<TaskEntity?>(
-        future: taskRepo.getTaskById(widget.taskId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (!snapshot.hasData || snapshot.data == null) {
+      body: taskAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
+        data: (task) {
+          if (task == null) {
             return Center(child: Text(AppErrors.genericError));
           }
-
-          final task = snapshot.data!;
 
           return SingleChildScrollView(
             padding: AppLayout.paddingMedium,
@@ -75,15 +72,17 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     Checkbox(
                       value: task.completed,
                       onChanged: (_) {
-                        taskRepo.toggleTaskCompletion(task.id, task.projectId, !task.completed);
+                        ref.read(taskRepositoryProvider).toggleTaskCompletion(
+                          task.id,
+                          task.projectId,
+                          !task.completed,
+                        );
                       },
                     ),
                     Text(
                       task.completed ? 'Completed' : 'Pending',
                       style: TextStyle(
-                        color: task.completed
-                            ? Colors.green
-                            : Colors.orange,
+                        color: task.completed ? Colors.green : Colors.orange,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -291,7 +290,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           ),
           TextButton(
             onPressed: () async {
-              // We need the task entity to get projectId for deletion
+              final taskRepo = ref.read(taskRepositoryProvider);
               final task = await taskRepo.getTaskById(widget.taskId);
               if (task != null) {
                 await taskRepo.deleteTask(widget.taskId, task.projectId);

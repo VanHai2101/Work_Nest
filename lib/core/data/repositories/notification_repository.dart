@@ -5,7 +5,7 @@ class NotificationRepository {
   final FirebaseFirestore _firestore;
 
   NotificationRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   // Get user notifications
   Stream<List<AppNotification>> getUserNotifications(String userId) {
@@ -16,10 +16,39 @@ class NotificationRepository {
         .limit(50)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => AppNotification.fromMap(doc.data(), doc.id))
-          .toList();
-    });
+          return snapshot.docs
+              .map((doc) => AppNotification.fromMap(doc.data(), doc.id))
+              .toList();
+        });
+  }
+
+  // Create a new notification (Client-side workaround for Cách 2)
+  Future<void> createNotification({
+    required String userId,
+    required String type,
+    required String title,
+    required String body,
+    required String actorId,
+    required String actorName,
+    String? actorPhotoURL,
+    String? relatedEntityId,
+    String? relatedEntityType,
+  }) async {
+    final docRef = _firestore.collection('notifications').doc();
+    final data = {
+      'userId': userId,
+      'type': type,
+      'title': title,
+      'body': body,
+      'actorId': actorId,
+      'actorName': actorName,
+      'actorPhotoURL': actorPhotoURL,
+      'isRead': false,
+      'createdAt': FieldValue.serverTimestamp(),
+      'relatedEntityId': relatedEntityId,
+      'relatedEntityType': relatedEntityType,
+    };
+    await docRef.set(data);
   }
 
   // Get unread notifications count
@@ -32,14 +61,12 @@ class NotificationRepository {
         .map((snapshot) => snapshot.docs.length);
   }
 
-  // Mark notification as read
   Future<void> markAsRead(String notificationId) async {
     await _firestore.collection('notifications').doc(notificationId).update({
       'isRead': true,
     });
   }
 
-  // Mark all as read
   Future<void> markAllAsRead(String userId) async {
     final batch = _firestore.batch();
     final docs = await _firestore
@@ -55,12 +82,10 @@ class NotificationRepository {
     await batch.commit();
   }
 
-  // Delete notification
   Future<void> deleteNotification(String notificationId) async {
     await _firestore.collection('notifications').doc(notificationId).delete();
   }
 
-  // Delete all notifications for user
   Future<void> deleteAllNotifications(String userId) async {
     final batch = _firestore.batch();
     final docs = await _firestore

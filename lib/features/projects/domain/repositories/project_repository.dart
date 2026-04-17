@@ -1,4 +1,5 @@
 import 'package:work_nest/core/domain/entities/index.dart';
+import 'package:work_nest/features/projects/domain/entities/project_entity.dart';
 
 abstract class ProjectRepository {
   Stream<List<ProjectEntity>> getProjects();

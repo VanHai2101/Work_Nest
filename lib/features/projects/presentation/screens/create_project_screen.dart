@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/index.dart';
-import '../../../../core/domain/entities/index.dart';
-import '../../data/repositories/index.dart';
+import '../../domain/entities/project_entity.dart';
+import '../providers/projects_provider.dart';
 
-class CreateProjectScreen extends StatefulWidget {
+class CreateProjectScreen extends ConsumerStatefulWidget {
   const CreateProjectScreen({Key? key}) : super(key: key);
 
   @override
-  State<CreateProjectScreen> createState() => _CreateProjectScreenState();
+  ConsumerState<CreateProjectScreen> createState() => _CreateProjectScreenState();
 }
 
-class _CreateProjectScreenState extends State<CreateProjectScreen> {
+class _CreateProjectScreenState extends ConsumerState<CreateProjectScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  final projectRepo = FirebaseProjectRepository();
   
   late String currentUserId;
   bool _isLoading = false;
@@ -55,7 +55,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
         tags: [],
       );
 
-      await projectRepo.createProject(newProject);
+      await ref.read(projectRepositoryProvider).createProject(newProject);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -66,7 +66,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
+          const SnackBar(content: Text('Không thể tạo project. Vui lòng thử lại.')),
         );
       }
     } finally {

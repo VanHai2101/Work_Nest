@@ -12,12 +12,10 @@ class CalendarWeekdayHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.border, width: 1),
-        ),
+        color: AppColors.primaryBackground,
       ),
-      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: List.generate(labels.length, (i) {
           final isSundayCol = i == 6;
@@ -25,12 +23,13 @@ class CalendarWeekdayHeader extends StatelessWidget {
             child: Center(
               child: Text(
                 labels[i],
-                style: AppTextStyles.caption.copyWith(
+                style: TextStyle(
                   color: isSundayCol
-                      ? AppColors.error.withOpacity(0.8)
-                      : AppColors.textSecondary,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
+                      ? Colors.red.withOpacity(0.7)
+                      : Colors.black45,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.0,
                 ),
               ),
             ),

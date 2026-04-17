@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:work_nest/core/data/models/index.dart';
-import 'package:work_nest/core/data/repositories/index.dart';
-import 'package:work_nest/core/domain/entities/index.dart';
-import 'package:work_nest/features/projects/domain/repositories/project_repository.dart';
+import '../../../../core/data/repositories/base_firestore_repository.dart';
+import '../models/project_model.dart';
+import '../../domain/entities/project_entity.dart';
+import '../../domain/repositories/project_repository.dart';
 
 class FirebaseProjectRepository extends BaseFirestoreRepository<ProjectEntity>
     implements ProjectRepository {

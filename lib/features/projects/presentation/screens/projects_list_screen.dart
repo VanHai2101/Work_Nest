@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:work_nest/core/theme/index.dart' show AppColors;
 import '../../../../core/constants/index.dart';
-import '../../../../core/domain/entities/index.dart';
-import '../../../../core/data/repositories/index.dart';
-import '../../data/repositories/index.dart';
-import 'index.dart';
+import '../../domain/entities/project_entity.dart';
+import '../providers/projects_provider.dart';
+import 'project_detail_screen.dart';
+import 'create_project_screen.dart';
 
-class ProjectsListScreen extends StatefulWidget {
+class ProjectsListScreen extends ConsumerStatefulWidget {
   const ProjectsListScreen({Key? key}) : super(key: key);
 
   @override
-  State<ProjectsListScreen> createState() => _ProjectsListScreenState();
+  ConsumerState<ProjectsListScreen> createState() => _ProjectsListScreenState();
 }
 
-class _ProjectsListScreenState extends State<ProjectsListScreen> {
-  final projectRepo = FirebaseProjectRepository();
+class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
   late String currentUserId;
 
   @override
@@ -25,19 +26,14 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Projects'),
-        centerTitle: true,
-      ),
-      body: StreamBuilder<List<ProjectEntity>>(
-        stream: projectRepo.getProjectsByMember(currentUserId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    final projectsAsync = ref.watch(userProjectsProvider(currentUserId));
 
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+    return Scaffold(
+      body: projectsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
+        data: (projects) {
+          if (projects.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -50,16 +46,13 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
                   AppLayout.gapMedium,
                   Text(
                     'No projects yet',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                    ),
+                    style: TextStyle(color: Colors.white.withOpacity(0.5)),
                   ),
                 ],
               ),
             );
           }
 
-          final projects = snapshot.data!;
           return ListView.builder(
             padding: AppLayout.paddingMedium,
             itemCount: projects.length,
@@ -70,7 +63,8 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => ProjectDetailScreen(projectId: project.id),
+                      builder: (_) =>
+                          ProjectDetailScreen(projectId: project.id),
                     ),
                   );
                 },
@@ -84,9 +78,7 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
         label: const Text('New Project'),
         onPressed: () {
           Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const CreateProjectScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const CreateProjectScreen()),
           );
         },
       ),
@@ -94,15 +86,13 @@ class _ProjectsListScreenState extends State<ProjectsListScreen> {
   }
 }
 
+
 class _ProjectTile extends StatelessWidget {
   final ProjectEntity project;
   final VoidCallback onTap;
 
-  const _ProjectTile({
-    required this.project,
-    required this.onTap,
-    Key? key,
-  }) : super(key: key);
+  const _ProjectTile({required this.project, required this.onTap, Key? key})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -115,9 +105,16 @@ class _ProjectTile extends StatelessWidget {
         margin: EdgeInsets.symmetric(vertical: AppPadding.small),
         padding: AppLayout.paddingMedium,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: AppColors.card,
           borderRadius: AppBorderRadius.medium,
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,17 +125,21 @@ class _ProjectTile extends StatelessWidget {
                 Expanded(
                   child: Text(
                     project.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
+                      color: AppColors.textPrimary,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.2),
+                    color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -157,10 +158,7 @@ class _ProjectTile extends StatelessWidget {
               project.description,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
-                fontSize: 13,
-              ),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
             AppLayout.gapMedium,
             Row(
@@ -175,14 +173,14 @@ class _ProjectTile extends StatelessWidget {
                           Text(
                             'Progress',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.5),
+                              color: AppColors.textTertiary,
                               fontSize: 12,
                             ),
                           ),
                           Text(
                             '$progressPercent%',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.7),
+                              color: AppColors.textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -194,7 +192,7 @@ class _ProjectTile extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: project.progress,
                           minHeight: 4,
-                          backgroundColor: Colors.white.withOpacity(0.1),
+                          backgroundColor: AppColors.surfaceVariant,
                           valueColor: AlwaysStoppedAnimation(
                             _getProgressColor(project.progress),
                           ),
@@ -209,12 +207,12 @@ class _ProjectTile extends StatelessWidget {
                     Icon(
                       Icons.people,
                       size: AppSize.iconMedium,
-                      color: Colors.white.withOpacity(0.5),
+                      color: AppColors.textTertiary,
                     ),
                     Text(
                       '${project.memberIds.length}',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.7),
+                        color: AppColors.textSecondary,
                         fontSize: 12,
                       ),
                     ),

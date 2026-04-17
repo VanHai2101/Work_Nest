@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:work_nest/core/theme/index.dart' show AppColors;
 import '../../../../core/constants/index.dart';
-import '../../../../core/domain/entities/index.dart';
-import '../../../../core/data/repositories/index.dart';
+import '../../domain/entities/task_entity.dart';
+import '../providers/tasks_provider.dart';
 import 'task_detail_screen.dart';
 import 'create_task_screen.dart';
 
-class TasksListScreen extends StatefulWidget {
+class TasksListScreen extends ConsumerStatefulWidget {
   const TasksListScreen({Key? key}) : super(key: key);
 
   @override
-  State<TasksListScreen> createState() => _TasksListScreenState();
+  ConsumerState<TasksListScreen> createState() => _TasksListScreenState();
 }
 
-class _TasksListScreenState extends State<TasksListScreen> {
-  final taskRepo = TaskRepository();
+class _TasksListScreenState extends ConsumerState<TasksListScreen> {
   late String currentUserId;
   String _filterStatus = 'all';
 
@@ -26,16 +27,15 @@ class _TasksListScreenState extends State<TasksListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final tasksAsync = ref.watch(userAssignedTasksProvider(currentUserId));
+
     return Scaffold(
       appBar: AppBar(title: const Text('My Tasks'), centerTitle: true),
-      body: StreamBuilder<List<TaskEntity>>(
-        stream: taskRepo.getUserAssignedTasks(currentUserId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+      body: tasksAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
+        data: (allTasks) {
+          if (allTasks.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -55,8 +55,7 @@ class _TasksListScreenState extends State<TasksListScreen> {
             );
           }
 
-          var tasks = snapshot.data!;
-
+          var tasks = allTasks;
           // Apply filter
           if (_filterStatus == 'pending') {
             tasks = tasks.where((t) => !t.completed).toList();
@@ -103,7 +102,7 @@ class _TasksListScreenState extends State<TasksListScreen> {
                         );
                       },
                       onCompletionToggle: () {
-                        taskRepo.toggleTaskCompletion(
+                        ref.read(taskRepositoryProvider).toggleTaskCompletion(
                           task.id,
                           task.projectId,
                           !task.completed,
@@ -152,15 +151,23 @@ class _TaskTile extends StatelessWidget {
         margin: EdgeInsets.symmetric(vertical: AppPadding.small),
         padding: AppLayout.paddingMedium,
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: AppColors.card,
           borderRadius: AppBorderRadius.medium,
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Checkbox(
               value: task.completed,
               onChanged: (_) => onCompletionToggle(),
+              activeColor: AppColors.accentDark,
             ),
             AppLayout.horizontalGapSmall,
             Expanded(
@@ -172,6 +179,7 @@ class _TaskTile extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
+                      color: AppColors.textPrimary,
                       decoration: task.completed
                           ? TextDecoration.lineThrough
                           : null,
@@ -188,7 +196,7 @@ class _TaskTile extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: priorityColor.withOpacity(0.2),
+                          color: priorityColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -204,13 +212,13 @@ class _TaskTile extends StatelessWidget {
                       Icon(
                         Icons.calendar_today,
                         size: AppSize.iconSmall,
-                        color: Colors.white.withOpacity(0.4),
+                        color: AppColors.textTertiary,
                       ),
                       AppLayout.horizontalGapSmall,
                       Text(
                         _formatDate(task.dueDate),
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: AppColors.textSecondary,
                           fontSize: 12,
                         ),
                       ),

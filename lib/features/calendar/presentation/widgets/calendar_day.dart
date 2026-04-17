@@ -44,25 +44,21 @@ class _CalendarDayViewState extends ConsumerState<CalendarDayView> {
     final state = ref.watch(calendarProvider);
     final today = DateTime.now();
     final selectedDay = state.selectedDay ?? today;
-    final isToday =
-        selectedDay.year == today.year &&
-        selectedDay.month == today.month &&
-        selectedDay.day == today.day;
+    final isToday = selectedDay.isSameDay(today);
 
-    final dayLabel = selectedDay.weekdayFullVi;
+    final dayLabel = selectedDay.weekdayFullVi.toUpperCase();
 
     return Column(
       children: [
         // ── Header ngày ──
         _buildDayHeader(selectedDay, dayLabel, isToday, today),
 
-        // ── Lưới giờ + current time indicator ──
+        // ── Lưới giờ ──
         Expanded(
           child: SingleChildScrollView(
             controller: _scrollController,
-            child: SizedBox(
-              // Chiều cao đủ cho 24 giờ
-              height: 24 * _hourHeight,
+            child: Container(
+              color: AppColors.primaryBackground,
               child: Stack(
                 children: [
                   // Các hàng giờ
@@ -87,117 +83,84 @@ class _CalendarDayViewState extends ConsumerState<CalendarDayView> {
     DateTime today,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
+        color: AppColors.primaryBackground,
+        border: Border(bottom: BorderSide(color: Colors.black.withOpacity(0.05))),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Circle ngày
-          CalendarDayCircle(day: day.day, isToday: isToday, size: 40),
-
-          const SizedBox(width: 12),
-
-          // Tên thứ + tháng/năm
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Text(
+            dayLabel,
+            style: const TextStyle(
+              color: Colors.black45,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
             children: [
+              CalendarDayCircle(day: day.day, isToday: isToday, isSelected: true, size: 44),
+              const SizedBox(width: 16),
               Text(
-                dayLabel,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
+                '${day.monthNameVi} ${day.year}',
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
-              ),
-              Text(
-                'Tháng ${day.month}, ${day.year}',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),
             ],
           ),
-
-          const Spacer(),
-
-          if (isToday)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.info.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: AppColors.info.withOpacity(0.4),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                'HÔM NAY',
-                style: TextStyle(
-                  color: AppColors.info,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                ),
-              ),
-            ),
         ],
       ),
     );
   }
 
   Widget _buildHourRow(int hour) {
-    return SizedBox(
+    return Container(
       height: _hourHeight,
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.black.withOpacity(0.05),
+            width: 0.5,
+          ),
+        ),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Nhãn giờ — ẩn "00:00" như week view
-          SizedBox(
-            width: 52,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 0, right: 8),
-              child: Transform.translate(
-                // Dịch lên trên để label nằm TRÊN đường kẻ
-                offset: const Offset(0, -8),
-                child: Text(
-                  hour == 0 ? '' : '${hour.toString().padLeft(2, '0')}:00',
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    color: AppColors.textTertiary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+          // Nhãn giờ
+          Container(
+            width: 60,
+            padding: const EdgeInsets.only(top: 8, right: 12),
+            child: Text(
+              '${hour.toString().padLeft(2, '0')}:00',
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: Colors.black38,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
 
-          // Đường kẻ dọc phân cách
-          Container(width: 1, color: AppColors.border.withOpacity(0.4)),
+          // Đường kẻ dọc phân cách (Optional, images show it very subtle or absent)
+          Container(width: 0.5, color: Colors.black.withOpacity(0.05)),
 
-          // Khu vực sự kiện
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: AppColors.border.withOpacity(0.25),
-                    width: 1,
-                  ),
-                ),
-              ),
-              // TODO: Render events theo giờ ở đây
-            ),
-          ),
+          // Khu vực nội dung
+          const Expanded(child: SizedBox()),
         ],
       ),
     );
   }
 
   Widget _buildCurrentTimeLine(DateTime now) {
-    // Tính vị trí pixel của giờ hiện tại
-    final minuteOffset =
-        now.hour * _hourHeight + (now.minute / 60) * _hourHeight;
+    final minuteOffset = now.hour * _hourHeight + (now.minute / 60) * _hourHeight;
 
     return Positioned(
       top: minuteOffset,
@@ -206,23 +169,22 @@ class _CalendarDayViewState extends ConsumerState<CalendarDayView> {
       child: Row(
         children: [
           Container(
-            width: 52,
+            width: 60,
             alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 4),
+            padding: const EdgeInsets.only(right: 6),
             child: Container(
-              width: 8,
-              height: 8,
-              decoration: BoxDecoration(
+              width: 10,
+              height: 10,
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.error,
+                color: Colors.blueAccent,
               ),
             ),
           ),
-          // Đường kẻ đỏ ngang
           Expanded(
             child: Container(
               height: 1.5,
-              color: AppColors.error.withOpacity(0.8),
+              color: Colors.blueAccent.withOpacity(0.5),
             ),
           ),
         ],

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:work_nest/core/constants/index.dart';
 import 'package:work_nest/core/domain/entities/index.dart';
+import 'package:work_nest/features/tasks/domain/entities/task_entity.dart';
 import 'index.dart';
 
 /// State cho màn hình Create Task
@@ -126,7 +127,9 @@ class CreateTaskNotifier extends Notifier<CreateTaskState> {
       id: '', // Sẽ được gán khi lưu vào database
       title: state.title.trim(),
       description: state.description.trim(),
-      assigneeIds: state.assigneeIds.isEmpty ? [currentUserId] : state.assigneeIds,
+      assigneeIds: state.assigneeIds.isEmpty
+          ? [currentUserId]
+          : state.assigneeIds,
       creatorId: currentUserId,
       completed: false,
       dueDate: deadline,
@@ -153,7 +156,7 @@ class CreateTaskNotifier extends Notifier<CreateTaskState> {
     try {
       final task = buildTaskEntity(projectId: projectId);
       final useCase = ref.read(createTaskUseCaseProvider);
-      
+
       await useCase(task);
 
       state = state.copyWith(isLoading: false);
@@ -171,6 +174,7 @@ class CreateTaskNotifier extends Notifier<CreateTaskState> {
 }
 
 /// Provider cho Create Task
-final createTaskProvider = NotifierProvider<CreateTaskNotifier, CreateTaskState>(
-  CreateTaskNotifier.new,
-);
+final createTaskProvider =
+    NotifierProvider<CreateTaskNotifier, CreateTaskState>(
+      CreateTaskNotifier.new,
+    );

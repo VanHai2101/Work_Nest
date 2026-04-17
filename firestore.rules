@@ -133,10 +133,10 @@ service cloud.firestore {
       // ======================================
       match /tasks/{taskId} {
 
-        allow read: if isSignedIn() && isProjectMember(projectId);
+        allow read: if isSignedIn() && (projectId == 'default' || isProjectMember(projectId));
 
         allow create: if isSignedIn()
-          && isProjectMember(projectId)
+          && (projectId == 'default' || isProjectMember(projectId))
           && hasValidFields(
             ['title', 'description', 'assigneeIds', 'creatorId',
              'completed', 'dueDate', 'dueTime', 'projectId', 'order', 'createdAt'],
@@ -148,13 +148,13 @@ service cloud.firestore {
         allow update: if isSignedIn() && (
           resource.data.creatorId == request.auth.uid ||        // Creator
           request.auth.uid in resource.data.assigneeIds ||     // Assignee
-          isProjectOwner(projectId)                            // Project owner
+          (projectId != 'default' && isProjectOwner(projectId)) // Project owner
         )
           && notChanging(['creatorId', 'projectId', 'createdAt']); // 🔒 Không đổi các field quan trọng
 
         allow delete: if isSignedIn() && (
           resource.data.creatorId == request.auth.uid ||
-          isProjectOwner(projectId)
+          (projectId != 'default' && isProjectOwner(projectId))
         );
       }
     }
@@ -196,7 +196,7 @@ service cloud.firestore {
           && request.resource.data.senderId == request.auth.uid
           && hasValidFields(
             ['senderId', 'text', 'sentAt'],
-            ['attachments', 'readBy', 'type', 'deletedAt']
+            ['attachments', 'readBy', 'type', 'deletedAt', 'senderName', 'senderPhotoURL']
           );
 
         // 🔒 Chỉ được cập nhật readBy (đánh dấu đã đọc)
@@ -256,7 +256,7 @@ service cloud.firestore {
           && request.resource.data.senderId == request.auth.uid
           && hasValidFields(
             ['senderId', 'text', 'sentAt'],
-            ['attachments', 'readBy', 'type', 'deletedAt']
+            ['attachments', 'readBy', 'type', 'deletedAt', 'senderName', 'senderPhotoURL']
           );
 
         allow update: if isSignedIn()
@@ -279,8 +279,8 @@ service cloud.firestore {
       allow read: if isSignedIn()
         && resource.data.userId == request.auth.uid;
 
-      // 🔒 Chỉ Cloud Function mới tạo notification — chặn client
-      allow create: if false;
+      // Mở quyền tạm thời (Cách 2) do chưa dùng được Cloud Function
+      allow create: if isSignedIn();
 
       // 🔒 Chỉ được đánh dấu đã đọc, không đổi nội dung
       allow update: if isSignedIn()

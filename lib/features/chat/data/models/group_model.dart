@@ -1,19 +1,27 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:work_nest/core/domain/entities/index.dart';
-import 'package:work_nest/core/utils/index.dart';
+import '../../domain/entities/group_entity.dart';
+import '../../../../core/utils/parser.dart';
 
-class ChatModel {
+class GroupModel {
   final String id;
-  final List<String> participantIds;
+  final String name;
+  final String? description;
+  final String? photoURL;
+  final List<String> adminIds;
+  final List<String> memberIds;
   final String? lastMessage;
   final Timestamp? lastMessageAt;
   final Map<String, int> unreadCount;
   final Timestamp createdAt;
   final Timestamp updatedAt;
 
-  ChatModel({
+  GroupModel({
     required this.id,
-    required this.participantIds,
+    required this.name,
+    this.description,
+    this.photoURL,
+    required this.adminIds,
+    required this.memberIds,
     this.lastMessage,
     this.lastMessageAt,
     required this.unreadCount,
@@ -21,11 +29,15 @@ class ChatModel {
     required this.updatedAt,
   });
 
-  factory ChatModel.fromJson(Map<String, dynamic>? json, {String? id}) {
-    if (json == null) return ChatModel.empty();
-    return ChatModel(
+  factory GroupModel.fromJson(Map<String, dynamic>? json, {String? id}) {
+    if (json == null) return GroupModel.empty();
+    return GroupModel(
       id: id ?? '',
-      participantIds: Parser.parseStringList(json['participantIds']),
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String?,
+      photoURL: json['photoURL'] as String?,
+      adminIds: Parser.parseStringList(json['adminIds']),
+      memberIds: Parser.parseStringList(json['memberIds']),
       lastMessage: json['lastMessage'] as String?,
       lastMessageAt: json['lastMessageAt'] != null ? Parser.parseTimestamp(json['lastMessageAt']) : null,
       unreadCount: json['unreadCount'] != null ? Map<String, int>.from(json['unreadCount']) : {},
@@ -34,9 +46,13 @@ class ChatModel {
     );
   }
 
-  factory ChatModel.fromEntity(ChatEntity entity) => ChatModel(
+  factory GroupModel.fromEntity(GroupEntity entity) => GroupModel(
     id: entity.id,
-    participantIds: entity.participantIds,
+    name: entity.name,
+    description: entity.description,
+    photoURL: entity.photoURL,
+    adminIds: entity.adminIds,
+    memberIds: entity.memberIds,
     lastMessage: entity.lastMessage,
     lastMessageAt: entity.lastMessageAt != null ? Timestamp.fromDate(entity.lastMessageAt!) : null,
     unreadCount: entity.unreadCount,
@@ -44,16 +60,22 @@ class ChatModel {
     updatedAt: Timestamp.fromDate(entity.updatedAt),
   );
 
-  factory ChatModel.empty() => ChatModel(
+  factory GroupModel.empty() => GroupModel(
     id: '',
-    participantIds: [],
+    name: '',
+    adminIds: [],
+    memberIds: [],
     unreadCount: {},
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   );
 
   Map<String, dynamic> toJson() => {
-    'participantIds': participantIds,
+    'name': name,
+    'description': description,
+    'photoURL': photoURL,
+    'adminIds': adminIds,
+    'memberIds': memberIds,
     'lastMessage': lastMessage,
     'lastMessageAt': lastMessageAt,
     'unreadCount': unreadCount,
@@ -61,9 +83,13 @@ class ChatModel {
     'updatedAt': updatedAt,
   };
 
-  ChatEntity toEntity() => ChatEntity(
+  GroupEntity toEntity() => GroupEntity(
     id: id,
-    participantIds: participantIds,
+    name: name,
+    description: description,
+    photoURL: photoURL,
+    adminIds: adminIds,
+    memberIds: memberIds,
     lastMessage: lastMessage,
     lastMessageAt: lastMessageAt?.toDate(),
     unreadCount: unreadCount,
@@ -71,6 +97,6 @@ class ChatModel {
     updatedAt: updatedAt.toDate(),
   );
 
-  static List<ChatModel> fromJsonList(List<dynamic>? jsonList) =>
-      jsonList?.map((e) => ChatModel.fromJson(e as Map<String, dynamic>)).toList() ?? [];
+  static List<GroupModel> fromJsonList(List<dynamic>? jsonList) =>
+      jsonList?.map((e) => GroupModel.fromJson(e as Map<String, dynamic>)).toList() ?? [];
 }

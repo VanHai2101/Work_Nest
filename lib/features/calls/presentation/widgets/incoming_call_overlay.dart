@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/providers/index.dart';
-import '../../../../core/domain/models/index.dart';
+import '../../../../features/notifications/domain/entities/notification_entity.dart';
+import '../../../../features/notifications/presentation/providers/notification_providers.dart';
+import '../../../../features/calls/domain/entities/call_entity.dart' show CallType; 
 
 import '../screens/incoming_call_screen.dart';
 
@@ -16,7 +17,7 @@ class IncomingCallOverlay extends ConsumerWidget {
     ref.listen(userNotificationsProvider, (previous, next) {
       next.whenData((notifications) {
         // Find incoming call notifications
-        AppNotification? incomingCall;
+        NotificationEntity? incomingCall;
         for (final notification in notifications) {
           if (notification.type == NotificationType.callIncoming && !notification.isRead) {
             incomingCall = notification;

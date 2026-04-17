@@ -4,10 +4,7 @@ import '../../../../core/constants/index.dart';
 class ProjectMembers extends StatelessWidget {
   final List<String> memberIds;
 
-  const ProjectMembers({
-    required this.memberIds,
-    Key? key,
-  }) : super(key: key);
+  const ProjectMembers({required this.memberIds, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +16,9 @@ class ProjectMembers extends StatelessWidget {
           children: [
             Text(
               'Members',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

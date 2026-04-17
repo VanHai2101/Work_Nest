@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../tasks/data/models/task_model.dart' show TaskModel;
 import '../../domain/entities/calendar_event.dart';
 import '../../domain/repositories/calendar_repository.dart';
 import 'package:work_nest/core/data/models/index.dart';
@@ -22,45 +23,55 @@ class FirebaseCalendarRepository implements ICalendarRepository {
 
   @override
   Stream<List<CalendarEvent>> getEvents(DateTime start, DateTime end) {
-    // Truy vấn tất cả các task thuộc về người dùng hiện tại hoặc toàn bộ project
+    final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    // Truy vấn tất cả các task thuộc về người dùng hiện tại
     return _firestore
         .collectionGroup('tasks')
-        .where('dueDate', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
-        .where('dueDate', isLessThanOrEqualTo: Timestamp.fromDate(end))
+        .where('assigneeIds', arrayContains: uid)
+        // Lưu ý: Không dùng where dueDate ở đây vì Firestore chặn dùng nhiều where trên các trường khác nhau
+        // nếu dùng arrayContains, trừ khi tạo Composite Index. Nên ta sẽ filter data ở dưới client.
         .snapshots()
         .asyncMap((snapshot) async {
-      
-      // Dùng Map để cache màu của project lại, tránh gọi API nhiều lần cho cùng 1 project
-      Map<String, Color> projectColors = {};
-      List<CalendarEvent> events = [];
+          // Dùng Map để cache màu của project lại, tránh gọi API nhiều lần cho cùng 1 project
+          Map<String, Color> projectColors = {};
+          List<CalendarEvent> events = [];
 
-      for (var doc in snapshot.docs) {
-        final task = TaskModel.fromJson(doc.data(), id: doc.id);
-        
-        Color eventColor = AppColors.accent; // Màu mặc định
-        if (task.projectId.isNotEmpty) {
-          if (!projectColors.containsKey(task.projectId)) {
-            // Lấy thông tin Project của task này từ Firebase để lấy màu
-            final projectDoc = await _firestore.collection('projects').doc(task.projectId).get();
-            final colorData = projectDoc.data()?['color'] as String?;
-            projectColors[task.projectId] = _parseColor(colorData);
+          for (var doc in snapshot.docs) {
+            final task = TaskModel.fromJson(doc.data(), id: doc.id);
+
+            // Filter by date client-side
+            if (task.dueDate.toDate().isBefore(start) ||
+                task.dueDate.toDate().isAfter(end)) {
+              continue;
+            }
+
+            Color eventColor = AppColors.accent;
+            if (task.projectId.isNotEmpty) {
+              if (!projectColors.containsKey(task.projectId)) {
+                final projectDoc = await _firestore
+                    .collection('projects')
+                    .doc(task.projectId)
+                    .get();
+                final colorData = projectDoc.data()?['color'] as String?;
+                projectColors[task.projectId] = _parseColor(colorData);
+              }
+              eventColor = projectColors[task.projectId]!;
+            }
+
+            events.add(
+              CalendarEvent(
+                id: task.id,
+                title: task.title,
+                description: task.description,
+                startTime: task.dueDate.toDate(),
+                endTime: task.dueDate.toDate().add(const Duration(hours: 1)),
+                color: eventColor,
+                projectId: task.projectId,
+              ),
+            );
           }
-          eventColor = projectColors[task.projectId]!;
-        }
-
-        events.add(CalendarEvent(
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          startTime: task.dueDate.toDate(),
-          // Tạm gán endTime bằng startTime + 1 tiếng do Task chỉ có dueDate
-          endTime: task.dueDate.toDate().add(const Duration(hours: 1)),
-          color: eventColor,
-          projectId: task.projectId,
-        ));
-      }
-      return events;
-    });
+          return events;
+        });
   }
 
   @override
@@ -68,7 +79,9 @@ class FirebaseCalendarRepository implements ICalendarRepository {
     final uid = _auth.currentUser?.uid;
     if (uid == null) throw Exception('Vui lòng đăng nhập để tạo task!');
     if (event.projectId == null || event.projectId!.isEmpty) {
-      throw Exception('Task bắt buộc phải nằm trong một Project (projectId is null)');
+      throw Exception(
+        'Task bắt buộc phải nằm trong một Project (projectId is null)',
+      );
     }
 
     final docRef = _firestore
@@ -81,7 +94,7 @@ class FirebaseCalendarRepository implements ICalendarRepository {
       id: event.id,
       title: event.title,
       description: event.description ?? '',
-      assigneeIds: [uid], // Tạm thời gán cho chính mình
+      assigneeIds: [uid],
       creatorId: uid,
       completed: false,
       dueDate: Timestamp.fromDate(event.startTime),
@@ -118,7 +131,7 @@ class FirebaseCalendarRepository implements ICalendarRepository {
 
   @override
   Future<void> deleteEvent(String id) async {
-    throw Exception('Vui lòng truyền projectId để xóa task!'); 
+    throw Exception('Vui lòng truyền projectId để xóa task!');
     // Interface cũ chỉ truyền id, không truyền projectId nên không xóa dễ dàng được
   }
 }

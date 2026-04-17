@@ -1,10 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:work_nest/core/data/repositories/index.dart';
+import 'package:work_nest/features/tasks/domain/repositories/task_repository.dart';
+import 'package:work_nest/features/tasks/data/repositories/firebase_task_repository.dart';
 import '../../domain/usecases/index.dart';
 
 /// Provider cung cấp TaskRepository
 final taskRepositoryProvider = Provider<TaskRepository>((ref) {
-  return TaskRepository();
+  return FirebaseTaskRepository();
 });
 
 /// Provider cung cấp GetAllTasksUseCase
@@ -14,7 +15,9 @@ final getAllTasksUseCaseProvider = Provider<GetAllTasksUseCase>((ref) {
 });
 
 /// Provider cung cấp GetTasksByProjectUseCase
-final getTasksByProjectUseCaseProvider = Provider<GetTasksByProjectUseCase>((ref) {
+final getTasksByProjectUseCaseProvider = Provider<GetTasksByProjectUseCase>((
+  ref,
+) {
   final repository = ref.watch(taskRepositoryProvider);
   return GetTasksByProjectUseCase(repository);
 });
@@ -44,7 +47,8 @@ final deleteTaskUseCaseProvider = Provider<DeleteTaskUseCase>((ref) {
 });
 
 /// Provider cung cấp ToggleTaskCompletionUseCase
-final toggleTaskCompletionUseCaseProvider = Provider<ToggleTaskCompletionUseCase>((ref) {
-  final repository = ref.watch(taskRepositoryProvider);
-  return ToggleTaskCompletionUseCase(repository);
-});
+final toggleTaskCompletionUseCaseProvider =
+    Provider<ToggleTaskCompletionUseCase>((ref) {
+      final repository = ref.watch(taskRepositoryProvider);
+      return ToggleTaskCompletionUseCase(repository);
+    });

@@ -1,15 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:work_nest/core/domain/entities/index.dart';
-import 'package:work_nest/core/data/models/index.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import '../models/chat_model.dart';
+import '../models/message_model.dart';
+import '../models/group_model.dart';
+import '../../domain/entities/chat_entity.dart';
+import '../../domain/entities/message_entity.dart';
+import '../../domain/entities/group_entity.dart';
 import '../../domain/repositories/chat_repository.dart';
 
 class FirebaseChatRepository implements IChatRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  // =================================================================
-  // 1-1 CHATS
-  // =================================================================
 
   @override
   Stream<List<ChatEntity>> watchChats(String userId) {
@@ -18,9 +18,13 @@ class FirebaseChatRepository implements IChatRepository {
         .where('participantIds', arrayContains: userId)
         .orderBy('lastMessageAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => ChatModel.fromJson(doc.data(), id: doc.id).toEntity())
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) => ChatModel.fromJson(doc.data(), id: doc.id).toEntity(),
+              )
+              .toList(),
+        );
   }
 
   @override
@@ -31,65 +35,123 @@ class FirebaseChatRepository implements IChatRepository {
         .collection('messages')
         .orderBy('sentAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => MessageModel.fromJson(doc.data(), id: doc.id).toEntity())
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    MessageModel.fromJson(doc.data(), id: doc.id).toEntity(),
+              )
+              .toList(),
+        );
   }
 
   @override
   Future<void> sendMessage(String chatId, MessageEntity message) async {
     final messageModel = MessageModel.fromEntity(message);
-    
+
+    final chatDoc = await _firestore.collection('chats').doc(chatId).get();
+    final participants = List<String>.from(
+      chatDoc.data()?['participantIds'] ?? [],
+    );
+
     final batch = _firestore.batch();
-    
-    // 1. Lưu tin nhắn vào Subcollection
-    final messageRef = _firestore.collection('chats').doc(chatId).collection('messages').doc(message.id);
+
+    final messageRef = _firestore
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .doc(message.id);
     batch.set(messageRef, messageModel.toJson());
 
-    // 2. Cập nhật lastMessage ở Collection Cha
     final chatRef = _firestore.collection('chats').doc(chatId);
     batch.update(chatRef, {
       'lastMessage': message.text,
       'lastMessageAt': FieldValue.serverTimestamp(),
-      // Theo logic sẽ cần cập nhật unreadCount cho người kia, nhưng phải qua Cloud Function hoặc Transaction để an toàn
     });
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final actorName = currentUser?.displayName ?? 'Someone';
+    final actorPhotoURL = currentUser?.photoURL;
+    // Truncate message preview to avoid leaking full content via notifications
+    final preview = message.text.length > 60
+        ? '${message.text.substring(0, 60)}...'
+        : message.text;
+
+    final otherUserIds = participants
+        .where((id) => id != message.senderId)
+        .toList();
+    for (var userId in otherUserIds) {
+      final notifRef = _firestore.collection('notifications').doc();
+      batch.set(notifRef, {
+        'userId': userId,
+        'type': 'new_message',
+        'title': 'New Message',
+        'body': '$actorName: "$preview"',
+        'actorId': currentUser?.uid ?? '',
+        'actorName': actorName,
+        'actorPhotoURL': actorPhotoURL,
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+        'relatedEntityId': chatId,
+        'relatedEntityType': 'chat',
+      });
+    }
 
     await batch.commit();
   }
 
   @override
-  Future<String> createOrGetChat(String currentUserId, String otherUserId) async {
-    // Tìm các chat có mặt currentUserId
-    final query = await _firestore
+  Future<String> createOrGetChat(
+    String currentUserId,
+    String otherUserId,
+  ) async {
+    final ids = [currentUserId, otherUserId]..sort();
+    final deterministicId = '${ids[0]}_${ids[1]}';
+
+    final existingDoc = await _firestore
         .collection('chats')
-        .where('participantIds', arrayContains: currentUserId)
+        .doc(deterministicId)
         .get();
 
-    // Lọc thủ công do Firestore không hỗ trợ multiple arrayContains
-    for (var doc in query.docs) {
-      final participants = List<String>.from(doc['participantIds'] ?? []);
-      if (participants.contains(otherUserId) && participants.length == 2) {
-        return doc.id; // Trả về ID nếu đã từng chat
-      }
-    }
+    if (existingDoc.exists) return deterministicId;
 
-    // Nếu chưa chat bao giờ -> Tạo mới
-    final newChatRef = _firestore.collection('chats').doc();
-    await newChatRef.set({
+    await _firestore.collection('chats').doc(deterministicId).set({
       'participantIds': [currentUserId, otherUserId],
       'lastMessage': '',
       'lastMessageAt': FieldValue.serverTimestamp(),
-      'unreadCount': 0,
+      'unreadCount': <String, int>{},
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
 
-    return newChatRef.id;
+    return deterministicId;
   }
 
-  // =================================================================
-  // GROUP CHATS
-  // =================================================================
+  @override
+  Stream<ChatEntity?> watchChat(String chatId) {
+    return _firestore
+        .collection('chats')
+        .doc(chatId)
+        .snapshots()
+        .map(
+          (doc) => doc.exists
+              ? ChatModel.fromJson(doc.data()!, id: doc.id).toEntity()
+              : null,
+        );
+  }
+
+  @override
+  Stream<GroupEntity?> watchGroup(String groupId) {
+    return _firestore
+        .collection('groups')
+        .doc(groupId)
+        .snapshots()
+        .map(
+          (doc) => doc.exists
+              ? GroupModel.fromJson(doc.data()!, id: doc.id).toEntity()
+              : null,
+        );
+  }
 
   @override
   Stream<List<GroupEntity>> watchGroups(String userId) {
@@ -98,9 +160,13 @@ class FirebaseChatRepository implements IChatRepository {
         .where('memberIds', arrayContains: userId)
         .orderBy('lastMessageAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => GroupModel.fromJson(doc.data(), id: doc.id).toEntity())
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) => GroupModel.fromJson(doc.data(), id: doc.id).toEntity(),
+              )
+              .toList(),
+        );
   }
 
   @override
@@ -111,46 +177,85 @@ class FirebaseChatRepository implements IChatRepository {
         .collection('messages')
         .orderBy('sentAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => MessageModel.fromJson(doc.data(), id: doc.id).toEntity())
-            .toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map(
+                (doc) =>
+                    MessageModel.fromJson(doc.data(), id: doc.id).toEntity(),
+              )
+              .toList(),
+        );
   }
 
   @override
   Future<void> sendGroupMessage(String groupId, MessageEntity message) async {
     final messageModel = MessageModel.fromEntity(message);
-    
+    final groupDoc = await _firestore.collection('groups').doc(groupId).get();
+    final memberIds = List<String>.from(groupDoc.data()?['memberIds'] ?? []);
+    final groupName = groupDoc.data()?['name'] as String? ?? 'A group';
+
     final batch = _firestore.batch();
-    
-    // 1. Lưu tin nhắn vào Subcollection
-    final messageRef = _firestore.collection('groups').doc(groupId).collection('messages').doc(message.id);
+
+    final messageRef = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('messages')
+        .doc(message.id);
     batch.set(messageRef, messageModel.toJson());
 
-    // 2. Cập nhật thông tin Group Cha
     final groupRef = _firestore.collection('groups').doc(groupId);
     batch.update(groupRef, {
       'lastMessage': message.text,
       'lastMessageAt': FieldValue.serverTimestamp(),
     });
 
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final actorName = currentUser?.displayName ?? 'Someone';
+    final actorPhotoURL = currentUser?.photoURL;
+    // Truncate message preview to avoid leaking full content via notifications
+    final preview = message.text.length > 60
+        ? '${message.text.substring(0, 60)}...'
+        : message.text;
+
+    final otherUserIds = memberIds
+        .where((id) => id != message.senderId)
+        .toList();
+    for (var userId in otherUserIds) {
+      final notifRef = _firestore.collection('notifications').doc();
+      batch.set(notifRef, {
+        'userId': userId,
+        'type': 'group_message',
+        'title': 'New message in $groupName',
+        'body': '$actorName: "$preview"',
+        'actorId': currentUser?.uid ?? '',
+        'actorName': actorName,
+        'actorPhotoURL': actorPhotoURL,
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+        'relatedEntityId': groupId,
+        'relatedEntityType': 'group',
+      });
+    }
+
     await batch.commit();
   }
 
-  // =================================================================
-  // CHUNG (Đánh dấu đã đọc)
-  // =================================================================
-
   @override
-  Future<void> markMessageAsRead(String chatId, String messageId, String userId, {bool isGroup = false}) async {
+  Future<void> markMessageAsRead(
+    String chatId,
+    String messageId,
+    String userId, {
+    bool isGroup = false,
+  }) async {
     final collectionName = isGroup ? 'groups' : 'chats';
-    
+
     await _firestore
         .collection(collectionName)
         .doc(chatId)
         .collection('messages')
         .doc(messageId)
         .update({
-      'readBy': FieldValue.arrayUnion([userId])
-    });
+          'readBy': FieldValue.arrayUnion([userId]),
+        });
   }
 }

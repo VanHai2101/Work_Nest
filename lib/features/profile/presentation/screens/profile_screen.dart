@@ -1,66 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:work_nest/core/theme/index.dart' show AppColors, AppLayout, AppBorderRadius, AppSize;
 import '../../../../core/constants/index.dart';
-import '../../../../core/data/repositories/index.dart';
-import 'index.dart';
+import '../../../../features/auth/presentation/providers/auth_providers.dart';
 
-class ProfileScreen extends ConsumerStatefulWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
-}
-
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  final userRepo = UserRepository();
-  late String currentUserId;
-
-  @override
-  void initState() {
-    super.initState();
-    currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (currentUserId.isEmpty) {
-      return Scaffold(
-        body: Center(
-          child: Text(AppErrors.genericError),
-        ),
-      );
-    }
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userProfileAsync = ref.watch(userProfileProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const EditProfileScreen(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: StreamBuilder(
-        stream: userRepo.getUserStream(currentUserId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (!snapshot.hasData || snapshot.data == null) {
+      body: userProfileAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text(AppErrors.genericError)),
+        data: (user) {
+          if (user == null) {
             return Center(child: Text(AppErrors.genericError));
           }
-
-          final user = snapshot.data!;
 
           return SingleChildScrollView(
             padding: AppLayout.paddingMedium,
@@ -74,11 +33,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   radius: 50,
                   backgroundColor: Colors.blue.shade600,
                   child: user.photoURL == null
-                      ? const Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 50,
-                        )
+                      ? const Icon(Icons.person, color: Colors.white, size: 50)
                       : ClipOval(
                           child: Image.network(
                             user.photoURL!,
@@ -92,8 +47,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Text(
                   user.displayName,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 AppLayout.gapSmall,
@@ -135,9 +90,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     icon: const Icon(Icons.upgrade),
                     label: const Text('Upgrade Plan'),
                     onPressed: () {
-                      // TODO: Navigate to upgrade screen
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Upgrade feature coming soon')),
+                        const SnackBar(
+                          content: Text('Upgrade feature coming soon'),
+                        ),
                       );
                     },
                   ),
@@ -151,7 +107,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     icon: const Icon(Icons.settings),
                     label: const Text('Settings'),
                     onPressed: () {
-                      // TODO: Navigate to settings screen
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Settings coming soon')),
                       );
@@ -191,15 +146,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Container(
       padding: AppLayout.paddingMedium,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: AppColors.card,
         borderRadius: AppBorderRadius.medium,
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-        ),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Icon(icon, color: Colors.blue.shade300, size: AppSize.iconMedium),
+          Icon(icon, color: AppColors.accentDark, size: AppSize.iconMedium),
           AppLayout.horizontalGapMedium,
           Expanded(
             child: Column(
@@ -207,16 +167,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
                 ),
                 AppLayout.gapSmall,
                 Text(
                   value,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -226,7 +183,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: AppColors.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -253,7 +210,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           TextButton(
             onPressed: () {
               FirebaseAuth.instance.signOut();
-              Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/login', (route) => false);
             },
             child: const Text('Logout', style: TextStyle(color: Colors.red)),
           ),

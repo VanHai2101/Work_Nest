@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../domain/models/index.dart';
+import '../../../../features/calls/domain/entities/call_entity.dart';
+import '../../domain/models/call_model.dart' show IceCandidate; // Keep IceCandidate for now
 
 class CallRepository {
   final FirebaseFirestore _firestore;
@@ -8,14 +9,14 @@ class CallRepository {
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
   // Create call
-  Future<Call> createCall({
+  Future<CallEntity> createCall({
     required String callerUid,
     required String calleeUid,
     required CallType type,
   }) async {
     final callRef = _firestore.collection('calls').doc();
 
-    final call = Call(
+    final call = CallEntity(
       id: callRef.id,
       callerUid: callerUid,
       calleeUid: calleeUid,
@@ -24,19 +25,36 @@ class CallRepository {
       createdAt: DateTime.now(),
     );
 
-    await callRef.set(call.toMap());
+    await callRef.set({
+      'callerUid': call.callerUid,
+      'calleeUid': call.calleeUid,
+      'status': call.status.name,
+      'type': call.type.name,
+      'createdAt': call.createdAt,
+    });
     return call;
   }
 
   // Get call
-  Stream<Call?> getCall(String callId) {
+  Stream<CallEntity?> getCall(String callId) {
     return _firestore
         .collection('calls')
         .doc(callId)
         .snapshots()
         .map((doc) {
       if (doc.exists) {
-        return Call.fromMap(doc.data()!, doc.id);
+        final map = doc.data()!;
+        return CallEntity(
+          id: doc.id,
+          callerUid: map['callerUid'] ?? '',
+          calleeUid: map['calleeUid'] ?? '',
+          status: CallStatus.values.byName(map['status'] ?? 'ringing'),
+          type: CallType.values.byName(map['type'] ?? 'video'),
+          offer: map['offer'],
+          answer: map['answer'],
+          createdAt: map['createdAt']?.toDate() ?? DateTime.now(),
+          endedAt: map['endedAt']?.toDate(),
+        );
       }
       return null;
     });

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/index.dart';
-import '../../../../core/domain/entities/index.dart';
-import '../../data/repositories/index.dart';
+import '../../domain/entities/project_entity.dart';
+import '../providers/projects_provider.dart';
 import '../widgets/index.dart';
 
-class ProjectDetailScreen extends StatefulWidget {
+class ProjectDetailScreen extends ConsumerStatefulWidget {
   final String projectId;
 
   const ProjectDetailScreen({
@@ -13,14 +14,14 @@ class ProjectDetailScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<ProjectDetailScreen> createState() => _ProjectDetailScreenState();
+  ConsumerState<ProjectDetailScreen> createState() => _ProjectDetailScreenState();
 }
 
-class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
-  final projectRepo = FirebaseProjectRepository();
-
+class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   @override
   Widget build(BuildContext context) {
+    final projectAsync = ref.watch(projectByIdProvider(widget.projectId));
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Project Details'),
@@ -29,7 +30,6 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              // TODO: Navigate to edit project screen
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Edit feature coming soon')),
               );
@@ -43,20 +43,14 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<ProjectEntity?>(
-        future: projectRepo.getProjectById(widget.projectId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+      body: projectAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
+        data: (project) {
+          if (project == null) {
+            return Center(child: Text(AppErrors.genericError));
           }
 
-          if (!snapshot.hasData || snapshot.data == null) {
-            return Center(
-              child: Text(AppErrors.genericError),
-            );
-          }
-
-          final project = snapshot.data!;
           return SingleChildScrollView(
             padding: AppLayout.paddingMedium,
             child: Column(
@@ -154,13 +148,15 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              projectRepo.deleteProject(widget.projectId);
-              Navigator.pop(context);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Project deleted')),
-              );
+            onPressed: () async {
+              await ref.read(projectRepositoryProvider).deleteProject(widget.projectId);
+              if (mounted) {
+                Navigator.pop(context);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Project deleted')),
+                );
+              }
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),

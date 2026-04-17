@@ -1,5 +1,5 @@
-import 'package:work_nest/core/domain/entities/index.dart';
-import 'package:work_nest/core/data/repositories/index.dart';
+import '../entities/task_entity.dart';
+import '../repositories/task_repository.dart';
 
 /// UseCase lấy tất cả tasks của user (đã được giao)
 class GetAllTasksUseCase {

@@ -1,98 +1,205 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/core/theme/index.dart';
+import 'package:work_nest/core/extensions/index.dart';
+import '../../../../features/auth/domain/entities/user_entity.dart';
+import '../../../../features/auth/presentation/providers/auth_providers.dart';
 import '../providers/calendar_provider.dart';
 
 class CalendarHeader extends ConsumerWidget {
   const CalendarHeader({super.key});
 
-  static const List<String> _monthNames = [
-    '',
-    'Tháng 1',
-    'Tháng 2',
-    'Tháng 3',
-    'Tháng 4',
-    'Tháng 5',
-    'Tháng 6',
-    'Tháng 7',
-    'Tháng 8',
-    'Tháng 9',
-    'Tháng 10',
-    'Tháng 11',
-    'Tháng 12',
-  ];
+  String _getDateString(CalendarViewMode mode, DateTime focused, DateTime? selected) {
+    switch (mode) {
+      case CalendarViewMode.day:
+        final date = selected ?? focused;
+        return '${date.day} Tháng ${date.month}, ${date.year}';
+      case CalendarViewMode.week:
+        final date = selected ?? focused;
+        final week = date.daysInWeek;
+        final start = week.first;
+        final end = week.last;
+        if (start.month == end.month) {
+          return '${start.day} — ${end.day} Tháng ${start.month}, ${start.year}';
+        } else {
+          return '${start.day} Tháng ${start.month} — ${end.day} Tháng ${end.month}, ${start.year}';
+        }
+      case CalendarViewMode.month:
+        return 'Tháng ${focused.month} ${focused.year}';
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(calendarProvider);
     final notifier = ref.read(calendarProvider.notifier);
     final focused = state.focusedMonth;
+    final selected = state.selectedDay;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  '${_monthNames[focused.month]} ${focused.year}',
-                  style: AppTextStyles.subtitleMedium.copyWith(
-                    color: AppColors.textPrimary,
-                    letterSpacing: 0.2,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 12),
-              GestureDetector(
-                onTap: notifier.goToToday,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.border, width: 1),
-                  ),
-                  child: Text(
-                    'HÔM NAY',
-                    style: AppTextStyles.caption.copyWith(
-                      color: AppColors.accent,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.8,
-                    ),
-                  ),
-                ),
-              ),
-              const Spacer(),
+    final userProfile = ref.watch(userProfileProvider);
 
-              // Nút điều hướng trái / phải
-              _NavButton(
-                icon: Icons.chevron_left_rounded,
-                onTap: notifier.goToPreviousMonth,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.primaryBackground,
+        border: Border(bottom: BorderSide(color: Colors.black.withOpacity(0.05))),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 600;
+
+          if (isWide) {
+            return Row(
+              children: [
+                _buildDateText(state.viewMode, focused, selected),
+                const SizedBox(width: 24),
+                _buildNavigation(state, notifier, focused, selected),
+                const Spacer(),
+                _buildUserSelector(userProfile.asData?.value, isMini: false),
+                const SizedBox(width: 12),
+                _buildViewSwitcher(state, notifier),
+              ],
+            );
+          } else {
+            // Narrow layout (2 rows)
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildDateText(state.viewMode, focused, selected, isMini: true),
+                    _buildNavigation(state, notifier, focused, selected, isMini: true),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildUserSelector(userProfile.asData?.value, isMini: true),
+                    _buildViewSwitcher(state, notifier, isMini: true),
+                  ],
+                ),
+              ],
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildDateText(CalendarViewMode mode, DateTime focused, DateTime? selected, {bool isMini = false}) {
+    return Text(
+      _getDateString(mode, focused, selected),
+      style: TextStyle(
+        fontSize: isMini ? 15 : 18,
+        fontWeight: FontWeight.bold,
+        color: Colors.black87,
+      ),
+    );
+  }
+
+  Widget _buildNavigation(CalendarState state, CalendarNotifier notifier, DateTime focused, DateTime? selected, {bool isMini = false}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _NavIconButton(
+          icon: Icons.chevron_left_rounded,
+          onTap: state.viewMode == CalendarViewMode.month 
+              ? notifier.goToPreviousMonth 
+              : () => notifier.selectDay((selected ?? focused).subtract(const Duration(days: 1))),
+          isMini: isMini,
+        ),
+        SizedBox(width: isMini ? 4 : 8),
+        GestureDetector(
+          onTap: notifier.goToToday,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: isMini ? 8 : 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              'HÔM NAY',
+              style: TextStyle(
+                fontSize: isMini ? 9 : 11,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+                color: Colors.black54,
               ),
-              const SizedBox(width: 4),
-              _NavButton(
-                icon: Icons.chevron_right_rounded,
-                onTap: notifier.goToNextMonth,
-              ),
-            ],
+            ),
           ),
+        ),
+        SizedBox(width: isMini ? 4 : 8),
+        _NavIconButton(
+          icon: Icons.chevron_right_rounded,
+          onTap: state.viewMode == CalendarViewMode.month 
+              ? notifier.goToNextMonth 
+              : () => notifier.selectDay((selected ?? focused).add(const Duration(days: 1))),
+          isMini: isMini,
+        ),
+      ],
+    );
+  }
 
-          const SizedBox(height: 12),
+  Widget _buildUserSelector(UserEntity? user, {bool isMini = false}) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: isMini ? 8 : 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.black.withOpacity(0.05)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: isMini ? 8 : 10,
+            backgroundColor: Colors.grey.shade200,
+            backgroundImage: user?.photoURL != null ? NetworkImage(user!.photoURL!) : null,
+            child: user?.photoURL == null
+                ? Icon(Icons.person, size: isMini ? 10 : 12, color: Colors.grey)
+                : null,
+          ),
+          SizedBox(width: isMini ? 6 : 8),
+          Text(
+            user?.displayName ?? 'User',
+            style: TextStyle(fontSize: isMini ? 10 : 12, color: Colors.black87),
+          ),
+          const SizedBox(width: 4),
+          Icon(Icons.unfold_more, size: isMini ? 12 : 14, color: Colors.grey),
+        ],
+      ),
+    );
+  }
 
-          // Row 2: Bộ chuyển chế độ xem (Căn phải)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              _ViewModeSelector(
-                current: state.viewMode,
-                onChanged: notifier.setViewMode,
-              ),
-            ],
+  Widget _buildViewSwitcher(CalendarState state, CalendarNotifier notifier, {bool isMini = false}) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(25),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _PillButton(
+            label: 'NGÀY',
+            isSelected: state.viewMode == CalendarViewMode.day,
+            onTap: () => notifier.setViewMode(CalendarViewMode.day),
+            isMini: isMini,
+          ),
+          _PillButton(
+            label: 'TUẦN',
+            isSelected: state.viewMode == CalendarViewMode.week,
+            onTap: () => notifier.setViewMode(CalendarViewMode.week),
+            isMini: isMini,
+          ),
+          _PillButton(
+            label: 'THÁNG',
+            isSelected: state.viewMode == CalendarViewMode.month,
+            onTap: () => notifier.setViewMode(CalendarViewMode.month),
+            isMini: isMini,
           ),
         ],
       ),
@@ -100,80 +207,69 @@ class CalendarHeader extends ConsumerWidget {
   }
 }
 
-class _NavButton extends StatelessWidget {
+class _NavIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
+  final bool isMini;
 
-  const _NavButton({required this.icon, required this.onTap});
+  const _NavIconButton({required this.icon, required this.onTap, this.isMini = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onTap,
+      icon: Icon(icon, color: Colors.black54, size: isMini ? 18 : 20),
+      constraints: const BoxConstraints(),
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+    );
+  }
+}
+
+class _PillButton extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final bool isMini;
+
+  const _PillButton({
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    this.isMini = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 32,
-        height: 32,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: EdgeInsets.symmetric(horizontal: isMini ? 10 : 16, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border, width: 1),
+          color: isSelected ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : null,
         ),
-        child: Icon(icon, color: AppColors.textSecondary, size: 20),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: isMini ? 8 : 10,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            color: isSelected ? Colors.blue : Colors.black54,
+            letterSpacing: 0.5,
+          ),
+        ),
       ),
     );
   }
 }
 
-class _ViewModeSelector extends StatelessWidget {
-  final CalendarViewMode current;
-  final void Function(CalendarViewMode) onChanged;
-
-  const _ViewModeSelector({required this.current, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    const modes = [
-      (CalendarViewMode.day, 'Ngày'),
-      (CalendarViewMode.week, 'Tuần'),
-      (CalendarViewMode.month, 'Tháng'),
-    ];
-
-    return Container(
-      height: 36,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border, width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: modes.map((entry) {
-          final (mode, label) = entry;
-          final isSelected = current == mode;
-
-          return GestureDetector(
-            onTap: () => onChanged(mode),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.accent : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                label,
-                style: AppTextStyles.body.copyWith(
-                  fontSize: 13,
-                  color: isSelected
-                      ? AppColors.primaryBackground
-                      : AppColors.textSecondary,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-}

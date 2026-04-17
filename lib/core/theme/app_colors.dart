@@ -116,31 +116,31 @@ extension _AppColorExtension on _AppColor {
   Color get color {
     switch (this) {
       case _AppColor.primaryBackground:
-        return const Color(0xFF212832);
+        return const Color(0xFFFFFFFF); // Pure White
       case _AppColor.accent:
-        return const Color(0xFFFED36A);
+        return const Color(0xFFFACC15); // Vibrant Yellow
       case _AppColor.accentLight:
-        return const Color(0xFFFEE5A0);
+        return const Color(0xFFFEF08A);
       case _AppColor.accentDark:
-        return const Color(0xFFFBC834);
+        return const Color(0xFFEAB308);
       case _AppColor.textPrimary:
-        return const Color(0xFFFFFFFF);
+        return const Color(0xFF111827); // Dark Gray
       case _AppColor.textSecondary:
-        return const Color(0xFF9CA3AF);
+        return const Color(0xFF4B5563); // Gray
       case _AppColor.textTertiary:
-        return const Color(0xFF6B7280);
+        return const Color(0xFF9CA3AF); // Light Gray
       case _AppColor.surface:
-        return const Color(0xFF2A3440);
+        return const Color(0xFFF9FAFB); // Very Light Gray
       case _AppColor.surfaceVariant:
-        return const Color(0xFF374151);
+        return const Color(0xFFF3F4F6); // Light Gray
       case _AppColor.card:
-        return const Color(0xFF455A64);
+        return const Color(0xFFFFFFFF);
       case _AppColor.border:
-        return const Color(0xFF374151);
+        return const Color(0xFFE5E7EB); // Soft Borders
       case _AppColor.borderLight:
-        return const Color(0xFF4B5563);
+        return const Color(0xFFF3F4F6);
       case _AppColor.divider:
-        return const Color(0xFF374151);
+        return const Color(0xFFF3F4F6);
       case _AppColor.success:
         return const Color(0xFF10B981);
       case _AppColor.warning:
@@ -150,19 +150,19 @@ extension _AppColorExtension on _AppColor {
       case _AppColor.info:
         return const Color(0xFF3B82F6);
       case _AppColor.disabled:
-        return const Color(0xFF6B7280);
+        return const Color(0xFFD1D5DB);
       case _AppColor.disabledBackground:
-        return const Color(0xFF4B5563);
+        return const Color(0xFFF3F4F6);
       case _AppColor.overlay:
-        return const Color(0x99000000);
+        return const Color(0x66111827);
       case _AppColor.inputBackground:
-        return const Color(0xFF3D4957);
+        return const Color(0xFFF9FAFB);
       case _AppColor.inputFocus:
-        return const Color(0xFF4B5563);
+        return const Color(0xFFE5E7EB);
       case _AppColor.chipBackground:
-        return const Color(0xFF374151);
+        return const Color(0xFFF3F4F6);
       case _AppColor.skeleton:
-        return const Color(0xFF3D4957);
+        return const Color(0xFFF3F4F6);
     }
   }
 }

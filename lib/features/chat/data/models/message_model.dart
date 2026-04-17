@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:work_nest/core/domain/entities/index.dart';
-import 'package:work_nest/core/utils/index.dart';
+import '../../domain/entities/message_entity.dart';
+import '../../../../core/utils/parser.dart';
 
 class MessageModel {
   final String id;

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:work_nest/core/domain/entities/index.dart';
+import '../../domain/entities/task_entity.dart';
 import 'index.dart';
 
 /// Provider lấy tất cả tasks của user hiện tại

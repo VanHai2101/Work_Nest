@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:work_nest/core/domain/entities/index.dart';
-import 'package:work_nest/core/utils/index.dart';
+import '../../domain/entities/user_entity.dart';
+import '../../../../core/utils/index.dart';
 
 class UserModel {
   final String id;
@@ -132,6 +132,11 @@ class UserModel {
       planUpdatedAt: planUpdatedAt ?? this.planUpdatedAt,
     );
   }
+
+  bool get isPro => plan == 'pro' || plan == 'business';
+  bool get isBusiness => plan == 'business';
+  bool get isPremium => isPro || isBusiness;
+  bool get isFree => plan == 'free';
 
   static List<UserModel> fromJsonList(List<dynamic>? jsonList) =>
       jsonList?.map((e) => UserModel.fromJson(e as Map<String, dynamic>)).toList() ?? [];

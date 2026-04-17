@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/presentation/screens/index.dart';
-import '../features/auth/presentation/screens/splash_screen.dart';
 import '../features/home/presentation/screens/index.dart';
 import '../features/profile/presentation/screens/index.dart';
 import '../features/projects/presentation/screens/index.dart';
-import '../features/projects/presentation/screens/project_detail_screen.dart';
 import '../features/tasks/presentation/screens/tasks_list_screen.dart';
 import '../features/tasks/presentation/screens/task_detail_screen.dart';
 import '../features/tasks/presentation/screens/create_task_screen.dart';
@@ -37,9 +35,8 @@ class AppRouter {
         final projectId = settings.arguments as String?;
         if (projectId == null) {
           return MaterialPageRoute(
-            builder: (_) => Scaffold(
-              body: Center(child: Text('Project ID required')),
-            ),
+            builder: (_) =>
+                Scaffold(body: Center(child: Text('Project ID required'))),
           );
         }
         return MaterialPageRoute(
@@ -56,9 +53,8 @@ class AppRouter {
         final taskId = settings.arguments as String?;
         if (taskId == null) {
           return MaterialPageRoute(
-            builder: (_) => Scaffold(
-              body: Center(child: Text('Task ID required')),
-            ),
+            builder: (_) =>
+                Scaffold(body: Center(child: Text('Task ID required'))),
           );
         }
         return MaterialPageRoute(

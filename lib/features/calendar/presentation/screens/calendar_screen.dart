@@ -40,36 +40,8 @@ class CalendarScreen extends ConsumerWidget {
       ),
 
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          try {
-            // ignore: unused_local_variable
-            final uid = ref.read(
-              calendarRepositoryProvider,
-            ); // Lấy ref provider
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text(
-                  'Tính năng test đã khoá. Vui lòng thêm Task từ trang công việc của Project để đúng chuẩn dữ liệu!',
-                ),
-                backgroundColor: AppColors.warning,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            );
-            return;
-          } catch (e) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Lỗi: $e'),
-                  backgroundColor: AppColors.error,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            }
-          }
+        onPressed: () {
+          Navigator.of(context).pushNamed('/tasks/create');
         },
         backgroundColor: AppColors.accent,
         foregroundColor: AppColors.primaryBackground,

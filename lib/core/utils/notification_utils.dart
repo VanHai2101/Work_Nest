@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../domain/models/index.dart';
+import '../../features/notifications/domain/entities/notification_entity.dart';
 
 /// Centralized notification utilities
 /// Maps notification types to colors, icons, titles, etc.

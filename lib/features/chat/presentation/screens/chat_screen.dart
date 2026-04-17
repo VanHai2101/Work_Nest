@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../../core/providers/index.dart';
+import '../providers/chat_providers.dart';
+import '../../domain/entities/message_entity.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String chatId;
@@ -27,9 +28,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.dispose();
   }
 
+  Future<void> _handleSend() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    final newMessage = MessageEntity(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      senderId: currentUser.uid,
+      text: text,
+      sentAt: DateTime.now(),
+    );
+
+    try {
+      await ref.read(chatRepositoryProvider).sendMessage(widget.chatId, newMessage);
+      _controller.clear();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error sending message: $e')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final messagesAsync = ref.watch(messagesProvider(widget.chatId));
+    final messagesAsync = ref.watch(chatMessagesProvider(widget.chatId));
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
@@ -106,6 +133,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
+                    onSubmitted: (_) => _handleSend(),
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
                       border: OutlineInputBorder(
@@ -116,15 +144,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                FloatingActionButton(
-                  mini: true,
-                  onPressed: () async {
-                    if (_controller.text.isEmpty) return;
-
-                    await ref.read(sendMessageProvider((widget.chatId, _controller.text)).future);
-                    _controller.clear();
-                  },
-                  child: const Icon(Icons.send),
+                IconButton(
+                  onPressed: _handleSend,
+                  icon: const Icon(Icons.send, color: Colors.blue),
                 ),
               ],
             ),

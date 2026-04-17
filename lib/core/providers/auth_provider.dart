@@ -1,4 +1,3 @@
-/// Basic Auth provider to manage current user state.
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';

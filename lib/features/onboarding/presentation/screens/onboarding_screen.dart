@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:work_nest/core/theme/index.dart' show AppColors;
 import '../../../../core/constants/index.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -23,14 +24,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _OnboardingStep(
       title: 'Create Projects',
       subtitle: 'Organize Your Work',
-      description: 'Create projects, set deadlines, and track progress in real-time.',
+      description:
+          'Create projects, set deadlines, and track progress in real-time.',
       icon: Icons.folder,
       color: Colors.green,
     ),
     _OnboardingStep(
       title: 'Assign Tasks',
       subtitle: 'Manage Your Team',
-      description: 'Assign tasks to team members and monitor completion status.',
+      description:
+          'Assign tasks to team members and monitor completion status.',
       icon: Icons.task,
       color: Colors.orange,
     ),
@@ -146,7 +149,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         backgroundColor: Colors.blue.shade600,
                       ),
                       child: Text(
-                        _currentPage == steps.length - 1 ? 'Get Started' : 'Next',
+                        _currentPage == steps.length - 1
+                            ? 'Get Started'
+                            : 'Next',
                       ),
                     ),
                   ),
@@ -163,31 +168,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 class _OnboardingPage extends StatelessWidget {
   final _OnboardingStep step;
 
-  const _OnboardingPage({
-    required this.step,
-    Key? key,
-  }) : super(key: key);
+  const _OnboardingPage({required this.step, Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            step.color.withOpacity(0.3),
-            Colors.black87,
-          ],
-        ),
-      ),
+      color: AppColors.primaryBackground,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            step.icon,
-            size: 100,
-            color: step.color,
+          Container(
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              color: step.color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(step.icon, size: 100, color: step.color),
           ),
           AppLayout.gapXLarge,
           Padding(
@@ -198,9 +194,9 @@ class _OnboardingPage extends StatelessWidget {
                   step.title,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
                 AppLayout.gapSmall,
                 Text(
@@ -218,7 +214,7 @@ class _OnboardingPage extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.7),
+                    color: AppColors.textSecondary,
                     height: 1.5,
                   ),
                 ),
