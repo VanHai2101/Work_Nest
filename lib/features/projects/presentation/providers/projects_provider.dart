@@ -7,11 +7,7 @@ final projectRepositoryProvider = Provider<ProjectRepository>((ref) {
   return FirebaseProjectRepository();
 });
 
-final allProjectsProvider = StreamProvider<List<ProjectEntity>>((ref) {
-  final repository = ref.watch(projectRepositoryProvider);
-  return repository.getProjects();
-});
-
+// Provider lấy danh sách Dự án của User cụ thể (Có filter nên không bị chặn bởi Rules)
 final userProjectsProvider = StreamProvider.family<List<ProjectEntity>, String>((ref, userId) {
   final repository = ref.watch(projectRepositoryProvider);
   return repository.getProjectsByMember(userId);

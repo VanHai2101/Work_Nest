@@ -12,6 +12,8 @@ import 'package:work_nest/features/calendar/presentation/screens/calendar_screen
 import '../../../profile/presentation/screens/index.dart';
 import '../widgets/index.dart';
 import '../../../../core/theme/index.dart';
+import '../../../../core/components/index.dart';
+import '../../../search/presentation/screens/search_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -24,7 +26,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // List of screens for bottom navigation
   late final List<Widget> _screens = [
     const HomeDashboardView(),
     const ChatsListScreen(),
@@ -49,118 +50,153 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: AppColors.primaryBackground,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: AppColors.primaryBackground,
-        title: Text(
-          _titles[_selectedIndex],
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        elevation: 0,
-        centerTitle: false,
-        iconTheme: IconThemeData(color: AppColors.textPrimary),
-        actions: [
-          if (_selectedIndex == 4)
-            IconButton(
-              icon: Icon(Icons.done_all, color: AppColors.textPrimary),
-              onPressed: () {},
-            ),
-          if (_selectedIndex != 4)
-            Padding(
-              padding: AppLayout.paddingMedium,
-              child: Stack(
-                children: [
-                  IconButton(
-                    icon: Icon(
-                      Icons.notifications_outlined,
-                      color: AppColors.textPrimary,
-                    ),
-                    onPressed: () {
-                      setState(() => _selectedIndex = 4);
-                    },
-                  ),
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: AppColors.error,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
-                      child: const Text(
-                        '3',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          IconButton(
-            icon: Icon(Icons.menu, color: AppColors.textPrimary),
-            onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
-          ),
-        ],
-      ),
+      backgroundColor: Colors.white,
+      extendBody: true,
+      appBar: _buildAppBar(),
       endDrawer: ProfileMenuDrawer(
         onLogout: () {
           FirebaseAuth.instance.signOut();
           Navigator.of(context).pushReplacementNamed('/login');
         },
       ),
-      body: _screens[_selectedIndex],
-      bottomNavigationBar: Container(
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: KeyedSubtree(
+          key: ValueKey(_selectedIndex),
+          child: _screens[_selectedIndex],
+        ),
+      ),
+      bottomNavigationBar: AppBottomNavbar(
+        currentIndex: _selectedIndex,
+        onTap: _onNavItemTapped,
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      automaticallyImplyLeading: false,
+      backgroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: false,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(0.5),
+        child: Container(height: 0.5, color: AppColors.border),
+      ),
+      title: Text(
+        _titles[_selectedIndex],
+        style: const TextStyle(
+          fontWeight: FontWeight.w700,
+          color: Colors.black87,
+          fontSize: 20,
+          letterSpacing: -0.5,
+        ),
+      ),
+      iconTheme: const IconThemeData(color: Colors.black87),
+      actions: [
+        _appBarBtn(Icons.search_rounded, () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const SearchScreen()));
+        }),
+        if (_selectedIndex == 4)
+          _appBarBtn(Icons.done_all_rounded, () {})
+        else
+          _notificationBtn(),
+        const SizedBox(width: 4),
+        GestureDetector(
+          onTap: () => _scaffoldKey.currentState?.openEndDrawer(),
+          child: Container(
+            width: 38,
+            height: 38,
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.03),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.menu_rounded,
+              color: Colors.black87,
+              size: 20,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _appBarBtn(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 38,
+        height: 38,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: _onNavItemTapped,
-          backgroundColor: AppColors.primaryBackground,
-          selectedItemColor: AppColors.accent,
-          unselectedItemColor: AppColors.textTertiary,
-          type: BottomNavigationBarType.fixed,
-          items: [
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.dashboard_outlined),
-              activeIcon: const Icon(Icons.dashboard),
-              label: 'Trang chủ',
+        child: Icon(icon, color: Colors.black87, size: 20),
+      ),
+    );
+  }
+
+  Widget _notificationBtn() {
+    return GestureDetector(
+      onTap: () => setState(() => _selectedIndex = 4),
+      child: Container(
+        width: 38,
+        height: 38,
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.chat_outlined),
-              activeIcon: const Icon(Icons.chat),
-              label: AppStrings.chats,
+          ],
+        ),
+        child: Stack(
+          children: [
+            const Center(
+              child: Icon(
+                Icons.notifications_outlined,
+                color: Colors.black87,
+                size: 20,
+              ),
             ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.calendar_today_outlined),
-              activeIcon: const Icon(Icons.calendar_today),
-              label: 'Lịch trình',
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.folder_outlined),
-              activeIcon: const Icon(Icons.folder),
-              label: 'Dự án',
-            ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.notifications_outlined),
-              activeIcon: const Icon(Icons.notifications),
-              label: 'Thông báo',
+            Positioned(
+              right: 8,
+              top: 8,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: Colors.redAccent,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+              ),
             ),
           ],
         ),

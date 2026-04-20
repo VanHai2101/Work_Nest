@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/components/index.dart';
 import '../../../../core/constants/index.dart';
 import '../../../../core/theme/index.dart';
 import '../../../../features/auth/domain/entities/user_entity.dart';
@@ -11,7 +12,6 @@ import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../tasks/presentation/providers/tasks_provider.dart';
 import '../../../projects/presentation/screens/index.dart';
 import '../../../tasks/presentation/screens/index.dart';
-import '../../../../core/components/task_card.dart';
 
 class HomeDashboardView extends ConsumerStatefulWidget {
   const HomeDashboardView({super.key});
@@ -34,142 +34,226 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
     final userProfile = ref.watch(userProfileProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.primaryBackground,
+      backgroundColor: Colors.white,
       body: userProfile.when(
         data: (user) => _buildContent(user),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.darkAccent),
+        ),
+        error: (err, stack) => Center(
+          child: Text(
+            'Error: $err',
+            style: const TextStyle(color: AppColors.darkTextSecondary),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildContent(UserEntity? user) {
     return SingleChildScrollView(
-      padding: AppLayout.paddingMedium,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(user),
-          AppLayout.gapLarge,
+          const SizedBox(height: 20),
           _buildStatsGrid(),
-          AppLayout.gapLarge,
-          _buildSectionHeader('Dự án gần đây', () {
+          const SizedBox(height: 24),
+          _buildSectionHeader(AppStrings.recentProjects, () {
             Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const ProjectsListScreen()),
             );
           }),
-          AppLayout.gapMedium,
+          const SizedBox(height: 12),
           _buildRecentProjects(),
-          AppLayout.gapLarge,
-          _buildSectionHeader('Công việc gần đây', () {
-            // Navigate to tasks tab (usually index 1 in MainScreen)
-            // For now, push the TaskListScreen
+          const SizedBox(height: 24),
+          _buildSectionHeader(AppStrings.recentTasks, () {
             Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (_) => const TasksListScreen()));
           }),
-          AppLayout.gapMedium,
+          const SizedBox(height: 12),
           _buildRecentTasks(),
-          AppLayout.gapLarge,
-          _buildSectionHeader('Hành động nhanh', null),
-          AppLayout.gapMedium,
+          const SizedBox(height: 24),
+          _buildSectionHeader(AppStrings.quickActions, null),
+          const SizedBox(height: 12),
           _buildQuickActions(),
+          const SizedBox(height: 16),
         ],
       ),
     );
   }
 
   Widget _buildHeader(UserEntity? user) {
+    final name = user?.displayName ?? 'Người dùng';
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : 'U';
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Chào buổi sáng'
+        : hour < 18
+        ? 'Chào buổi chiều'
+        : 'Chào buổi tối';
+
     return Row(
       children: [
-        CircleAvatar(
-          radius: 28,
-          backgroundColor: AppColors.accent.withOpacity(0.2),
-          backgroundImage: user?.photoURL != null
-              ? NetworkImage(user!.photoURL!)
-              : null,
-          child: user?.photoURL == null
-              ? Text(
-                  user?.displayName[0].toUpperCase() ?? 'U',
-                  style: TextStyle(
-                    color: AppColors.accent,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                )
-              : null,
+        AppAvatar(
+          id: user?.displayName ?? 'U',
+          photoURL: user?.photoURL,
+          size: 52,
+          showOnline: false,
         ),
         AppLayout.horizontalGapMedium,
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Xin chào,',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-            ),
-            Text(
-              user?.displayName ?? 'Người dùng',
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                greeting,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                name,
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Today date pill
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.calendar_today_rounded,
+                color: AppColors.darkAccent,
+                size: 13,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                _todayLabel(),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
+  }
+
+  String _todayLabel() {
+    final now = DateTime.now();
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${now.day} ${months[now.month - 1]}';
   }
 
   Widget _buildStatsGrid() {
     final projectsAsync = ref.watch(userProjectsProvider(currentUserId));
     final tasksAsync = ref.watch(userAssignedTasksProvider(currentUserId));
 
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: AppPadding.medium,
-      crossAxisSpacing: AppPadding.medium,
-      childAspectRatio: 1.5,
+    return Row(
       children: [
-        projectsAsync.when(
-          data: (projects) => _buildStatCard(
-            'Dự án',
-            projects.length.toString(),
-            Icons.folder_copy_outlined,
-            Colors.blue,
-          ),
-          loading: () => _buildStatCardLoading(
-            'Dự án',
-            Icons.folder_copy_outlined,
-            Colors.blue,
-          ),
-          error: (_, _) => _buildStatCard(
-            'Dự án',
-            '!',
-            Icons.folder_copy_outlined,
-            Colors.red,
+        Expanded(
+          child: projectsAsync.when(
+            data: (projects) => _buildStatCard(
+              AppStrings.projectsCount,
+              projects.length.toString(),
+              Icons.folder_copy_rounded,
+              AppColors.darkAccent,
+            ),
+            loading: () => _buildStatCard(
+              AppStrings.projectsCount,
+              '—',
+              Icons.folder_copy_rounded,
+              AppColors.darkAccent,
+            ),
+            error: (_, _) => _buildStatCard(
+              AppStrings.projectsCount,
+              '!',
+              Icons.folder_copy_rounded,
+              AppColors.error,
+            ),
           ),
         ),
-        tasksAsync.when(
-          data: (tasks) => _buildStatCard(
-            'Công việc',
-            tasks.where((t) => !t.completed).length.toString(),
-            Icons.task_alt,
-            Colors.green,
+        const SizedBox(width: 12),
+        Expanded(
+          child: tasksAsync.when(
+            data: (tasks) => _buildStatCard(
+              AppStrings.tasksInProgress,
+              tasks.where((t) => !t.completed).length.toString(),
+              Icons.task_alt_rounded,
+              AppColors.success,
+            ),
+            loading: () => _buildStatCard(
+              AppStrings.tasksInProgress,
+              '—',
+              Icons.task_alt_rounded,
+              AppColors.success,
+            ),
+            error: (_, _) => _buildStatCard(
+              AppStrings.tasksInProgress,
+              '!',
+              Icons.task_alt_rounded,
+              AppColors.error,
+            ),
           ),
-          loading: () =>
-              _buildStatCardLoading('Công việc', Icons.task_alt, Colors.green),
-          error: (_, _) =>
-              _buildStatCard('Công việc', '!', Icons.task_alt, Colors.red),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: tasksAsync.when(
+            data: (tasks) => _buildStatCard(
+              AppStrings.tasksCompleted,
+              tasks.where((t) => t.completed).length.toString(),
+              Icons.check_circle_rounded,
+              const Color(0xFF8B5CF6),
+            ),
+            loading: () => _buildStatCard(
+              AppStrings.tasksCompleted,
+              '—',
+              Icons.check_circle_rounded,
+              const Color(0xFF8B5CF6),
+            ),
+            error: (_, _) => _buildStatCard(
+              AppStrings.tasksCompleted,
+              '!',
+              Icons.check_circle_rounded,
+              AppColors.error,
+            ),
+          ),
         ),
       ],
     );
   }
 
   Widget _buildStatCardLoading(String title, IconData icon, Color color) {
-    return _buildStatCard(title, '...', icon, color);
+    return _buildStatCard(title, '—', icon, color);
   }
 
   Widget _buildStatCard(
@@ -179,14 +263,14 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
     Color color,
   ) {
     return Container(
-      padding: AppLayout.paddingMedium,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
         color: AppColors.card,
-        borderRadius: AppBorderRadius.medium,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -194,26 +278,29 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(icon, color: color, size: 24),
-              Text(
-                value,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 18),
           ),
-          AppLayout.gapSmall,
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 2),
           Text(
             title,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
           ),
         ],
       ),
@@ -228,16 +315,27 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
           title,
           style: TextStyle(
             color: AppColors.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
           ),
         ),
         if (onMore != null)
-          TextButton(
-            onPressed: onMore,
-            child: Text(
-              'Xem tất cả',
-              style: TextStyle(color: AppColors.accent, fontSize: 13),
+          GestureDetector(
+            onTap: onMore,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.darkAccent.withOpacity(0.10),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                AppStrings.viewAll,
+                style: TextStyle(
+                  color: AppColors.darkAccent,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ),
       ],
@@ -250,21 +348,11 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
     return projectsAsync.when(
       data: (projects) {
         if (projects.isEmpty) {
-          return Container(
-            height: 100,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: AppBorderRadius.medium,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Text(
-              'Chưa có dự án nào',
-              style: TextStyle(color: AppColors.textTertiary),
-            ),
+          return _buildEmptyCard(
+            AppStrings.noProjectsYet,
+            Icons.folder_outlined,
           );
         }
-
         final recentProjects = projects.take(3).toList();
         return Column(
           children: recentProjects
@@ -272,49 +360,108 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
               .toList(),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => Center(child: Text('Error loading projects')),
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: AppColors.darkAccent),
+      ),
+      error: (err, _) => const Center(
+        child: Text(
+          'Error loading projects',
+          style: TextStyle(color: AppColors.darkTextSecondary),
+        ),
+      ),
     );
   }
 
   Widget _buildProjectSmallCard(ProjectEntity project) {
-    return Container(
-      margin: EdgeInsets.only(bottom: AppPadding.small),
-      padding: AppLayout.paddingSmall,
-      decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: AppBorderRadius.medium,
-        border: Border.all(color: AppColors.border),
+    final pct = (project.progress * 100).toInt();
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ProjectDetailScreen(projectId: project.id),
+        ),
       ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.accent.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(Icons.folder, color: AppColors.accent, size: 20),
-        ),
-        title: Text(
-          project.title,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        subtitle: Text(
-          'Tiến độ: ${(project.progress * 100).toInt()}%',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-        ),
-        trailing: const Icon(Icons.chevron_right, size: 20),
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => ProjectDetailScreen(projectId: project.id),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          );
-        },
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.accent.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.accent.withOpacity(0.15)),
+              ),
+              child: Icon(
+                Icons.folder_rounded,
+                color: AppColors.accent,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    project.title,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(99),
+                          child: LinearProgressIndicator(
+                            value: project.progress,
+                            minHeight: 3,
+                            backgroundColor: AppColors.surface,
+                            valueColor: AlwaysStoppedAnimation(
+                              pct >= 100 ? AppColors.success : AppColors.accent,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$pct%',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: AppColors.darkTextHint,
+              size: 18,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -325,109 +472,131 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
     return tasksAsync.when(
       data: (tasks) {
         if (tasks.isEmpty) {
-          return Container(
-            height: 100,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: AppBorderRadius.medium,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Text(
-              'Chưa có công việc nào',
-              style: TextStyle(color: AppColors.textTertiary),
-            ),
-          );
+          return _buildEmptyCard(AppStrings.noTasksYet, Icons.task_alt_rounded);
         }
-
-        // Get 3 most recent tasks (sorted by creation date)
         final recentTasks =
             (tasks.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
                 .take(3)
                 .toList();
-
         return Column(
           children: recentTasks
               .map(
                 (t) => TaskCard(
                   task: t,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => TaskDetailScreen(taskId: t.id),
-                      ),
-                    );
-                  },
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => TaskDetailScreen(taskId: t.id),
+                    ),
+                  ),
                 ),
               )
               .toList(),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, _) => Center(child: Text('Error loading tasks')),
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: AppColors.darkAccent),
+      ),
+      error: (err, _) => const Center(
+        child: Text(
+          'Error loading tasks',
+          style: TextStyle(color: AppColors.darkTextSecondary),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyCard(String text, IconData icon) {
+    return Container(
+      height: 90,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: AppColors.darkTextHint, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: const TextStyle(color: AppColors.darkTextHint, fontSize: 13),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildQuickActions() {
-    return Row(
-      children: [
-        _buildActionItem(
-          'Dự án mới',
-          Icons.add_box_outlined,
-          Colors.orange,
-          () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CreateProjectScreen()),
-            );
-          },
-        ),
-        AppLayout.horizontalGapMedium,
-        _buildActionItem('Giao việc', Icons.add_task, Colors.purple, () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const CreateTaskScreen()));
-        }),
-        AppLayout.horizontalGapMedium,
-        _buildActionItem('Tin nhắn', Icons.message_outlined, Colors.teal, () {
-          // Switch to chats tab
-        }),
-      ],
-    );
-  }
-
-  Widget _buildActionItem(
-    String title,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: AppBorderRadius.medium,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: AppBorderRadius.medium,
-            border: Border.all(color: color.withOpacity(0.3)),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 28),
-              AppLayout.gapSmall,
-              Text(
-                title,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
+    final actions = [
+      (
+        'Dự án mới',
+        Icons.add_box_rounded,
+        AppColors.warning,
+        () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const CreateProjectScreen())),
       ),
+      (
+        'Giao việc',
+        Icons.add_task_rounded,
+        const Color(0xFF8B5CF6),
+        () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const CreateTaskScreen())),
+      ),
+      ('Tin nhắn', Icons.message_rounded, const Color(0xFF14B8A6), () {}),
+    ];
+
+    return Row(
+      children: actions.asMap().entries.map((e) {
+        final i = e.key;
+        final (title, icon, color, onTap) = e.value;
+        return Expanded(
+          child: GestureDetector(
+            onTap: onTap,
+            child: Container(
+              margin: EdgeInsets.only(right: i < actions.length - 1 ? 10 : 0),
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: Icon(icon, color: color, size: 20),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

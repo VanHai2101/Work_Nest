@@ -29,6 +29,7 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
     final projectsAsync = ref.watch(userProjectsProvider(currentUserId));
 
     return Scaffold(
+      backgroundColor: AppColors.primaryBackground,
       body: projectsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: $err')),
@@ -39,14 +40,14 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Icons.folder_open,
-                    size: AppSize.iconXLarge,
-                    color: Colors.white.withOpacity(0.3),
+                    Icons.folder_open_rounded,
+                    size: AppSize.iconLarge,
+                    color: AppColors.textTertiary.withOpacity(0.5),
                   ),
                   AppLayout.gapMedium,
                   Text(
-                    'No projects yet',
-                    style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                    'Chưa có dự án nào',
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -54,7 +55,7 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
           }
 
           return ListView.builder(
-            padding: AppLayout.paddingMedium,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
             itemCount: projects.length,
             itemBuilder: (context, index) {
               final project = projects[index];
@@ -73,14 +74,31 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.add),
-        label: const Text('New Project'),
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const CreateProjectScreen()),
-          );
-        },
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const CreateProjectScreen()),
+            );
+          },
+          child: Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: AppColors.darkAccent,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.darkAccent.withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+          ),
+        ),
       ),
     );
   }
@@ -90,7 +108,7 @@ class _ProjectTile extends StatelessWidget {
   final ProjectEntity project;
   final VoidCallback onTap;
 
-  const _ProjectTile({required this.project, required this.onTap, super.key});
+  const _ProjectTile({required this.project, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -227,20 +245,20 @@ class _ProjectTile extends StatelessWidget {
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'active':
-        return Colors.green;
+        return AppColors.success;
       case 'on hold':
-        return Colors.orange;
+        return AppColors.warning;
       case 'completed':
-        return Colors.blue;
+        return AppColors.info;
       default:
-        return Colors.grey;
+        return AppColors.textTertiary;
     }
   }
 
   Color _getProgressColor(double progress) {
-    if (progress >= 0.75) return Colors.green;
-    if (progress >= 0.5) return Colors.yellow;
-    if (progress >= 0.25) return Colors.orange;
-    return Colors.red;
+    if (progress >= 0.75) return AppColors.success;
+    if (progress >= 0.5) return AppColors.warning;
+    if (progress >= 0.25) return AppColors.warning.withOpacity(0.8);
+    return AppColors.error;
   }
 }

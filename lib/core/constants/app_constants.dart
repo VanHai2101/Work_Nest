@@ -72,39 +72,66 @@ class AppDuration {
 
 class AppStrings {
   // Navigation & Titles
-  static const String chats = 'Chats';
-  static const String groups = 'Groups';
-  static const String notifications = 'Notifications';
-  static const String calls = 'Calls';
-  static const String profile = 'Profile';
+  static const String chats = 'Trò chuyện';
+  static const String groups = 'Nhóm';
+  static const String notifications = 'Thông báo';
+  static const String profile = 'Cá nhân';
+  static const String schedule = 'Lịch trình';
+  static const String projects = 'Dự án';
+  static const String projectDetails = 'Chi tiết dự án';
+  static const String description = 'Mô tả';
+  static const String tags = 'Thẻ';
 
   // Empty States
-  static const String noChatsYet = 'No chats yet';
-  static const String noGroupsYet = 'No groups yet';
-  static const String noNotifications = 'No notifications';
-  static const String noCalls = 'No calls yet';
+  static const String noChatsYet = 'Chưa có cuộc trò chuyện';
+  static const String noProjectsYet = 'Chưa có dự án nào';
+  static const String noTasksYet = 'Chưa có công việc nào';
+  static const String noGroupsYet = 'Chưa có nhóm nào';
+  static const String createGroupToWork = 'Tạo nhóm để làm việc cùng nhau';
+  static const String noNotifications = 'Chưa có thông báo';
+  static const String startNewChat = 'Bắt đầu một cuộc trò chuyện mới';
+
+  // Dashboard
+  static const String recentProjects = 'Dự án gần đây';
+  static const String recentTasks = 'Công việc gần đây';
+  static const String quickActions = 'Hành động nhanh';
+  static const String viewAll = 'Xem tất cả';
+  static const String projectsCount = 'Dự án';
+  static const String tasksInProgress = 'Đang làm';
+  static const String tasksCompleted = 'Hoàn thành';
+
+  // Placeholders
+  static const String searchChat = 'Tìm kiếm cuộc trò chuyện...';
+  static const String searchGroup = 'Tìm kiếm nhóm...';
+  static const String noMessages = 'Chưa có tin nhắn';
+  static const String chatWith = 'Chat với';
+  static const String membersCount = 'thành viên';
 
   // Default Values
-  static const String unknown = 'Unknown';
-  static const String noDescription = 'No description';
-  static const String unnamed = 'Unnamed';
+  static const String unknown = 'Không xác định';
+  static const String noDescription = 'Không có mô tả';
+  static const String unnamed = 'Chưa đặt tên';
 
-  // Chat States
-  static const String inCall = 'In Call';
-  static const String ringing = 'Ringing...';
-  static const String callEnded = 'Call ended';
-  static const String missedCall = 'Missed call';
+  // Chat/Call States
+  static const String inCall = 'Trong cuộc gọi';
+  static const String ringing = 'Đang đổ chuông...';
+  static const String callEnded = 'Cuộc gọi đã kết thúc';
+  static const String missedCall = 'Cuộc gọi nhỡ';
+  static const String endCall = 'Kết thúc';
 
   // Actions
-  static const String send = 'Send';
-  static const String delete = 'Delete';
-  static const String markAsRead = 'Mark as read';
-  static const String markAllAsRead = 'Mark all as read';
-  static const String accept = 'Accept';
-  static const String reject = 'Reject';
-  static const String endCall = 'End Call';
-  static const String add = 'Add';
-  static const String create = 'Create';
+  static const String send = 'Gửi';
+  static const String delete = 'Xóa';
+  static const String accept = 'Chấp nhận';
+  static const String reject = 'Từ chối';
+  static const String add = 'Thêm';
+  static const String create = 'Tạo';
+  static const String edit = 'Sửa';
+  static const String cancel = 'Hủy';
+  static const String deleteProject = 'Xóa dự án';
+  static const String areYouSureShort = 'Bạn có chắc chắn không?';
+  static const String cannotBeUndone = 'Hành động này không thể hoàn tác.';
+  static const String projectDeleted = 'Đã xóa dự án';
 
   // Time Format
   static const String now = 'now';

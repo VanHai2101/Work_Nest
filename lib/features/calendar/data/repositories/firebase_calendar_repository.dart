@@ -24,22 +24,17 @@ class FirebaseCalendarRepository implements ICalendarRepository {
   @override
   Stream<List<CalendarEvent>> getEvents(DateTime start, DateTime end) {
     final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-    // Truy vấn tất cả các task thuộc về người dùng hiện tại
     return _firestore
         .collectionGroup('tasks')
         .where('assigneeIds', arrayContains: uid)
-        // Lưu ý: Không dùng where dueDate ở đây vì Firestore chặn dùng nhiều where trên các trường khác nhau
-        // nếu dùng arrayContains, trừ khi tạo Composite Index. Nên ta sẽ filter data ở dưới client.
+        .orderBy('dueDate', descending: false)
         .snapshots()
         .asyncMap((snapshot) async {
-          // Dùng Map để cache màu của project lại, tránh gọi API nhiều lần cho cùng 1 project
           Map<String, Color> projectColors = {};
           List<CalendarEvent> events = [];
 
           for (var doc in snapshot.docs) {
             final task = TaskModel.fromJson(doc.data(), id: doc.id);
-
-            // Filter by date client-side
             if (task.dueDate.toDate().isBefore(start) ||
                 task.dueDate.toDate().isAfter(end)) {
               continue;
@@ -48,14 +43,19 @@ class FirebaseCalendarRepository implements ICalendarRepository {
             Color eventColor = AppColors.accent;
             if (task.projectId.isNotEmpty) {
               if (!projectColors.containsKey(task.projectId)) {
-                final projectDoc = await _firestore
-                    .collection('projects')
-                    .doc(task.projectId)
-                    .get();
-                final colorData = projectDoc.data()?['color'] as String?;
-                projectColors[task.projectId] = _parseColor(colorData);
+                try {
+                  final projectDoc = await _firestore
+                      .collection('projects')
+                      .doc(task.projectId)
+                      .get();
+                  final colorData = projectDoc.data()?['color'] as String?;
+                  projectColors[task.projectId] = _parseColor(colorData);
+                } catch (e) {
+                  // Fallback to default if permission denied or project not found
+                  projectColors[task.projectId] = AppColors.accent;
+                }
               }
-              eventColor = projectColors[task.projectId]!;
+              eventColor = projectColors[task.projectId] ?? AppColors.accent;
             }
 
             events.add(

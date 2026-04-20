@@ -7,6 +7,7 @@ class CustomButton extends StatelessWidget {
   final bool isLoading;
   final bool isOutline;
   final IconData? icon;
+  final IconData? suffixIcon;
   final double? width;
   final double height;
   final List<Color>? gradientColors;
@@ -17,6 +18,7 @@ class CustomButton extends StatelessWidget {
     this.isLoading = false,
     this.isOutline = false,
     this.icon,
+    this.suffixIcon,
     this.width,
     this.height = 55,
     this.gradientColors,
@@ -101,12 +103,20 @@ class CustomButton extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                         color: isOutline
                             ? (onPressed != null
-                                  ? AppColors.accent
-                                  : AppColors.disabled)
+                                ? AppColors.accent
+                                : AppColors.disabled)
                             : Colors.white,
                         letterSpacing: 1.1,
                       ),
                     ),
+                    if (suffixIcon != null) ...[
+                      const SizedBox(width: 10),
+                      Icon(
+                        suffixIcon,
+                        color: isOutline ? AppColors.accent : Colors.white,
+                        size: 20,
+                      ),
+                    ],
                   ],
                 ),
         ),

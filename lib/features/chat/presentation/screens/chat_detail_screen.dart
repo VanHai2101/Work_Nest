@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/theme/index.dart';
+import '../../../../core/components/index.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/message_entity.dart';
 import '../providers/chat_providers.dart';
@@ -40,7 +41,6 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       repo.sendMessage(widget.chatId, newMsg);
     }
     
-    // Auto scroll to bottom
     _scrollToBottom();
   }
 
@@ -64,7 +64,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     final currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
     return Scaffold(
-      backgroundColor: AppColors.primaryBackground,
+      backgroundColor: AppColors.darkBg,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -72,30 +72,21 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             child: messagesStream.when(
               data: (messages) {
                 if (messages.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.chat_bubble_outline_rounded, size: 64, color: AppColors.textTertiary),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Hãy bắt đầu câu chuyện nhé! 👋',
-                          style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
+                  return const AppEmptyState(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    title: 'Hãy bắt đầu câu chuyện nhé! 👋',
+                    subtitle: 'Gửi tin nhắn đầu tiên của bạn cho người ấy.',
                   );
                 }
                 return ListView.builder(
                   controller: _scrollController,
                   reverse: true,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final msg = messages[index];
                     final isMe = msg.senderId == currentUserId;
                     
-                    // Logic for showing avatar (only for first message in a group by same user)
                     bool showAvatar = true;
                     if (index < messages.length - 1) {
                       showAvatar = messages[index + 1].senderId != msg.senderId;
@@ -105,13 +96,13 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                       message: msg,
                       isMe: isMe,
                       showAvatar: !isMe && showAvatar,
-                      senderName: widget.isGroup ? 'Guest' : null, // Would fetch actual name in production
+                      senderName: widget.isGroup ? 'Guest' : null,
                     );
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, stack) => Center(child: Text('Lỗi: $e')),
+              loading: () => const Center(child: CircularProgressIndicator(color: AppColors.darkAccent)),
+              error: (e, stack) => Center(child: Text('Lỗi: $e', style: const TextStyle(color: AppColors.darkTextSecondary))),
             ),
           ),
           
@@ -128,38 +119,25 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: AppColors.primaryBackground,
+      backgroundColor: AppColors.darkSurface,
       elevation: 0,
       centerTitle: false,
       titleSpacing: 0,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(0.5),
+        child: Container(height: 0.5, color: AppColors.darkBorder),
+      ),
       leading: IconButton(
-        icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
+        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
         onPressed: () => Navigator.pop(context),
       ),
       title: Row(
         children: [
-          Stack(
-            children: [
-              CircleAvatar(
-                radius: 19,
-                backgroundColor: AppColors.surface,
-                child: Icon(widget.isGroup ? Icons.group_rounded : Icons.person_rounded, 
-                  color: AppColors.accent, size: 22),
-              ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: AppColors.success,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.primaryBackground, width: 2),
-                  ),
-                ),
-              ),
-            ],
+          AppAvatar(
+            id: widget.chatId,
+            size: 38,
+            isGroup: widget.isGroup,
+            showOnline: true,
           ),
           const SizedBox(width: 12),
           Column(
@@ -167,11 +145,11 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             children: [
               Text(
                 widget.isGroup ? 'Team Work Group' : 'Tin nhắn',
-                style: AppTextStyles.subtitle.copyWith(color: AppColors.textPrimary),
+                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
               ),
-              Text(
+              const Text(
                 'Đang hoạt động',
-                style: AppTextStyles.caption.copyWith(color: AppColors.success, fontSize: 11),
+                style: TextStyle(color: AppColors.darkSuccess, fontSize: 11),
               ),
             ],
           ),
@@ -179,15 +157,15 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.videocam_rounded, color: AppColors.textPrimary),
+          icon: const Icon(Icons.videocam_rounded, color: Colors.white, size: 22),
           onPressed: () {},
         ),
         IconButton(
-          icon: Icon(Icons.call_rounded, color: AppColors.textPrimary),
+          icon: const Icon(Icons.call_rounded, color: Colors.white, size: 20),
           onPressed: () {},
         ),
         IconButton(
-          icon: Icon(Icons.more_vert_rounded, color: AppColors.textSecondary),
+          icon: const Icon(Icons.more_vert_rounded, color: AppColors.darkTextSecondary, size: 22),
           onPressed: () {},
         ),
         const SizedBox(width: 8),

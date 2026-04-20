@@ -17,7 +17,6 @@ class CalendarWeekView extends ConsumerWidget {
 
     return Column(
       children: [
-        // ── Header: 7 ngày trong tuần ──
         Container(
           decoration: BoxDecoration(
             color: AppColors.primaryBackground,
@@ -28,7 +27,7 @@ class CalendarWeekView extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Row(
             children: [
-              const SizedBox(width: 60), // Space for time labels
+              const SizedBox(width: 60),
               ...weekDays.map((day) {
                 final isSelected = state.selectedDay?.isSameDay(day) ?? false;
                 return Expanded(

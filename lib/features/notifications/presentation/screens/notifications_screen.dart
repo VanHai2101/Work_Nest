@@ -14,6 +14,7 @@ class NotificationsScreen extends ConsumerWidget {
     final notificationsAsync = ref.watch(userNotificationsProvider);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: notificationsAsync.when(
         data: (notifications) {
           if (notifications.isEmpty) {

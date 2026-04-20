@@ -3,7 +3,7 @@ import 'package:work_nest/core/theme/index.dart' show AppColors;
 import '../../../../core/constants/index.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({Key? key}) : super(key: key);
+  const OnboardingScreen({super.key});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -168,7 +168,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 class _OnboardingPage extends StatelessWidget {
   final _OnboardingStep step;
 
-  const _OnboardingPage({required this.step, Key? key}) : super(key: key);
+  const _OnboardingPage({required this.step});
 
   @override
   Widget build(BuildContext context) {

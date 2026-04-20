@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../providers/chat_providers.dart';
+import '../../../../core/theme/index.dart';
+import '../../../../core/components/index.dart';
 import '../../domain/entities/message_entity.dart';
-import '../../domain/entities/group_entity.dart';
+import '../providers/chat_providers.dart';
 
 class GroupChatScreen extends ConsumerStatefulWidget {
   final String groupId;
@@ -50,9 +51,19 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
       _controller.clear();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error sending message: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: const Color(0xFF2A1A1A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            content: Text(
+              'Error: $e',
+              style: const TextStyle(color: Colors.redAccent),
+            ),
+          ),
+        );
       }
     }
   }
@@ -64,124 +75,292 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      appBar: AppBar(
-        title: groupAsync.when(
-          data: (group) => Text(group?.name ?? 'Group Chat'),
-          loading: () => const Text('Loading...'),
-          error: (_, _) => const Text('Group'),
-        ),
-        elevation: 0,
-      ),
+      backgroundColor: AppColors.darkBg,
+      appBar: _buildAppBar(groupAsync),
       body: Column(
         children: [
-          // Messages list
           Expanded(
             child: messagesAsync.when(
               data: (messages) {
                 if (messages.isEmpty) {
-                  return const Center(child: Text('No messages yet'));
+                  return const AppEmptyState(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    title: 'Chưa có tin nhắn',
+                    subtitle: 'Hãy bắt đầu cuộc trò chuyện nhóm!',
+                  );
                 }
-
                 return ListView.builder(
                   reverse: true,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
                     final isOwn = message.senderId == currentUser?.uid;
-
-                    return Align(
-                      alignment: isOwn
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isOwn ? Colors.blue : Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: isOwn
-                              ? CrossAxisAlignment.end
-                              : CrossAxisAlignment.start,
-                          children: [
-                            if (!isOwn)
-                              Text(
-                                'User ${message.senderId.substring(0, 4)}', // Ideally use a sender name provider
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                            Text(
-                              message.text,
-                              style: TextStyle(
-                                color: isOwn ? Colors.white : Colors.black,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${message.sentAt.hour}:${message.sentAt.minute.toString().padLeft(2, '0')}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isOwn
-                                    ? Colors.white70
-                                    : Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
+                    final showTime =
+                        index == 0 ||
+                        messages[index - 1].sentAt
+                                .difference(message.sentAt)
+                                .abs()
+                                .inMinutes >
+                            5;
+                    return _buildBubble(message, isOwn, showTime);
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('Error: $err')),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.darkAccent),
+              ),
+              error: (err, stack) => Center(
+                child: Text(
+                  'Error: $err',
+                  style: const TextStyle(color: AppColors.darkTextSecondary),
+                ),
+              ),
             ),
           ),
-          // Input field
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Colors.grey.shade300)),
+          _buildInput(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBubble(MessageEntity message, bool isOwn, bool showTime) {
+    final timeStr =
+        '${message.sentAt.hour}:${message.sentAt.minute.toString().padLeft(2, '0')}';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Column(
+        children: [
+          if (showTime)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Text(
+                timeStr,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.darkTextSecondary,
+                ),
+              ),
             ),
+          Align(
+            alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
             child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    onSubmitted: (_) => _handleSend(),
-                    decoration: InputDecoration(
-                      hintText: 'Type a message...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
+                if (!isOwn) ...[
+                  AppAvatar(id: message.senderId, size: 28),
+                  const SizedBox(width: 8),
+                ],
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.65,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isOwn ? AppColors.darkAccent : AppColors.darkCard,
+                      borderRadius: BorderRadius.only(
+                        topLeft: const Radius.circular(18),
+                        topRight: const Radius.circular(18),
+                        bottomLeft: Radius.circular(isOwn ? 18 : 4),
+                        bottomRight: Radius.circular(isOwn ? 4 : 18),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
+                      border: isOwn
+                          ? null
+                          : Border.all(color: AppColors.darkBorder),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: isOwn
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      children: [
+                        if (!isOwn)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Text(
+                              'User ${message.senderId.substring(0, 4)}',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.darkAccent.withOpacity(0.8),
+                              ),
+                            ),
+                          ),
+                        Text(
+                          message.text,
+                          style: TextStyle(
+                            color: isOwn
+                                ? Colors.white
+                                : Colors.white.withOpacity(0.9),
+                            fontSize: 14,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: _handleSend,
-                  icon: const Icon(Icons.send, color: Colors.blue),
                 ),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInput() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      decoration: BoxDecoration(
+        color: AppColors.darkSurface,
+        border: Border(top: BorderSide(color: AppColors.darkBorder)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.darkCard,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.darkBorder),
+              ),
+              child: const Icon(
+                Icons.add_rounded,
+                color: AppColors.darkTextSecondary,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Container(
+                constraints: const BoxConstraints(maxHeight: 120),
+                decoration: BoxDecoration(
+                  color: AppColors.darkCard,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: AppColors.darkBorder),
+                ),
+                child: TextField(
+                  controller: _controller,
+                  onSubmitted: (_) => _handleSend(),
+                  maxLines: null,
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  decoration: const InputDecoration(
+                    hintText: 'Nhập tin nhắn...',
+                    hintStyle: TextStyle(
+                      color: AppColors.darkTextHint,
+                      fontSize: 14,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 10,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: _handleSend,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.darkAccent,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+                child: const Icon(
+                  Icons.send_rounded,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(AsyncValue groupAsync) {
+    return AppBar(
+      backgroundColor: AppColors.darkSurface,
+      elevation: 0,
+      centerTitle: false,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(0.5),
+        child: Container(height: 0.5, color: AppColors.darkBorder),
+      ),
+      leading: IconButton(
+        icon: const Icon(
+          Icons.arrow_back_ios_new_rounded,
+          color: Colors.white,
+          size: 18,
+        ),
+        onPressed: () => Navigator.pop(context),
+      ),
+      title: groupAsync.when(
+        data: (group) => Row(
+          children: [
+            AppAvatar(
+              id: group?.name ?? 'G',
+              photoURL: group?.photoURL,
+              size: 36,
+              isGroup: true,
+            ),
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  group?.name ?? 'Group Chat',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  '${group?.memberIds.length ?? 0} thành viên',
+                  style: const TextStyle(
+                    color: AppColors.darkTextSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        loading: () =>
+            const Text('Đang tải...', style: TextStyle(fontSize: 14)),
+        error: (_, _) =>
+            const Text('Lỗi tải nhóm', style: TextStyle(fontSize: 14)),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.search_rounded, color: Colors.white, size: 22),
+          onPressed: () {},
+        ),
+        IconButton(
+          icon: const Icon(
+            Icons.more_vert_rounded,
+            color: Colors.white,
+            size: 20,
+          ),
+          onPressed: () {},
+        ),
+        const SizedBox(width: 4),
+      ],
     );
   }
 }

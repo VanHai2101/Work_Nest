@@ -56,69 +56,57 @@ class _ChatInputEditorState extends State<ChatInputEditor> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
       decoration: BoxDecoration(
-        color: AppColors.primaryBackground,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        color: AppColors.darkSurface,
+        border: Border(top: BorderSide(color: AppColors.darkBorder)),
       ),
       child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           children: [
-            Row(
-              children: [
-                _buildActionButton(Icons.add_circle_rounded, widget.onAttach),
-                _buildActionButton(Icons.camera_alt_rounded, widget.onCamera),
-                _buildActionButton(Icons.image_rounded, () {}),
-                
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: AppColors.border, width: 1),
-                    ),
-                    child: TextField(
-                      controller: _controller,
-                      maxLines: 5,
-                      minLines: 1,
-                      style: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
-                      decoration: InputDecoration(
-                        hintText: 'Soạn tin nhắn...',
-                        hintStyle: AppTextStyles.body.copyWith(color: AppColors.textTertiary),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        border: InputBorder.none,
-                      ),
-                    ),
+            _buildActionButton(Icons.add_circle_rounded, widget.onAttach),
+            _buildActionButton(Icons.camera_alt_rounded, widget.onCamera),
+            
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.darkCard,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.darkBorder),
+                ),
+                child: TextField(
+                  controller: _controller,
+                  maxLines: 5,
+                  minLines: 1,
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  decoration: const InputDecoration(
+                    hintText: 'Soạn tin nhắn...',
+                    hintStyle: TextStyle(color: AppColors.darkTextHint, fontSize: 14),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    border: InputBorder.none,
                   ),
                 ),
-
-                if (_isTyping)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: GestureDetector(
-                      onTap: _handleSend,
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.accent,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.send_rounded, color: Colors.black87, size: 20),
-                      ),
-                    ),
-                  )
-                else
-                  _buildActionButton(Icons.mic_rounded, widget.onVoice),
-              ],
+              ),
             ),
+
+            if (_isTyping)
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: GestureDetector(
+                  onTap: _handleSend,
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                      color: AppColors.darkAccent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                  ),
+                ),
+              )
+            else
+              _buildActionButton(Icons.mic_rounded, widget.onVoice),
           ],
         ),
       ),
@@ -127,7 +115,7 @@ class _ChatInputEditorState extends State<ChatInputEditor> {
 
   Widget _buildActionButton(IconData icon, VoidCallback? onTap) {
     return IconButton(
-      icon: Icon(icon, color: AppColors.accent, size: 26),
+      icon: Icon(icon, color: AppColors.darkAccent, size: 24),
       onPressed: onTap,
       visualDensity: VisualDensity.compact,
     );

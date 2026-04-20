@@ -67,6 +67,29 @@ class AppColors {
 
   static const List<Color> avatarColors = projectPalette;
 
+  // ==================== PREMIUM DARK PALETTE ====================
+  // Used for high-fidelity dark-themed screens
+
+  static const Color darkBg = Color(0xFF0F1117);
+  static const Color darkSurface = Color(0xFF161B24);
+  static const Color darkCard = Color(0xFF1A2030);
+  static const Color darkBorder = Color(0xFF252D3D);
+  static const Color darkTextSecondary = Color(0xFF6B7A99);
+  static const Color darkTextHint = Color(0xFF3A4560);
+  static const Color darkAccent = Color(0xFF3B82F6);
+  static const Color darkAccentLight = Color(0xFF60A5FA);
+  static const Color darkSuccess = Color(0xFF34D399);
+  static const Color darkWarning = Color(0xFFFBBF24);
+
+  static const List<Color> darkAvatarPalette = [
+    Color(0xFF3B82F6),
+    Color(0xFF8B5CF6),
+    Color(0xFF10B981),
+    Color(0xFFF59E0B),
+    Color(0xFFEF4444),
+    Color(0xFFEC4899),
+  ];
+
   // ==================== HELPERS ====================
 
   static Color getColorByBrightness(
@@ -82,9 +105,6 @@ class AppColors {
   }
 }
 
-/// =======================================================
-/// PRIVATE ENUM (IMPLEMENTATION DETAIL)
-/// =======================================================
 enum _AppColor {
   primaryBackground,
   accent,
@@ -116,27 +136,27 @@ extension _AppColorExtension on _AppColor {
   Color get color {
     switch (this) {
       case _AppColor.primaryBackground:
-        return const Color(0xFFFFFFFF); // Pure White
+        return const Color(0xFFFFFFFF);
       case _AppColor.accent:
-        return const Color(0xFFFACC15); // Vibrant Yellow
+        return const Color(0xFFFACC15);
       case _AppColor.accentLight:
         return const Color(0xFFFEF08A);
       case _AppColor.accentDark:
         return const Color(0xFFEAB308);
       case _AppColor.textPrimary:
-        return const Color(0xFF111827); // Dark Gray
+        return const Color(0xFF111827);
       case _AppColor.textSecondary:
-        return const Color(0xFF4B5563); // Gray
+        return const Color(0xFF4B5563);
       case _AppColor.textTertiary:
-        return const Color(0xFF9CA3AF); // Light Gray
+        return const Color(0xFF9CA3AF);
       case _AppColor.surface:
-        return const Color(0xFFF9FAFB); // Very Light Gray
+        return const Color(0xFFF9FAFB);
       case _AppColor.surfaceVariant:
-        return const Color(0xFFF3F4F6); // Light Gray
+        return const Color(0xFFF3F4F6);
       case _AppColor.card:
         return const Color(0xFFFFFFFF);
       case _AppColor.border:
-        return const Color(0xFFE5E7EB); // Soft Borders
+        return const Color(0xFFE5E7EB);
       case _AppColor.borderLight:
         return const Color(0xFFF3F4F6);
       case _AppColor.divider:
@@ -167,9 +187,6 @@ extension _AppColorExtension on _AppColor {
   }
 }
 
-/// =======================================================
-/// STATE TYPE
-/// =======================================================
 enum StateType { success, warning, error, info }
 
 extension StateTypeExtension on StateType {

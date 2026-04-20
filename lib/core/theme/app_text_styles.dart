@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppTextStyles {
   AppTextStyles._();
 
-  static const String _headingFont = 'Inter'; // Defaulting to Inter as PilatExtended might not be available
+  static const String _headingFont = 'Inter';
   static const String _bodyFont = 'Inter';
 
   static const TextStyle _headingBase = TextStyle(

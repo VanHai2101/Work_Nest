@@ -5,10 +5,7 @@ import '../../domain/entities/project_entity.dart';
 class ProjectHeader extends StatelessWidget {
   final ProjectEntity project;
 
-  const ProjectHeader({
-    required this.project,
-    Key? key,
-  }) : super(key: key);
+  const ProjectHeader({required this.project, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +18,8 @@ class ProjectHeader extends StatelessWidget {
               child: Text(
                 project.title,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             Container(

@@ -88,7 +88,7 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
               ),
               Expanded(
                 child: ListView.builder(
-                  padding: AppLayout.paddingMedium,
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
                   itemCount: tasks.length,
                   itemBuilder: (context, index) {
                     final task = tasks[index];

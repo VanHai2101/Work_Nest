@@ -5,10 +5,7 @@ import '../../../../core/constants/index.dart';
 class ProfileMenuDrawer extends StatelessWidget {
   final VoidCallback onLogout;
 
-  const ProfileMenuDrawer({
-    required this.onLogout,
-    Key? key,
-  }) : super(key: key);
+  const ProfileMenuDrawer({required this.onLogout, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +60,7 @@ class ProfileMenuDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // Menu items
             _DrawerMenuItem(
               icon: Icons.person_outline,

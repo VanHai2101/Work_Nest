@@ -39,15 +39,19 @@ class CalendarScreen extends ConsumerWidget {
         ),
       ),
 
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).pushNamed('/tasks/create');
-        },
-        backgroundColor: AppColors.accent,
-        foregroundColor: AppColors.primaryBackground,
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: const Icon(Icons.add_rounded, size: 28),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: FloatingActionButton(
+          onPressed: () {
+            Navigator.of(context).pushNamed('/tasks/create');
+          },
+          backgroundColor: AppColors.accent,
+          foregroundColor: AppColors.primaryBackground,
+          elevation: 4,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: const Icon(Icons.add_rounded, size: 28),
+        ),
       ),
     );
   }
@@ -57,17 +61,21 @@ class CalendarScreen extends ConsumerWidget {
       case CalendarViewMode.month:
         return Padding(
           key: key,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 110),
           child: CalendarMonthGrid(),
         );
       case CalendarViewMode.week:
         return Padding(
           key: key,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.fromLTRB(8, 0, 8, 110),
           child: CalendarWeekView(),
         );
       case CalendarViewMode.day:
-        return CalendarDayView(key: key);
+        return Padding(
+          key: key,
+          padding: const EdgeInsets.only(bottom: 110),
+          child: CalendarDayView(key: key),
+        );
     }
   }
 }

@@ -16,7 +16,7 @@ class CalendarMonthGrid extends ConsumerWidget {
     final selectedDay = state.selectedDay;
 
     final firstDayOfMonth = DateTime(focusedMonth.year, focusedMonth.month, 1);
-    final startWeekday = firstDayOfMonth.weekday; // Mon=1, Sun=7
+    final startWeekday = firstDayOfMonth.weekday;
     final gridStart = firstDayOfMonth.subtract(
       Duration(days: startWeekday - 1),
     );
@@ -27,7 +27,6 @@ class CalendarMonthGrid extends ConsumerWidget {
       (i) => gridStart.add(Duration(days: i)),
     );
 
-    // Fetch events for the current grid range
     final eventsAsync = ref.watch(
       calendarEventsProvider((start: days.first, end: days.last)),
     );

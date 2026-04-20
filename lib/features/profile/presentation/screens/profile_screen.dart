@@ -2,20 +2,56 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:work_nest/core/theme/index.dart';
+import '../../../../core/components/index.dart';
 import '../../../../core/constants/index.dart';
 import '../../../../features/auth/presentation/providers/auth_providers.dart';
 
 class ProfileScreen extends ConsumerWidget {
-  const ProfileScreen({super.key});
+  final String? userId; // Optional UID to view another user's profile
+
+  const ProfileScreen({this.userId, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userProfileAsync = ref.watch(userProfileProvider);
+    // Nếu không có userId truyền vào, mặc định là user hiện tại
+    final isOwnProfile =
+        userId == null || userId == FirebaseAuth.instance.currentUser?.uid;
+
+    final profileAsync = isOwnProfile
+        ? ref.watch(userProfileProvider)
+        : ref.watch(userProfileByIdProvider(userId!));
 
     return Scaffold(
-      body: userProfileAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text(AppErrors.genericError)),
+      backgroundColor: AppColors.primaryBackground,
+      appBar: AppBar(
+        backgroundColor: AppColors.primaryBackground,
+        elevation: 0,
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: AppColors.textPrimary,
+                  size: 20,
+                ),
+                onPressed: () => Navigator.pop(context),
+              )
+            : null,
+        title: Text(
+          isOwnProfile ? AppStrings.profile : 'Hồ sơ người dùng',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: profileAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.darkAccent),
+        ),
+        error: (err, stack) =>
+            Center(child: Text('${AppErrors.genericError}: $err')),
         data: (user) {
           if (user == null) {
             return Center(child: Text(AppErrors.genericError));
@@ -26,109 +62,135 @@ class ProfileScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                AppLayout.gapLarge,
-
-                // Avatar
-                CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.blue.shade600,
-                  child: user.photoURL == null
-                      ? const Icon(Icons.person, color: Colors.white, size: 50)
-                      : ClipOval(
-                          child: Image.network(
-                            user.photoURL!,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                ),
+                const SizedBox(height: 10),
+                AppAvatar(id: user.uid, photoURL: user.photoURL, size: 100),
                 AppLayout.gapMedium,
-
-                // Name
                 Text(
                   user.displayName,
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
+                    fontSize: 24,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 AppLayout.gapSmall,
-
-                // Email
                 Text(
                   user.email,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
+                    color: AppColors.textSecondary,
                     fontSize: 14,
                   ),
                 ),
                 AppLayout.gapXLarge,
-
-                // Plan Info Card
                 _buildInfoCard(
-                  icon: Icons.star,
-                  title: 'Current Plan',
+                  icon: Icons.star_rounded,
+                  title: 'Gói hiện tại',
                   value: user.plan.toUpperCase(),
                   subtitle: user.planExpiresAt != null
-                      ? 'Expires: ${_formatDate(user.planExpiresAt!)}'
-                      : 'Free forever',
+                      ? 'Hết hạn: ${_formatDate(user.planExpiresAt!)}'
+                      : 'Miễn phí vĩnh viễn',
                 ),
                 AppLayout.gapMedium,
-
-                // Member Since Card
                 _buildInfoCard(
-                  icon: Icons.calendar_today,
-                  title: 'Member Since',
+                  icon: Icons.calendar_today_rounded,
+                  title: 'Thành viên từ',
                   value: _formatDate(user.createdAt),
                 ),
-                AppLayout.gapXLarge,
 
-                // Action Buttons
-                SizedBox(
-                  width: double.infinity,
-                  height: AppSize.buttonHeight,
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.upgrade),
-                    label: const Text('Upgrade Plan'),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Upgrade feature coming soon'),
+                if (isOwnProfile) ...[
+                  AppLayout.gapXLarge,
+                  // Action Buttons
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.darkAccent,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      );
-                    },
-                  ),
-                ),
-                AppLayout.gapSmall,
-
-                SizedBox(
-                  width: double.infinity,
-                  height: AppSize.buttonHeight,
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.settings),
-                    label: const Text('Settings'),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Settings coming soon')),
-                      );
-                    },
-                  ),
-                ),
-                AppLayout.gapSmall,
-
-                SizedBox(
-                  width: double.infinity,
-                  height: AppSize.buttonHeight,
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.logout),
-                    label: const Text('Logout'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade600,
+                        elevation: 0,
+                      ),
+                      icon: const Icon(Icons.upgrade_rounded),
+                      label: const Text('Nâng cấp gói'),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Tính năng nâng cấp đang phát triển'),
+                          ),
+                        );
+                      },
                     ),
-                    onPressed: () {
-                      _showLogoutDialog(context);
-                    },
                   ),
-                ),
+                  AppLayout.gapSmall,
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppColors.border),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        foregroundColor: AppColors.textPrimary,
+                      ),
+                      icon: const Icon(Icons.settings_outlined),
+                      label: const Text('Cài đặt'),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Cài đặt đang phát triển'),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  AppLayout.gapSmall,
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                      ),
+                      icon: const Icon(Icons.logout_rounded),
+                      label: const Text('Đăng xuất'),
+                      onPressed: () {
+                        _showLogoutDialog(context);
+                      },
+                    ),
+                  ),
+                ] else ...[
+                  AppLayout.gapXLarge,
+                  // Nếu không phải profile của mình, có thể thêm nút Tin nhắn hoặc Kết bạn
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.darkAccent,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      icon: const Icon(Icons.chat_bubble_outline_rounded),
+                      label: const Text('Gửi tin nhắn'),
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Tính năng nhắn tin đang phát triển'),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ],
             ),
           );

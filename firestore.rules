@@ -19,7 +19,9 @@ service cloud.firestore {
     }
 
     function getUserPlan() {
-      return getUserData().planExpiresAt == null || getUserData().planExpiresAt > request.time ? getUserData().plan : 'free';
+      return getUserData().planExpiresAt == null || getUserData().planExpiresAt > request.time
+        ? getUserData().plan
+        : 'free';
     }
 
     function isPro() {
@@ -30,7 +32,6 @@ service cloud.firestore {
       return getUserPlan() == 'business';
     }
 
-    // Giới hạn thành viên theo plan
     function memberLimit() {
       return isBusiness() ? 9999 : isPro() ? 10 : 3;
     }
@@ -56,6 +57,21 @@ service cloud.firestore {
     function isProjectOwner(projectId) {
       return get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId
           == request.auth.uid;
+    }
+
+    // ========================================
+    // HELPER: FRIEND CHECK
+    // ========================================
+    function areFriends(uid1, uid2) {
+      let fid1 = uid1 + '_' + uid2;
+      let fid2 = uid2 + '_' + uid1;
+      return (
+        exists(/databases/$(database)/documents/friendships/$(fid1)) &&
+        get(/databases/$(database)/documents/friendships/$(fid1)).data.status == 'accepted'
+      ) || (
+        exists(/databases/$(database)/documents/friendships/$(fid2)) &&
+        get(/databases/$(database)/documents/friendships/$(fid2)).data.status == 'accepted'
+      );
     }
 
     // ========================================
@@ -89,12 +105,37 @@ service cloud.firestore {
     }
 
     // ========================================
+    // FRIENDSHIPS COLLECTION
+    // ========================================
+    match /friendships/{friendshipId} {
+      allow read: if isSignedIn()
+        && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+
+      allow create: if isSignedIn()
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.receiverId != request.auth.uid
+        && request.resource.data.status == 'pending'
+        && hasValidFields(['senderId', 'receiverId', 'status', 'createdAt'], ['updatedAt', 'message']);
+
+      allow update: if isSignedIn()
+        && notChanging(['senderId', 'receiverId', 'createdAt'])
+        && (
+          (resource.data.receiverId == request.auth.uid && resource.data.status == 'pending' && request.resource.data.status in ['accepted', 'rejected'])
+          || (resource.data.senderId == request.auth.uid && resource.data.status == 'pending' && request.resource.data.status == 'cancelled')
+          || ((resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid) && resource.data.status == 'accepted' && request.resource.data.status == 'cancelled')
+        );
+
+      allow delete: if false;
+    }
+
+    // ========================================
     // PROJECTS COLLECTION
     // ========================================
     match /projects/{projectId} {
 
       // Chủ hoặc thành viên mới đọc được
       allow read: if isSignedIn() && (
+        projectId == 'default' ||
         resource.data.ownerId == request.auth.uid ||
         request.auth.uid in resource.data.memberIds
       );
@@ -169,7 +210,7 @@ service cloud.firestore {
 
       allow create: if isSignedIn()
         && request.auth.uid in request.resource.data.participantIds
-        && request.resource.data.participantIds.size() == 2 // 🔒 Chỉ 2 người
+        && request.resource.data.participantIds.size() == 2 
         && hasValidFields(
           ['participantIds', 'lastMessage', 'lastMessageAt', 'unreadCount', 'createdAt'],
           ['updatedAt']
@@ -325,11 +366,41 @@ service cloud.firestore {
     }
 
     // ========================================
-    // 🔒 Chặn tất cả path còn lại
+    // SEARCH INDEX (Read-only for clients)
     // ========================================
-    match /{document=**} {
-      allow read, write: if false;
+    match /search_index/{type}/items/{docId} {
+      // 🔍 Mọi user đã đăng nhập đều có thể tìm kiếm
+      allow read: if isSignedIn();
+      // 🔒 Chỉ Cloud Function mới được ghi (Cloud Function bỏ qua rules)
+      allow write: if false;
     }
+
+    // ========================================
+    // SEARCH SUGGESTIONS (Search History)
+    // ========================================
+    match /search_suggestions/{userId}/history/{docId} {
+      // 🔒 Chỉ chính chủ mới xem và quản lý được lịch sử tìm kiếm của mình
+      allow read, delete: if isOwner(userId);
+
+      // Tạo suggestion mới
+      allow create: if isOwner(userId)
+        && hasValidFields(
+          ['query', 'type', 'count', 'createdAt'],
+          ['updatedAt']
+        )
+        && request.resource.data.query is string
+        && request.resource.data.query.size() >= 1
+        && request.resource.data.query.size() <= 100
+        && request.resource.data.type in ['user', 'project', 'mixed']
+        && request.resource.data.count == 1;
+
+      // Cập nhật khi search lại cùng query (tăng count)
+      allow update: if isOwner(userId)
+        && notChanging(['query', 'type', 'createdAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count', 'updatedAt'])
+        && request.resource.data.count == resource.data.count + 1;
+    }
+
     
     // ========================================
 		// CALLS COLLECTION — Video Call (WebRTC Signaling)
@@ -398,6 +469,13 @@ service cloud.firestore {
       
       // Chặn mọi hành động ghi trực tiếp qua collection group
       allow write: if false;
+    }
+
+    // ========================================
+    // 🔒 CATCH-ALL: Chặn tất cả các đường dẫn khác
+    // ========================================
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

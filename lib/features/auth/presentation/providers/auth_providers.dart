@@ -36,7 +36,13 @@ final userProfileProvider = StreamProvider<UserEntity?>((ref) {
   );
 });
 
-// 4. Current User UID Provider (Helper)
+// 4. Specific User Profile Stream
+// Lấy thông tin profile của bất kỳ user nào qua UID
+final userProfileByIdProvider = StreamProvider.family<UserEntity?, String>((ref, userId) {
+  return ref.watch(userRepositoryProvider).getUserStream(userId);
+});
+
+// 5. Current User UID Provider (Helper)
 final userIdProvider = Provider<String?>((ref) {
   return ref.watch(authStateProvider).value?.uid;
 });

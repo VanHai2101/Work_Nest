@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/index.dart';
+import '../../../../core/theme/index.dart';
 import '../../domain/entities/project_entity.dart';
 import '../providers/projects_provider.dart';
 import '../widgets/index.dart';
@@ -21,20 +22,30 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     final projectAsync = ref.watch(projectByIdProvider(widget.projectId));
 
     return Scaffold(
+      backgroundColor: AppColors.primaryBackground,
       appBar: AppBar(
-        title: const Text('Project Details'),
+        title: const Text(
+          AppStrings.projectDetails,
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18),
+        ),
+        backgroundColor: AppColors.primaryBackground,
+        elevation: 0,
         centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit),
+            icon: Icon(Icons.edit_outlined, color: AppColors.textPrimary, size: 22),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit feature coming soon')),
+                const SnackBar(content: Text(AppStrings.edit)),
               );
             },
           ),
           IconButton(
-            icon: const Icon(Icons.delete),
+            icon: Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 22),
             onPressed: () {
               _showDeleteDialog(context);
             },
@@ -42,8 +53,8 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         ],
       ),
       body: projectAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.darkAccent)),
+        error: (err, stack) => Center(child: Text('${AppErrors.loadingFailed}: $err')),
         data: (project) {
           if (project == null) {
             return Center(child: Text(AppErrors.genericError));
@@ -64,23 +75,26 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
 
                 // Description
                 Text(
-                  'Description',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  AppStrings.description,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
                 AppLayout.gapSmall,
                 Container(
                   padding: AppLayout.paddingMedium,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: AppColors.surface,
                     borderRadius: AppBorderRadius.medium,
-                    border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Text(
-                    project.description,
+                    project.description.isNotEmpty ? project.description : AppStrings.noDescription,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
                       height: 1.5,
                     ),
                   ),
@@ -94,9 +108,11 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 // Tags
                 if (project.tags.isNotEmpty) ...[
                   Text(
-                    'Tags',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    AppStrings.tags,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
                       fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
                   AppLayout.gapSmall,
@@ -111,14 +127,15 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.2),
+                              color: AppColors.info.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
                               tag,
                               style: TextStyle(
-                                color: Colors.blue.shade300,
+                                color: AppColors.info,
                                 fontSize: 12,
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                           ),
@@ -138,12 +155,20 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Project'),
-        content: const Text('Are you sure? This cannot be undone.'),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: AppBorderRadius.large),
+        title: const Text(
+          AppStrings.deleteProject,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(AppStrings.cannotBeUndone),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              AppStrings.cancel,
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () async {
@@ -154,11 +179,14 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 Navigator.pop(context);
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Project deleted')),
+                  const SnackBar(content: Text(AppStrings.projectDeleted)),
                 );
               }
             },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(
+              AppStrings.delete,
+              style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),

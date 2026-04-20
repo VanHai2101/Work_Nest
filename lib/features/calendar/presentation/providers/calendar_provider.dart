@@ -13,7 +13,7 @@ class CalendarState {
   const CalendarState({
     required this.focusedMonth,
     this.selectedDay,
-    this.viewMode = CalendarViewMode.month,
+    this.viewMode = CalendarViewMode.day,
   });
 
   CalendarState copyWith({

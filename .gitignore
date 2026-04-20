@@ -53,3 +53,15 @@ translator_keys
 lib/firebase_options.dart
 google-services.json
 GoogleService-Info.plist
+
+# Secrets
+service-account.json
+*.json.secret
+.env
+.env.*
+
+# Dependencies
+node_modules/
+dist/
+/scripts/seeder/node_modules/
+
