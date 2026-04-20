@@ -134,13 +134,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     AppLayout.gapSmall,
 
-                    // Forgot password
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {
-                          // TODO: Implement forgot password
-                        },
+                        onPressed: () {},
                         child: Text(
                           'Forgot Password?',
                           style: TextStyle(
@@ -152,7 +149,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     AppLayout.gapLarge,
 
-                    // Error message
                     if (_errorMessage != null)
                       Container(
                         padding: AppLayout.paddingMedium,

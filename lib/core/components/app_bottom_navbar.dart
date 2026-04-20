@@ -2,8 +2,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/index.dart';
 import '../constants/index.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/chat/presentation/providers/chat_providers.dart';
 
-class AppBottomNavbar extends StatelessWidget {
+class AppBottomNavbar extends ConsumerWidget {
   final int currentIndex;
   final Function(int) onTap;
   final VoidCallback? onAction;
@@ -16,14 +18,15 @@ class AppBottomNavbar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unreadCount = ref.watch(totalUnreadCountProvider);
+
     final items = [
       (Icons.dashboard_rounded, 'Dashboard'),
       (Icons.chat_bubble_rounded, 'Chats'),
       (Icons.calendar_today_rounded, 'Schedule'),
       (Icons.folder_rounded, 'Projects'),
     ];
-
     return SafeArea(
       top: false,
       child: Padding(
@@ -51,7 +54,6 @@ class AppBottomNavbar extends StatelessWidget {
                         final sel = currentIndex == i;
                         final (ico, label) = items[i];
                         final hasBadge = i == 1;
-
                         return Expanded(
                           child: GestureDetector(
                             onTap: () => onTap(i),
@@ -84,7 +86,7 @@ class AppBottomNavbar extends StatelessWidget {
                                           ? AppColors.darkAccent
                                           : Colors.white.withOpacity(0.5),
                                     ),
-                                    if (hasBadge)
+                                    if (hasBadge && unreadCount > 0)
                                       Positioned(
                                         right: -4,
                                         top: -4,
@@ -102,9 +104,9 @@ class AppBottomNavbar extends StatelessWidget {
                                             minWidth: 16,
                                             minHeight: 16,
                                           ),
-                                          child: const Text(
-                                            '2',
-                                            style: TextStyle(
+                                          child: Text(
+                                            '$unreadCount',
+                                            style: const TextStyle(
                                               color: Colors.white,
                                               fontSize: 9,
                                               fontWeight: FontWeight.bold,

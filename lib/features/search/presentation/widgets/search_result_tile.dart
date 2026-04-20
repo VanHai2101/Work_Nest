@@ -14,6 +14,8 @@ class SearchResultTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = result.type == SearchResultType.user;
+    final isProject = result.type == SearchResultType.project;
+    final isTask = result.type == SearchResultType.task;
 
     return ListTile(
       onTap:
@@ -25,7 +27,7 @@ class SearchResultTile extends StatelessWidget {
                   builder: (context) => ProfileScreen(userId: result.id),
                 ),
               );
-            } else {
+            } else if (isProject) {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (context) =>
@@ -33,6 +35,7 @@ class SearchResultTile extends StatelessWidget {
                 ),
               );
             }
+            // Add task navigation if needed
           },
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: isUser
@@ -41,12 +44,12 @@ class SearchResultTile extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.accent.withOpacity(0.1),
+                color: (isTask ? Colors.green : AppColors.accent).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
-                Icons.folder_rounded,
-                color: AppColors.accent,
+                isTask ? Icons.check_circle_outline_rounded : Icons.folder_rounded,
+                color: isTask ? Colors.green : AppColors.accent,
                 size: 22,
               ),
             ),
@@ -69,13 +72,13 @@ class SearchResultTile extends StatelessWidget {
       trailing: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: (isUser ? Colors.blue : Colors.orange).withOpacity(0.1),
+          color: (isUser ? Colors.blue : isTask ? Colors.green : Colors.orange).withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
-          isUser ? 'Người' : 'Dự án',
+          isUser ? 'Người' : isTask ? 'Công việc' : 'Dự án',
           style: TextStyle(
-            color: isUser ? Colors.blue : Colors.orange,
+            color: isUser ? Colors.blue : isTask ? Colors.green : Colors.orange,
             fontSize: 10,
             fontWeight: FontWeight.bold,
           ),

@@ -38,21 +38,15 @@ class AppColors {
   static Color get error => _AppColor.error.color;
   static Color get info => _AppColor.info.color;
 
-  // ==================== DISABLED & OVERLAY ====================
-
   static Color get disabled => _AppColor.disabled.color;
   static Color get disabledBackground => _AppColor.disabledBackground.color;
   static Color get overlay => _AppColor.overlay.color;
   static Color get transparent => Colors.transparent;
 
-  // ==================== INPUT / CHIP ====================
-
   static Color get inputBackground => _AppColor.inputBackground.color;
   static Color get inputFocus => _AppColor.inputFocus.color;
   static Color get chipBackground => _AppColor.chipBackground.color;
   static Color get skeleton => _AppColor.skeleton.color;
-
-  // ==================== PROJECT / AVATAR PALETTE ====================
 
   static const List<Color> projectPalette = [
     Color(0xFFEF4444), // Red
@@ -80,6 +74,12 @@ class AppColors {
   static const Color darkAccentLight = Color(0xFF60A5FA);
   static const Color darkSuccess = Color(0xFF34D399);
   static const Color darkWarning = Color(0xFFFBBF24);
+  static const Color darkSuccessBg = Color(0xFF1A2E23);
+  static const Color darkSuccessBorder = Color(0xFF0B6E38);
+  static const Color darkWarningBg = Color(0xFF2A2010);
+  static const Color darkWarningBorder = Color(0xFF856C0A);
+  static const Color darkErrorBg = Color(0xFF2A1414);
+  static const Color darkErrorBorder = Color(0xFF8B2020);
 
   static const List<Color> darkAvatarPalette = [
     Color(0xFF3B82F6),
@@ -89,9 +89,6 @@ class AppColors {
     Color(0xFFEF4444),
     Color(0xFFEC4899),
   ];
-
-  // ==================== HELPERS ====================
-
   static Color getColorByBrightness(
     Color darkColor,
     Color lightColor, {

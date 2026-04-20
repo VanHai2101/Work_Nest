@@ -35,6 +35,30 @@ class TimeFormatUtils {
     return '${formatDate(dateTime)} ${formatTime(dateTime)}';
   }
 
+  /// Format DateTime to short month string (dd MMM, yyyy)
+  static String formatShortMonthDate(DateTime dateTime) {
+    const m = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${dateTime.day} ${m[dateTime.month - 1]}, ${dateTime.year}';
+  }
+
+  /// Get days left until a given date
+  static int getDaysLeft(DateTime dateTime) {
+    return dateTime.difference(DateTime.now()).inDays;
+  }
+
   /// Format duration for call timer (HH:mm:ss)
   static String formatDuration(Duration duration) {
     final hours = (duration.inSeconds ~/ 3600).toString().padLeft(2, '0');

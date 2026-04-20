@@ -58,22 +58,6 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId
           == request.auth.uid;
     }
-
-    // ========================================
-    // HELPER: FRIEND CHECK
-    // ========================================
-    function areFriends(uid1, uid2) {
-      let fid1 = uid1 + '_' + uid2;
-      let fid2 = uid2 + '_' + uid1;
-      return (
-        exists(/databases/$(database)/documents/friendships/$(fid1)) &&
-        get(/databases/$(database)/documents/friendships/$(fid1)).data.status == 'accepted'
-      ) || (
-        exists(/databases/$(database)/documents/friendships/$(fid2)) &&
-        get(/databases/$(database)/documents/friendships/$(fid2)).data.status == 'accepted'
-      );
-    }
-
     // ========================================
     // USERS COLLECTION
     // ========================================
@@ -89,11 +73,10 @@ service cloud.firestore {
           ['photoURL', 'updatedAt', 'fcmTokens', 'planExpiresAt', 'planUpdatedAt']
         )
         && request.resource.data.uid == userId
-        && request.resource.data.plan == 'free'; // 🔒 Không cho tự đặt plan cao hơn
-
+        && request.resource.data.plan == 'free';
       // Cập nhật profile — KHÔNG được tự đổi plan
       allow update: if isOwner(userId)
-        && notChanging(['plan', 'planExpiresAt', 'planUpdatedAt']); // 🔒 Chỉ Cloud Function mới đổi được plan
+        && notChanging(['plan', 'planExpiresAt', 'planUpdatedAt']); 
 
       // Chỉ chủ sở hữu mới xóa được
       allow delete: if isOwner(userId);
@@ -369,9 +352,9 @@ service cloud.firestore {
     // SEARCH INDEX (Read-only for clients)
     // ========================================
     match /search_index/{type}/items/{docId} {
-      // 🔍 Mọi user đã đăng nhập đều có thể tìm kiếm
-      allow read: if isSignedIn();
-      // 🔒 Chỉ Cloud Function mới được ghi (Cloud Function bỏ qua rules)
+      // 🔍 Mọi user đã đăng nhập đều có thể thực hiện truy vấn tìm kiếm
+      allow get, list: if isSignedIn();
+      // 🔒 Chỉ Cloud Function mới được ghi
       allow write: if false;
     }
 

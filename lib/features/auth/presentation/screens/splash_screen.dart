@@ -4,7 +4,6 @@ import '../../../../core/theme/index.dart' show AppColors;
 import '../../../../core/constants/index.dart';
 import '../providers/auth_providers.dart';
 
-/// Splash screen displayed on app launch
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -43,7 +42,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _checkAuthState() async {
-    // Wait for minimum splash duration plus a small buffer for auth state to resolve
     await Future.delayed(const Duration(seconds: 3));
 
     if (!mounted) return;
@@ -59,7 +57,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         }
       },
       loading: () {
-        // Still loading auth state, wait a bit more
         _checkAuthState();
       },
       error: (_, _) {
@@ -105,9 +102,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   ),
                 ),
                 AppLayout.gapLarge,
-                // App title
                 Text(
-                  'Work Nest',
+                  'Hải Tới Đây!',
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 32,
@@ -116,7 +112,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   ),
                 ),
                 AppLayout.gapSmall,
-                // Tagline
                 Text(
                   'Collaborate, Connect, Achieve',
                   style: TextStyle(

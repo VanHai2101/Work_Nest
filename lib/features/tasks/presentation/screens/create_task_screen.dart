@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/index.dart';
+import '../../../../core/theme/index.dart';
+import '../../../../core/components/index.dart';
+import '../../../../core/utils/index.dart';
 import '../../../../core/data/repositories/index.dart';
 import '../providers/tasks_provider.dart';
 
@@ -27,35 +31,41 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
   bool _isLoading = false;
   String _selectedPriority = 'medium';
   DateTime _selectedDueDate = DateTime.now().add(const Duration(days: 7));
-  String _selectedDueTime = '09:00';
+  late String _selectedDueTime;
+  bool _isTimePickerExpanded = false;
 
-  // ── design tokens ──────────────────────────────
-  static const _bg = Color(0xFF0F1117);
-  static const _surface = Color(0xFF161B24);
-  static const _card = Color(0xFF1A2030);
-  static const _border = Color(0xFF252D3D);
-  static const _accent = Color(0xFF3B82F6);
-  static const _white = Colors.white;
-  static const _textSec = Color(0xFF6B7A99);
-  static const _textHint = Color(0xFF3A4560);
+  // Design tokens used from AppColors (Premium Dark Palette)
 
   // priority config
-  static const _priorities = [
-    ('low', 'Thấp', Color(0xFF34D399), Color(0xFF1A2E23), Color(0xFF0B6E38)),
+  static final _priorities = [
+    (
+      'low',
+      'Thấp',
+      AppColors.success,
+      AppColors.success.withOpacity(0.12),
+      AppColors.success.withOpacity(0.4),
+    ),
     (
       'medium',
       'Trung',
-      Color(0xFFFBBF24),
-      Color(0xFF2A2010),
-      Color(0xFF856C0A),
+      AppColors.warning,
+      AppColors.warning.withOpacity(0.12),
+      AppColors.warning.withOpacity(0.4),
     ),
-    ('high', 'Cao', Color(0xFFF87171), Color(0xFF2A1414), Color(0xFF8B2020)),
+    (
+      'high',
+      'Cao',
+      AppColors.error,
+      AppColors.error.withOpacity(0.12),
+      AppColors.error.withOpacity(0.4),
+    ),
   ];
 
   @override
   void initState() {
     super.initState();
     currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    _selectedDueTime = TimeFormatUtils.formatTime(DateTime.now());
     _fadeCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -71,8 +81,6 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
     _fadeCtrl.dispose();
     super.dispose();
   }
-
-  // ── actions ────────────────────────────────────
 
   Future<void> _handleCreate() async {
     if (!_formKey.currentState!.validate()) return;
@@ -112,6 +120,7 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
       if (mounted) {
         _showSnack('Task created successfully!', success: true);
         await Future.delayed(const Duration(milliseconds: 600));
+        // ignore: use_build_context_synchronously
         Navigator.of(context).pop();
       }
     } catch (e) {
@@ -128,16 +137,16 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
         backgroundColor: success
             ? const Color(0xFF1A2E23)
             : const Color(0xFF2A1414),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+        ),
         content: Row(
           children: [
             Icon(
               success
                   ? Icons.check_circle_rounded
                   : Icons.error_outline_rounded,
-              color: success
-                  ? const Color(0xFF34D399)
-                  : const Color(0xFFF87171),
+              color: success ? AppColors.darkSuccess : AppColors.error,
               size: 18,
             ),
             const SizedBox(width: 10),
@@ -145,9 +154,7 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
               child: Text(
                 msg,
                 style: TextStyle(
-                  color: success
-                      ? const Color(0xFF34D399)
-                      : const Color(0xFFF87171),
+                  color: success ? AppColors.darkSuccess : AppColors.error,
                 ),
               ),
             ),
@@ -165,12 +172,12 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: _accent,
-            surface: _surface,
-            onSurface: _white,
+          colorScheme: ColorScheme.dark(
+            primary: AppColors.info,
+            surface: AppColors.surface,
+            onSurface: AppColors.textPrimary,
           ),
-          dialogBackgroundColor: _card,
+          dialogBackgroundColor: Colors.white,
         ),
         child: child!,
       ),
@@ -178,62 +185,20 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
     if (picked != null) setState(() => _selectedDueDate = picked);
   }
 
-  Future<void> _selectTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay(
-        hour: int.parse(_selectedDueTime.split(':')[0]),
-        minute: int.parse(_selectedDueTime.split(':')[1]),
-      ),
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: _accent,
-            surface: _surface,
-            onSurface: _white,
-          ),
-          dialogBackgroundColor: _card,
-        ),
-        child: child!,
-      ),
-    );
-    if (picked != null) {
-      setState(() {
-        _selectedDueTime =
-            '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
-      });
-    }
+  void _selectTime() {
+    setState(() {
+      _isTimePickerExpanded = !_isTimePickerExpanded;
+    });
   }
 
-  // ── helpers ────────────────────────────────────
-
-  String get _dueDateLabel {
-    final d = _selectedDueDate;
-    const m = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${d.day} ${m[d.month - 1]}, ${d.year}';
-  }
-
-  int get _daysLeft => _selectedDueDate.difference(DateTime.now()).inDays;
-
-  // ── build ──────────────────────────────────────
+  String get _dueDateLabel =>
+      TimeFormatUtils.formatShortMonthDate(_selectedDueDate);
+  int get _daysLeft => TimeFormatUtils.getDaysLeft(_selectedDueDate);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: AppColors.primaryBackground,
       body: FadeTransition(
         opacity: _fadeAnim,
         child: SafeArea(
@@ -244,23 +209,29 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
                 _buildAppBar(),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppPadding.medium,
+                      AppPadding.small / 2,
+                      AppPadding.medium,
+                      AppPadding.large,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildHero(),
-                        const SizedBox(height: 20),
+                        AppLayout.gapMedium,
                         _sectionLabel('Chi tiết công việc'),
-                        const SizedBox(height: 8),
+                        AppLayout.gapSmall,
                         _buildInfoCard(),
-                        const SizedBox(height: 20),
+                        AppLayout.gapMedium,
                         _sectionLabel('Mức độ ưu tiên'),
-                        const SizedBox(height: 8),
+                        AppLayout.gapSmall,
                         _buildPriorityPicker(),
-                        const SizedBox(height: 20),
+                        AppLayout.gapMedium,
                         _sectionLabel('Thời hạn'),
-                        const SizedBox(height: 8),
+                        AppLayout.gapSmall,
                         _buildScheduleRow(),
+                        _buildInlineTimePicker(),
                         const SizedBox(height: 28),
                         _buildCTA(),
                       ],
@@ -288,23 +259,23 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: _surface,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _border),
+                border: Border.all(color: AppColors.border),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios_new_rounded,
-                size: 14,
-                color: _white,
+                size: 16,
+                color: AppColors.textPrimary,
               ),
             ),
           ),
-          const Expanded(
+          Expanded(
             child: Center(
               child: Text(
                 'Tạo công việc',
                 style: TextStyle(
-                  color: _white,
+                  color: AppColors.textPrimary,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
@@ -327,24 +298,24 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
           style: TextStyle(
             fontSize: 10,
             letterSpacing: 2,
-            color: _accent.withOpacity(0.9),
+            color: AppColors.info.withOpacity(0.9),
             fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           'Task Setup',
           style: TextStyle(
-            color: _white,
+            color: AppColors.textPrimary,
             fontSize: 22,
             fontWeight: FontWeight.w700,
             height: 1.2,
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           'Điền thông tin để tạo công việc mới',
-          style: TextStyle(color: _textHint, fontSize: 13),
+          style: TextStyle(color: AppColors.textTertiary, fontSize: 13),
         ),
       ],
     );
@@ -354,10 +325,10 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
     padding: const EdgeInsets.only(left: 2),
     child: Text(
       text.toUpperCase(),
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 10,
         letterSpacing: 1.4,
-        color: _textSec,
+        color: AppColors.textSecondary,
         fontWeight: FontWeight.w500,
       ),
     ),
@@ -366,9 +337,9 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
   Widget _buildInfoCard() {
     return Container(
       decoration: BoxDecoration(
-        color: _card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.large),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         children: [
@@ -380,7 +351,7 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
             maxLines: 1,
             validator: (v) => (v?.isEmpty ?? true) ? 'Tên là bắt buộc' : null,
           ),
-          Divider(height: 1, color: _border),
+          Divider(height: 1, color: AppColors.border),
           _buildField(
             controller: _descriptionController,
             label: 'Mô tả',
@@ -409,10 +380,10 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
         children: [
           Text(
             label.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
               letterSpacing: 1,
-              color: _textSec,
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -420,11 +391,11 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
           TextFormField(
             controller: controller,
             maxLines: maxLines,
-            style: const TextStyle(color: _white, fontSize: 14),
+            style: TextStyle(color: AppColors.textPrimary, fontSize: 14),
             validator: validator,
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: const TextStyle(color: _textHint, fontSize: 14),
+              hintStyle: TextStyle(color: AppColors.textTertiary, fontSize: 14),
               isDense: true,
               contentPadding: EdgeInsets.zero,
               border: InputBorder.none,
@@ -454,12 +425,14 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
               margin: EdgeInsets.only(
                 right: i < _priorities.length - 1 ? 10 : 0,
               ),
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              padding: const EdgeInsets.symmetric(
+                vertical: AppPadding.medium - 2,
+              ),
               decoration: BoxDecoration(
-                color: sel ? bgColor : _card,
-                borderRadius: BorderRadius.circular(14),
+                color: sel ? bgColor : Colors.white,
+                borderRadius: BorderRadius.circular(AppRadius.large - 2),
                 border: Border.all(
-                  color: sel ? Color(borderColor.value) : _border,
+                  color: sel ? Color(borderColor.value) : AppColors.border,
                   width: sel ? 1.5 : 1,
                 ),
               ),
@@ -479,7 +452,7 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: sel ? color : _textSec,
+                      color: sel ? color : AppColors.textSecondary,
                     ),
                   ),
                 ],
@@ -496,15 +469,15 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
       children: [
         // Date
         Expanded(
-          flex: 3,
+          flex: 1,
           child: GestureDetector(
             onTap: _pickDate,
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: _card,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _border),
+                border: Border.all(color: AppColors.border),
               ),
               child: Row(
                 children: [
@@ -512,12 +485,12 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: _accent.withOpacity(0.12),
+                      color: AppColors.info.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.calendar_month_rounded,
-                      color: _accent,
+                      color: AppColors.info,
                       size: 18,
                     ),
                   ),
@@ -526,27 +499,27 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'NGÀY',
                           style: TextStyle(
                             fontSize: 10,
                             letterSpacing: 0.8,
-                            color: _textSec,
+                            color: AppColors.textSecondary,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         const SizedBox(height: 3),
                         Text(
                           _dueDateLabel,
-                          style: const TextStyle(
-                            color: _white,
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
                           '$_daysLeft ngày',
-                          style: const TextStyle(color: _accent, fontSize: 10),
+                          style: TextStyle(color: AppColors.info, fontSize: 10),
                         ),
                       ],
                     ),
@@ -559,18 +532,17 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
         const SizedBox(width: 10),
         // Time
         Expanded(
-          flex: 2,
+          flex: 1,
           child: GestureDetector(
             onTap: _selectTime,
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: _card,
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: _border),
+                border: Border.all(color: AppColors.border),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
                   Container(
                     width: 36,
@@ -585,24 +557,37 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
                       size: 18,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'GIỜ',
-                    style: TextStyle(
-                      fontSize: 10,
-                      letterSpacing: 0.8,
-                      color: _textSec,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    _selectedDueTime,
-                    style: const TextStyle(
-                      color: _white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'GIỜ',
+                          style: TextStyle(
+                            fontSize: 10,
+                            letterSpacing: 0.8,
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          _selectedDueTime,
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 12, // matching the 12px of Date label
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'Cố định', // dynamic if needed, placeholder for balance
+                          style: TextStyle(
+                            color: const Color(0xFF8B5CF6),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -616,45 +601,53 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
 
   Widget _buildCTA() {
     // resolve current priority color
-    final (_, __, priColor, _, __2) = _priorities.firstWhere(
+    final (_, _, priColor, _, _) = _priorities.firstWhere(
       (p) => p.$1 == _selectedPriority,
     );
 
-    return SizedBox(
-      width: double.infinity,
+    return CustomButton(
+      text: 'Tạo công việc',
+      onPressed: _handleCreate,
+      isLoading: _isLoading,
+      suffixIcon: Icons.add_task_rounded,
       height: 54,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _handleCreate,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _accent,
-          disabledBackgroundColor: _accent.withOpacity(0.35),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0,
+      gradientColors: [AppColors.info, AppColors.info],
+    );
+  }
+
+  Widget _buildInlineTimePicker() {
+    return AnimatedCrossFade(
+      firstChild: const SizedBox.shrink(),
+      secondChild: Container(
+        height: 180,
+        margin: const EdgeInsets.only(top: 8),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
         ),
-        child: _isLoading
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(strokeWidth: 2, color: _white),
-              )
-            : const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Tạo công việc',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: _white,
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Icon(Icons.add_task_rounded, size: 18, color: _white),
-                ],
-              ),
+        child: CupertinoDatePicker(
+          mode: CupertinoDatePickerMode.time,
+          initialDateTime: DateTime(
+            2024,
+            1,
+            1,
+            int.parse(_selectedDueTime.split(':')[0]),
+            int.parse(_selectedDueTime.split(':')[1]),
+          ),
+          use24hFormat: true,
+          onDateTimeChanged: (DateTime newDateTime) {
+            setState(() {
+              _selectedDueTime =
+                  '${newDateTime.hour.toString().padLeft(2, '0')}:${newDateTime.minute.toString().padLeft(2, '0')}';
+            });
+          },
+        ),
       ),
+      crossFadeState: _isTimePickerExpanded
+          ? CrossFadeState.showSecond
+          : CrossFadeState.showFirst,
+      duration: const Duration(milliseconds: 300),
     );
   }
 }

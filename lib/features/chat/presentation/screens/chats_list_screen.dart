@@ -288,8 +288,9 @@ class ConversationListTile extends ConsumerWidget {
     final diff = now.difference(dt);
     if (diff.inMinutes < 1) return 'Vừa xong';
     if (diff.inMinutes < 60) return '${diff.inMinutes} phút';
-    if (diff.inHours < 24)
+    if (diff.inHours < 24) {
       return '${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+    }
     return '${dt.day}/${dt.month}';
   }
 }

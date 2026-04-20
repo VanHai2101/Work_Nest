@@ -61,13 +61,11 @@ class ProfileMenuDrawer extends StatelessWidget {
               ),
             ),
 
-            // Menu items
             _DrawerMenuItem(
               icon: Icons.person_outline,
               label: AppStrings.profile,
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Navigate to profile screen
               },
             ),
             _DrawerMenuItem(
@@ -75,7 +73,6 @@ class ProfileMenuDrawer extends StatelessWidget {
               label: 'Settings',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Navigate to settings screen
               },
             ),
             _DrawerMenuItem(
@@ -83,7 +80,6 @@ class ProfileMenuDrawer extends StatelessWidget {
               label: 'Help & Support',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Navigate to help screen
               },
             ),
             _DrawerMenuItem(
@@ -91,7 +87,6 @@ class ProfileMenuDrawer extends StatelessWidget {
               label: 'About',
               onTap: () {
                 Navigator.pop(context);
-                // TODO: Navigate to about screen
               },
             ),
             const Divider(color: Colors.white24),
@@ -118,6 +113,7 @@ class _DrawerMenuItem extends StatelessWidget {
   final VoidCallback onTap;
   final bool isHighlight;
 
+  // ignore: use_super_parameters
   const _DrawerMenuItem({
     required this.icon,
     required this.label,

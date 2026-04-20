@@ -90,7 +90,6 @@ final unifiedConversationsProvider =
           emitCombined();
         },
         onError: (e) {
-          print('Error loading chats: $e');
           emitCombined();
         },
       );
@@ -101,7 +100,6 @@ final unifiedConversationsProvider =
           emitCombined();
         },
         onError: (e) {
-          print('Error loading groups: $e');
           emitCombined();
         },
       );
@@ -113,3 +111,27 @@ final unifiedConversationsProvider =
       });
       return controller.stream;
     });
+
+// 6. Tổng số tin nhắn chưa đọc
+final totalUnreadCountProvider = Provider<int>((ref) {
+  final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+  if (userId.isEmpty) return 0;
+
+  final conversationsAsync = ref.watch(unifiedConversationsProvider(userId));
+
+  return conversationsAsync.when(
+    data: (conversations) {
+      int total = 0;
+      for (final conv in conversations) {
+        if (conv is ChatEntity) {
+          total += conv.unreadCount[userId] ?? 0;
+        } else if (conv is GroupEntity) {
+          total += conv.unreadCount[userId] ?? 0;
+        }
+      }
+      return total;
+    },
+    loading: () => 0,
+    error: (_, _) => 0,
+  );
+});

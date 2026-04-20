@@ -12,37 +12,21 @@ class SearchScreen extends ConsumerStatefulWidget {
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
 }
 
-class _SearchScreenState extends ConsumerState<SearchScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _SearchScreenState extends ConsumerState<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      if (_tabController.indexIsChanging) {
-        final type = _getSearchTypeFromIndex(_tabController.index);
-        ref.read(searchTypeFilterProvider.notifier).state = type;
-      }
-    });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _searchController.text = ref.read(searchQueryProvider);
     });
   }
 
-  SearchResultType? _getSearchTypeFromIndex(int index) {
-    if (index == 0) return null;
-    if (index == 1) return SearchResultType.user;
-    if (index == 2) return SearchResultType.project;
-    return null;
-  }
 
   @override
   void dispose() {
-    _tabController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -78,22 +62,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen>
           onChanged: (value) {
             ref.read(searchQueryProvider.notifier).state = value;
           },
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppColors.darkAccent,
-          unselectedLabelColor: AppColors.textTertiary,
-          indicatorColor: AppColors.darkAccent,
-          indicatorSize: TabBarIndicatorSize.label,
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-          ),
-          tabs: const [
-            Tab(text: 'TẤT CẢ'),
-            Tab(text: 'NGƯỜI DÙNG'),
-            Tab(text: 'DỰ ÁN'),
-          ],
         ),
       ),
       body: searchResults.when(

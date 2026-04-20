@@ -1,3 +1,4 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/index.dart';
@@ -32,20 +33,32 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: AppColors.textPrimary,
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.edit_outlined, color: AppColors.textPrimary, size: 22),
+            icon: Icon(
+              Icons.edit_outlined,
+              color: AppColors.textPrimary,
+              size: 22,
+            ),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text(AppStrings.edit)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text(AppStrings.edit)));
             },
           ),
           IconButton(
-            icon: Icon(Icons.delete_outline_rounded, color: AppColors.error, size: 22),
+            icon: Icon(
+              Icons.delete_outline_rounded,
+              color: AppColors.error,
+              size: 22,
+            ),
             onPressed: () {
               _showDeleteDialog(context);
             },
@@ -53,8 +66,11 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         ],
       ),
       body: projectAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.darkAccent)),
-        error: (err, stack) => Center(child: Text('${AppErrors.loadingFailed}: $err')),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.darkAccent),
+        ),
+        error: (err, stack) =>
+            Center(child: Text('${AppErrors.loadingFailed}: $err')),
         data: (project) {
           if (project == null) {
             return Center(child: Text(AppErrors.genericError));
@@ -91,7 +107,9 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Text(
-                    project.description.isNotEmpty ? project.description : AppStrings.noDescription,
+                    project.description.isNotEmpty
+                        ? project.description
+                        : AppStrings.noDescription,
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 14,
@@ -185,7 +203,10 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
             },
             child: Text(
               AppStrings.delete,
-              style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: AppColors.error,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
