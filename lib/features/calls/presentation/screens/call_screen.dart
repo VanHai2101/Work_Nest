@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,8 +14,11 @@ class CallScreen extends ConsumerStatefulWidget {
   final String callId;
   final String remoteUserId;
 
-  const CallScreen({required this.callId, required this.remoteUserId, Key? key})
-    : super(key: key);
+  const CallScreen({
+    required this.callId,
+    required this.remoteUserId,
+    super.key,
+  });
 
   @override
   ConsumerState<CallScreen> createState() => _CallScreenState();

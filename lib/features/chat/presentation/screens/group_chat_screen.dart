@@ -8,7 +8,7 @@ import '../../domain/entities/group_entity.dart';
 class GroupChatScreen extends ConsumerStatefulWidget {
   final String groupId;
 
-  const GroupChatScreen({required this.groupId, Key? key}) : super(key: key);
+  const GroupChatScreen({required this.groupId, super.key});
 
   @override
   ConsumerState<GroupChatScreen> createState() => _GroupChatScreenState();
@@ -44,13 +44,15 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
     );
 
     try {
-      await ref.read(chatRepositoryProvider).sendGroupMessage(widget.groupId, newMessage);
+      await ref
+          .read(chatRepositoryProvider)
+          .sendGroupMessage(widget.groupId, newMessage);
       _controller.clear();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error sending message: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error sending message: $e')));
       }
     }
   }
@@ -66,7 +68,7 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
         title: groupAsync.when(
           data: (group) => Text(group?.name ?? 'Group Chat'),
           loading: () => const Text('Loading...'),
-          error: (_, __) => const Text('Group'),
+          error: (_, _) => const Text('Group'),
         ),
         elevation: 0,
       ),
@@ -88,17 +90,26 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
                     final isOwn = message.senderId == currentUser?.uid;
 
                     return Align(
-                      alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment: isOwn
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
                       child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: isOwn ? Colors.blue : Colors.grey.shade300,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
-                          crossAxisAlignment:
-                              isOwn ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          crossAxisAlignment: isOwn
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
                           children: [
                             if (!isOwn)
                               Text(
@@ -120,7 +131,9 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
                               '${message.sentAt.hour}:${message.sentAt.minute.toString().padLeft(2, '0')}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isOwn ? Colors.white70 : Colors.grey.shade600,
+                                color: isOwn
+                                    ? Colors.white70
+                                    : Colors.grey.shade600,
                               ),
                             ),
                           ],
@@ -152,7 +165,10 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                     ),
                   ),
                 ),

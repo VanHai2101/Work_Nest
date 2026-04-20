@@ -9,7 +9,7 @@ import '../../domain/repositories/call_repository.dart';
 import '../../data/repositories/firebase_call_repository.dart';
 import '../../data/models/ice_candidate_model.dart';
 import '../../../../core/providers/index.dart';
-import '../../../../core/providers/auth_provider.dart';
+import '../../../auth/presentation/providers/auth_providers.dart';
 
 /// State of the active call, including streams and connection status.
 class CallState {
@@ -42,7 +42,7 @@ final incomingCallStreamProvider = StreamProvider.autoDispose<CallEntity?>((
   ref,
 ) {
   final repository = ref.watch(callRepositoryProvider);
-  final userId = ref.watch(currentUserIdProvider);
+  final userId = ref.watch(userIdProvider);
   if (userId == null) return const Stream.empty();
   return repository.watchIncomingCalls(userId);
 });

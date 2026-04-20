@@ -5,30 +5,38 @@ import '../../data/repositories/firebase_auth_repository.dart';
 import '../../data/repositories/firebase_user_repository.dart';
 import '../../domain/entities/user_entity.dart';
 
-// 1. Auth Repository Provider
+// 1. Repository Providers
 final authRepositoryProvider = Provider<IAuthRepository>((ref) {
   return FirebaseAuthRepository();
 });
 
-// 2. User Repository Provider
 final userRepositoryProvider = Provider<IUserRepository>((ref) {
   return FirebaseUserRepository();
 });
 
-// 3. Auth State Changes Provider
+// 2. Auth State Stream
+// Sử dụng select để chỉ lắng nghe sự thay đổi của uid, giảm thiểu re-render
 final authStateProvider = StreamProvider<UserEntity?>((ref) {
   return ref.watch(authRepositoryProvider).authStateChanges;
 });
 
-// 4. Current User Profile Provider
+// 3. User Profile Stream
+// Tự động cập nhật khi authState thay đổi hoặc dữ liệu Firestore thay đổi
 final userProfileProvider = StreamProvider<UserEntity?>((ref) {
   final authState = ref.watch(authStateProvider);
+  
   return authState.when(
     data: (user) {
       if (user == null) return Stream.value(null);
+      // Lắng nghe stream profile từ Firestore
       return ref.watch(userRepositoryProvider).getUserStream(user.uid);
     },
     loading: () => const Stream.empty(),
-    error: (_, __) => Stream.value(null),
+    error: (err, stack) => Stream.error(err, stack),
   );
+});
+
+// 4. Current User UID Provider (Helper)
+final userIdProvider = Provider<String?>((ref) {
+  return ref.watch(authStateProvider).value?.uid;
 });

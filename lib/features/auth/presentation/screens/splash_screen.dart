@@ -6,7 +6,7 @@ import '../providers/auth_providers.dart';
 
 /// Splash screen displayed on app launch
 class SplashScreen extends ConsumerStatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
@@ -45,11 +45,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Future<void> _checkAuthState() async {
     // Wait for minimum splash duration plus a small buffer for auth state to resolve
     await Future.delayed(const Duration(seconds: 3));
-    
+
     if (!mounted) return;
 
     final authState = ref.read(authStateProvider);
-    
+
     authState.when(
       data: (user) {
         if (user != null) {
@@ -62,7 +62,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         // Still loading auth state, wait a bit more
         _checkAuthState();
       },
-      error: (_, __) {
+      error: (_, _) {
         Navigator.of(context).pushReplacementNamed('/welcome');
       },
     );

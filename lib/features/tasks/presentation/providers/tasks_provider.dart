@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/task_entity.dart';
 import '../../domain/repositories/task_repository.dart';
 import '../../data/repositories/firebase_task_repository.dart';
-import '../../../../core/providers/firestore_providers.dart';
 
 final taskRepositoryProvider = Provider<TaskRepository>((ref) {
   return FirebaseTaskRepository();

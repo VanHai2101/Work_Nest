@@ -7,7 +7,7 @@ import '../../domain/entities/message_entity.dart';
 class ChatScreen extends ConsumerStatefulWidget {
   final String chatId;
 
-  const ChatScreen({required this.chatId, Key? key}) : super(key: key);
+  const ChatScreen({required this.chatId, super.key});
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -43,13 +43,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
 
     try {
-      await ref.read(chatRepositoryProvider).sendMessage(widget.chatId, newMessage);
+      await ref
+          .read(chatRepositoryProvider)
+          .sendMessage(widget.chatId, newMessage);
       _controller.clear();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error sending message: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error sending message: $e')));
       }
     }
   }
@@ -60,10 +62,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Chat'),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: const Text('Chat'), elevation: 0),
       body: Column(
         children: [
           // Messages list
@@ -71,9 +70,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: messagesAsync.when(
               data: (messages) {
                 if (messages.isEmpty) {
-                  return const Center(
-                    child: Text('No messages yet'),
-                  );
+                  return const Center(child: Text('No messages yet'));
                 }
 
                 return ListView.builder(
@@ -84,17 +81,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     final isOwn = message.senderId == currentUser?.uid;
 
                     return Align(
-                      alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
+                      alignment: isOwn
+                          ? Alignment.centerRight
+                          : Alignment.centerLeft,
                       child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: isOwn ? Colors.blue : Colors.grey.shade300,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
-                          crossAxisAlignment:
-                              isOwn ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          crossAxisAlignment: isOwn
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
                           children: [
                             Text(
                               message.text,
@@ -107,7 +113,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               '${message.sentAt.hour}:${message.sentAt.minute.toString().padLeft(2, '0')}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isOwn ? Colors.white70 : Colors.grey.shade600,
+                                color: isOwn
+                                    ? Colors.white70
+                                    : Colors.grey.shade600,
                               ),
                             ),
                           ],
@@ -139,7 +147,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                     ),
                   ),
                 ),

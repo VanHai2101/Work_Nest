@@ -12,10 +12,9 @@ import 'package:work_nest/features/calendar/presentation/screens/calendar_screen
 import '../../../profile/presentation/screens/index.dart';
 import '../widgets/index.dart';
 import '../../../../core/theme/index.dart';
-import '../../../dashboard/presentation/screens/dashboard_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -27,7 +26,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // List of screens for bottom navigation
   late final List<Widget> _screens = [
-    const DashboardScreen(),
+    const HomeDashboardView(),
     const ChatsListScreen(),
     const cal.CalendarScreen(),
     const ProjectsListScreen(),

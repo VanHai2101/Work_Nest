@@ -7,7 +7,7 @@ import '../providers/chat_providers.dart';
 import 'chat_screen.dart';
 
 class ChatsListScreen extends ConsumerWidget {
-  const ChatsListScreen({Key? key}) : super(key: key);
+  const ChatsListScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -64,15 +64,15 @@ class ChatsListScreen extends ConsumerWidget {
 class ChatListTile extends ConsumerWidget {
   final ChatEntity chat;
 
-  const ChatListTile({required this.chat, Key? key}) : super(key: key);
+  const ChatListTile({required this.chat, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ListTile(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => ChatScreen(chatId: chat.id))
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => ChatScreen(chatId: chat.id)));
       },
       leading: CircleAvatar(
         backgroundColor: AppColors.surface,

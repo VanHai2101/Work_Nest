@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:work_nest/core/theme/index.dart' show AppColors, AppLayout, AppBorderRadius, AppSize;
+import 'package:work_nest/core/theme/index.dart';
 import '../../../../core/constants/index.dart';
 import '../../../../features/auth/presentation/providers/auth_providers.dart';
 
 class ProfileScreen extends ConsumerWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

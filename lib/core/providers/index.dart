@@ -1,2 +1,2 @@
-export 'auth_provider.dart';
-export 'firestore_providers.dart';
+export '../../features/auth/presentation/providers/auth_providers.dart';
+export 'service_providers.dart';

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/core/constants/index.dart';
-import '../../../../core/theme/index.dart' show AppLayout, AppSize;
+import '../../../../core/theme/index.dart';
 import '../../../../core/utils/index.dart';
 import '../../../../features/notifications/domain/entities/notification_entity.dart';
 import '../../../../features/notifications/presentation/providers/notification_providers.dart';
 
 class NotificationsScreen extends ConsumerWidget {
-  const NotificationsScreen({Key? key}) : super(key: key);
+  const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -55,8 +55,7 @@ class NotificationsScreen extends ConsumerWidget {
 class NotificationTile extends ConsumerWidget {
   final NotificationEntity notification;
 
-  const NotificationTile({required this.notification, Key? key})
-    : super(key: key);
+  const NotificationTile({required this.notification, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

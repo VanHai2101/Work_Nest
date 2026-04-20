@@ -8,11 +8,7 @@ class TaskDetailScreen extends ConsumerStatefulWidget {
   final String taskId;
   final String? projectId;
 
-  const TaskDetailScreen({
-    required this.taskId,
-    this.projectId,
-    Key? key,
-  }) : super(key: key);
+  const TaskDetailScreen({required this.taskId, this.projectId, super.key});
 
   @override
   ConsumerState<TaskDetailScreen> createState() => _TaskDetailScreenState();
@@ -21,7 +17,9 @@ class TaskDetailScreen extends ConsumerStatefulWidget {
 class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
   @override
   Widget build(BuildContext context) {
-    final taskAsync = ref.watch(taskProvider((taskId: widget.taskId, projectId: widget.projectId)));
+    final taskAsync = ref.watch(
+      taskProvider((taskId: widget.taskId, projectId: widget.projectId)),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -61,8 +59,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                 Text(
                   task.title,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 AppLayout.gapSmall,
 
@@ -72,11 +70,13 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     Checkbox(
                       value: task.completed,
                       onChanged: (_) {
-                        ref.read(taskRepositoryProvider).toggleTaskCompletion(
-                          task.id,
-                          task.projectId,
-                          !task.completed,
-                        );
+                        ref
+                            .read(taskRepositoryProvider)
+                            .toggleTaskCompletion(
+                              task.id,
+                              task.projectId,
+                              !task.completed,
+                            );
                       },
                     ),
                     Text(
@@ -117,8 +117,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                 Text(
                   'Description',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 AppLayout.gapSmall,
                 Container(
@@ -126,9 +126,7 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.05),
                     borderRadius: AppBorderRadius.medium,
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.1),
-                    ),
+                    border: Border.all(color: Colors.white.withOpacity(0.1)),
                   ),
                   child: Text(
                     task.description,
@@ -145,8 +143,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                   Text(
                     'Assignees',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   AppLayout.gapSmall,
                   SizedBox(
@@ -179,31 +177,33 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                   Text(
                     'Tags',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   AppLayout.gapSmall,
                   Wrap(
                     spacing: AppPadding.small,
                     runSpacing: AppPadding.small,
                     children: task.tags
-                        .map((tag) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
+                        .map(
+                          (tag) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              tag,
+                              style: TextStyle(
+                                color: Colors.blue.shade300,
+                                fontSize: 12,
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Text(
-                                tag,
-                                style: TextStyle(
-                                  color: Colors.blue.shade300,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ))
+                            ),
+                          ),
+                        )
                         .toList(),
                   ),
                 ],
@@ -226,16 +226,18 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
         borderRadius: AppBorderRadius.medium,
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-        ),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: AppSize.iconSmall, color: Colors.white.withOpacity(0.5)),
+              Icon(
+                icon,
+                size: AppSize.iconSmall,
+                color: Colors.white.withOpacity(0.5),
+              ),
               AppLayout.horizontalGapSmall,
               Text(
                 label,
@@ -298,9 +300,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
               if (context.mounted) {
                 Navigator.pop(context);
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Task deleted')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Task deleted')));
               }
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),

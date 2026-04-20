@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:work_nest/core/constants/index.dart';
-import '../../../../core/theme/index.dart'
-    show AppLayout, AppBorderRadius, AppSize;
+import '../../../../core/theme/index.dart';
 import '../../../../features/auth/presentation/providers/auth_providers.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
-  const EditProfileScreen({Key? key}) : super(key: key);
+  const EditProfileScreen({super.key});
 
   @override
   ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();

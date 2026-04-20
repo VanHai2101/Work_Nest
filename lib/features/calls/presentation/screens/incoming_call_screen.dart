@@ -16,8 +16,8 @@ class IncomingCallScreen extends ConsumerWidget {
     required this.callerName,
     required this.callerId,
     required this.callType,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -60,10 +60,7 @@ class IncomingCallScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Text(
                     callType == CallType.video ? 'Video Call' : 'Audio Call',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                 ],
               ),
@@ -96,9 +93,13 @@ class IncomingCallScreen extends ConsumerWidget {
                       onPressed: () async {
                         // The actual acceptance and WebRTC setup is handled by the callProvider's notifier
                         // We fetch the call entity from the stream and pass it to the notifier
-                        final call = await ref.read(incomingCallStreamProvider.future);
+                        final call = await ref.read(
+                          incomingCallStreamProvider.future,
+                        );
                         if (call != null) {
-                          await ref.read(callProvider.notifier).acceptCall(call);
+                          await ref
+                              .read(callProvider.notifier)
+                              .acceptCall(call);
 
                           if (context.mounted) {
                             Navigator.of(context).pushReplacement(

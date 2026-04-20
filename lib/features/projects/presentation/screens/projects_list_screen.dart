@@ -9,7 +9,7 @@ import 'project_detail_screen.dart';
 import 'create_project_screen.dart';
 
 class ProjectsListScreen extends ConsumerStatefulWidget {
-  const ProjectsListScreen({Key? key}) : super(key: key);
+  const ProjectsListScreen({super.key});
 
   @override
   ConsumerState<ProjectsListScreen> createState() => _ProjectsListScreenState();
@@ -86,13 +86,11 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
   }
 }
 
-
 class _ProjectTile extends StatelessWidget {
   final ProjectEntity project;
   final VoidCallback onTap;
 
-  const _ProjectTile({required this.project, required this.onTap, Key? key})
-    : super(key: key);
+  const _ProjectTile({required this.project, required this.onTap, super.key});
 
   @override
   Widget build(BuildContext context) {

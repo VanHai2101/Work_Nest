@@ -1,5 +1,3 @@
-// ignore_for_file: unused_local_variable
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/core/theme/index.dart';
@@ -14,16 +12,25 @@ class CalendarMonthGrid extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(calendarProvider);
-    final today = DateTime.now();
     final focusedMonth = state.focusedMonth;
     final selectedDay = state.selectedDay;
 
     final firstDayOfMonth = DateTime(focusedMonth.year, focusedMonth.month, 1);
     final startWeekday = firstDayOfMonth.weekday; // Mon=1, Sun=7
-    final gridStart = firstDayOfMonth.subtract(Duration(days: startWeekday - 1));
+    final gridStart = firstDayOfMonth.subtract(
+      Duration(days: startWeekday - 1),
+    );
 
     const totalCells = 42;
-    final days = List.generate(totalCells, (i) => gridStart.add(Duration(days: i)));
+    final days = List.generate(
+      totalCells,
+      (i) => gridStart.add(Duration(days: i)),
+    );
+
+    // Fetch events for the current grid range
+    final eventsAsync = ref.watch(
+      calendarEventsProvider((start: days.first, end: days.last)),
+    );
 
     return Column(
       children: [
@@ -32,27 +39,40 @@ class CalendarMonthGrid extends ConsumerWidget {
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.primaryBackground,
-              border: Border.all(color: Colors.black.withOpacity(0.05), width: 0.5),
-            ),
-            child: GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 7,
-                childAspectRatio: 0.85,
+              border: Border.all(
+                color: Colors.black.withOpacity(0.05),
+                width: 0.5,
               ),
-              itemCount: totalCells,
-              itemBuilder: (context, index) {
-                final day = days[index];
-                final isCurrentMonth = day.month == focusedMonth.month;
-                final isSelected = selectedDay?.isSameDay(day) ?? false;
-                
-                return _MonthDayCell(
-                  day: day,
-                  isCurrentMonth: isCurrentMonth,
-                  isSelected: isSelected,
-                  onTap: () => ref.read(calendarProvider.notifier).selectDay(day),
-                );
-              },
+            ),
+            child: eventsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, _) => Center(child: Text('Lỗi: $err')),
+              data: (events) => GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 7,
+                  childAspectRatio: 0.85,
+                ),
+                itemCount: totalCells,
+                itemBuilder: (context, index) {
+                  final day = days[index];
+                  final isCurrentMonth = day.month == focusedMonth.month;
+                  final isSelected = selectedDay?.isSameDay(day) ?? false;
+
+                  final dayEvents = events
+                      .where((e) => e.startTime.isSameDay(day))
+                      .toList();
+
+                  return _MonthDayCell(
+                    day: day,
+                    isCurrentMonth: isCurrentMonth,
+                    isSelected: isSelected,
+                    eventCount: dayEvents.length,
+                    onTap: () =>
+                        ref.read(calendarProvider.notifier).selectDay(day),
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -65,12 +85,14 @@ class _MonthDayCell extends StatelessWidget {
   final DateTime day;
   final bool isCurrentMonth;
   final bool isSelected;
+  final int eventCount;
   final VoidCallback onTap;
 
   const _MonthDayCell({
     required this.day,
     required this.isCurrentMonth,
     required this.isSelected,
+    required this.eventCount,
     required this.onTap,
   });
 
@@ -83,7 +105,9 @@ class _MonthDayCell extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: Colors.black.withOpacity(0.03), width: 0.5),
-          color: isSelected ? Colors.blue.withOpacity(0.02) : Colors.transparent,
+          color: isSelected
+              ? Colors.blue.withOpacity(0.02)
+              : Colors.transparent,
         ),
         padding: const EdgeInsets.all(4),
         child: Column(
@@ -103,21 +127,20 @@ class _MonthDayCell extends StatelessWidget {
               ],
             ),
             const Spacer(),
-            // Mockup task indicator as seen in Image 3
-            if (isCurrentMonth && (day.day % 4 == 0))
+            if (isCurrentMonth && eventCount > 0)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
+                  color: AppColors.accent.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.orange.withOpacity(0.2)),
+                  border: Border.all(color: AppColors.accent.withOpacity(0.2)),
                 ),
-                child: const Text(
-                  '1 công việc khác',
+                child: Text(
+                  '$eventCount công việc',
                   style: TextStyle(
                     fontSize: 8,
-                    color: Colors.orange,
+                    color: AppColors.accentDark,
                     fontWeight: FontWeight.bold,
                   ),
                   overflow: TextOverflow.ellipsis,

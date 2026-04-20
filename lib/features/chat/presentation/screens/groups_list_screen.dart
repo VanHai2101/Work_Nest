@@ -7,7 +7,7 @@ import '../providers/chat_providers.dart';
 import 'group_chat_screen.dart';
 
 class GroupsListScreen extends ConsumerWidget {
-  const GroupsListScreen({Key? key}) : super(key: key);
+  const GroupsListScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,7 +63,7 @@ class GroupsListScreen extends ConsumerWidget {
 class GroupListTile extends ConsumerWidget {
   final GroupEntity group;
 
-  const GroupListTile({required this.group, Key? key}) : super(key: key);
+  const GroupListTile({required this.group, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

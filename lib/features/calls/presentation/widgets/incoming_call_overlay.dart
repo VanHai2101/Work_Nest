@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../features/notifications/domain/entities/notification_entity.dart';
 import '../../../../features/notifications/presentation/providers/notification_providers.dart';
-import '../../../../features/calls/domain/entities/call_entity.dart' show CallType; 
+import '../../../../features/calls/domain/entities/call_entity.dart'
+    show CallType;
 
 import '../screens/incoming_call_screen.dart';
 
@@ -19,7 +20,8 @@ class IncomingCallOverlay extends ConsumerWidget {
         // Find incoming call notifications
         NotificationEntity? incomingCall;
         for (final notification in notifications) {
-          if (notification.type == NotificationType.callIncoming && !notification.isRead) {
+          if (notification.type == NotificationType.callIncoming &&
+              !notification.isRead) {
             incomingCall = notification;
             break;
           }
@@ -30,7 +32,7 @@ class IncomingCallOverlay extends ConsumerWidget {
           showGeneralDialog(
             context: context,
             barrierDismissible: false,
-            pageBuilder: (context, _, __) => IncomingCallScreen(
+            pageBuilder: (context, _, _) => IncomingCallScreen(
               callId: call.relatedEntityId!,
               callerName: call.actorName,
               callerId: call.actorId,
@@ -44,5 +46,3 @@ class IncomingCallOverlay extends ConsumerWidget {
     return child;
   }
 }
-
-

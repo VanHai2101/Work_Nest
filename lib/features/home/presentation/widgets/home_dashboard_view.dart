@@ -11,15 +11,16 @@ import '../../../tasks/domain/entities/task_entity.dart';
 import '../../../tasks/presentation/providers/tasks_provider.dart';
 import '../../../projects/presentation/screens/index.dart';
 import '../../../tasks/presentation/screens/index.dart';
+import '../../../../core/components/task_card.dart';
 
-class DashboardScreen extends ConsumerStatefulWidget {
-  const DashboardScreen({Key? key}) : super(key: key);
+class HomeDashboardView extends ConsumerStatefulWidget {
+  const HomeDashboardView({super.key});
 
   @override
-  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<HomeDashboardView> createState() => _HomeDashboardViewState();
 }
 
-class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
   late String currentUserId;
 
   @override
@@ -53,10 +54,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           _buildStatsGrid(),
           AppLayout.gapLarge,
           _buildSectionHeader('Dự án gần đây', () {
-            // In a real app, you'd use a provider or controller to switch tabs
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ProjectsListScreen()),
+            );
           }),
           AppLayout.gapMedium,
           _buildRecentProjects(),
+          AppLayout.gapLarge,
+          _buildSectionHeader('Công việc gần đây', () {
+            // Navigate to tasks tab (usually index 1 in MainScreen)
+            // For now, push the TaskListScreen
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const TasksListScreen()));
+          }),
+          AppLayout.gapMedium,
+          _buildRecentTasks(),
           AppLayout.gapLarge,
           _buildSectionHeader('Hành động nhanh', null),
           AppLayout.gapMedium,
@@ -72,7 +85,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         CircleAvatar(
           radius: 28,
           backgroundColor: AppColors.accent.withOpacity(0.2),
-          backgroundImage: user?.photoURL != null ? NetworkImage(user!.photoURL!) : null,
+          backgroundImage: user?.photoURL != null
+              ? NetworkImage(user!.photoURL!)
+              : null,
           child: user?.photoURL == null
               ? Text(
                   user?.displayName[0].toUpperCase() ?? 'U',
@@ -125,8 +140,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Icons.folder_copy_outlined,
             Colors.blue,
           ),
-          loading: () => _buildStatCardLoading('Dự án', Icons.folder_copy_outlined, Colors.blue),
-          error: (_, __) => _buildStatCard('Dự án', '!', Icons.folder_copy_outlined, Colors.red),
+          loading: () => _buildStatCardLoading(
+            'Dự án',
+            Icons.folder_copy_outlined,
+            Colors.blue,
+          ),
+          error: (_, _) => _buildStatCard(
+            'Dự án',
+            '!',
+            Icons.folder_copy_outlined,
+            Colors.red,
+          ),
         ),
         tasksAsync.when(
           data: (tasks) => _buildStatCard(
@@ -135,8 +159,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Icons.task_alt,
             Colors.green,
           ),
-          loading: () => _buildStatCardLoading('Công việc', Icons.task_alt, Colors.green),
-          error: (_, __) => _buildStatCard('Công việc', '!', Icons.task_alt, Colors.red),
+          loading: () =>
+              _buildStatCardLoading('Công việc', Icons.task_alt, Colors.green),
+          error: (_, _) =>
+              _buildStatCard('Công việc', '!', Icons.task_alt, Colors.red),
         ),
       ],
     );
@@ -146,7 +172,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return _buildStatCard(title, '...', icon, color);
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: AppLayout.paddingMedium,
       decoration: BoxDecoration(
@@ -236,7 +267,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
         final recentProjects = projects.take(3).toList();
         return Column(
-          children: recentProjects.map((p) => _buildProjectSmallCard(p)).toList(),
+          children: recentProjects
+              .map((p) => _buildProjectSmallCard(p))
+              .toList(),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -286,6 +319,55 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
+  Widget _buildRecentTasks() {
+    final tasksAsync = ref.watch(userAssignedTasksProvider(currentUserId));
+
+    return tasksAsync.when(
+      data: (tasks) {
+        if (tasks.isEmpty) {
+          return Container(
+            height: 100,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.card,
+              borderRadius: AppBorderRadius.medium,
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(
+              'Chưa có công việc nào',
+              style: TextStyle(color: AppColors.textTertiary),
+            ),
+          );
+        }
+
+        // Get 3 most recent tasks (sorted by creation date)
+        final recentTasks =
+            (tasks.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
+                .take(3)
+                .toList();
+
+        return Column(
+          children: recentTasks
+              .map(
+                (t) => TaskCard(
+                  task: t,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => TaskDetailScreen(taskId: t.id),
+                      ),
+                    );
+                  },
+                ),
+              )
+              .toList(),
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(child: Text('Error loading tasks')),
+    );
+  }
+
   Widget _buildQuickActions() {
     return Row(
       children: [
@@ -300,30 +382,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           },
         ),
         AppLayout.horizontalGapMedium,
-        _buildActionItem(
-          'Giao việc',
-          Icons.add_task,
-          Colors.purple,
-          () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CreateTaskScreen()),
-            );
-          },
-        ),
+        _buildActionItem('Giao việc', Icons.add_task, Colors.purple, () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const CreateTaskScreen()));
+        }),
         AppLayout.horizontalGapMedium,
-        _buildActionItem(
-          'Tin nhắn',
-          Icons.message_outlined,
-          Colors.teal,
-          () {
-            // Switch to chats tab
-          },
-        ),
+        _buildActionItem('Tin nhắn', Icons.message_outlined, Colors.teal, () {
+          // Switch to chats tab
+        }),
       ],
     );
   }
 
-  Widget _buildActionItem(String title, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionItem(
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return Expanded(
       child: InkWell(
         onTap: onTap,

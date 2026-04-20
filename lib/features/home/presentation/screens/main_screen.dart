@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:work_nest/core/theme/index.dart';
 import 'package:work_nest/features/calendar/presentation/screens/calendar_screen.dart';
+import 'package:work_nest/features/home/presentation/widgets/index.dart';
+import 'package:work_nest/features/profile/presentation/screens/profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -14,10 +16,12 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
   static final List<Widget> _screens = [
-    const Center(child: Text('Home Screen', style: TextStyle(color: Colors.white))),
-    const Center(child: Text('Chat Screen', style: TextStyle(color: Colors.white))),
+    const HomeDashboardView(),
+    const Center(
+      child: Text('Chat Screen', style: TextStyle(color: Colors.white)),
+    ),
     const CalendarScreen(),
-    const Center(child: Text('Profile Screen', style: TextStyle(color: Colors.white))),
+    const ProfileScreen(),
   ];
 
   @override
@@ -30,16 +34,11 @@ class _MainScreenState extends State<MainScreen> {
       ),
       child: Scaffold(
         backgroundColor: AppColors.primaryBackground,
-        body: IndexedStack(
-          index: _selectedIndex,
-          children: _screens,
-        ),
+        body: IndexedStack(index: _selectedIndex, children: _screens),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
-            border: Border(
-              top: BorderSide(color: AppColors.border, width: 1),
-            ),
+            border: Border(top: BorderSide(color: AppColors.border, width: 1)),
           ),
           child: BottomNavigationBar(
             currentIndex: _selectedIndex,

@@ -7,7 +7,7 @@ import 'signup_screen.dart';
 
 /// Login screen for user authentication
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -123,10 +123,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         },
                       ),
                       validator: (value) {
-                        if (value?.isEmpty ?? true)
+                        if (value?.isEmpty ?? true) {
                           return 'Password is required';
-                        if (value!.length < 6)
+                        }
+                        if (value!.length < 6) {
                           return 'Password must be at least 6 characters';
+                        }
                         return null;
                       },
                     ),

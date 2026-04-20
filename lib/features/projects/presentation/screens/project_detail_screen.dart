@@ -8,13 +8,11 @@ import '../widgets/index.dart';
 class ProjectDetailScreen extends ConsumerStatefulWidget {
   final String projectId;
 
-  const ProjectDetailScreen({
-    required this.projectId,
-    Key? key,
-  }) : super(key: key);
+  const ProjectDetailScreen({required this.projectId, super.key});
 
   @override
-  ConsumerState<ProjectDetailScreen> createState() => _ProjectDetailScreenState();
+  ConsumerState<ProjectDetailScreen> createState() =>
+      _ProjectDetailScreenState();
 }
 
 class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
@@ -68,8 +66,8 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                 Text(
                   'Description',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 AppLayout.gapSmall,
                 Container(
@@ -77,9 +75,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.05),
                     borderRadius: AppBorderRadius.medium,
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.1),
-                    ),
+                    border: Border.all(color: Colors.white.withOpacity(0.1)),
                   ),
                   child: Text(
                     project.description,
@@ -100,31 +96,33 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                   Text(
                     'Tags',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   AppLayout.gapSmall,
                   Wrap(
                     spacing: AppPadding.small,
                     runSpacing: AppPadding.small,
                     children: project.tags
-                        .map((tag) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
+                        .map(
+                          (tag) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              tag,
+                              style: TextStyle(
+                                color: Colors.blue.shade300,
+                                fontSize: 12,
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Text(
-                                tag,
-                                style: TextStyle(
-                                  color: Colors.blue.shade300,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ))
+                            ),
+                          ),
+                        )
                         .toList(),
                   ),
                 ],
@@ -149,7 +147,9 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           ),
           TextButton(
             onPressed: () async {
-              await ref.read(projectRepositoryProvider).deleteProject(widget.projectId);
+              await ref
+                  .read(projectRepositoryProvider)
+                  .deleteProject(widget.projectId);
               if (mounted) {
                 Navigator.pop(context);
                 Navigator.pop(context);

@@ -21,7 +21,9 @@ class CalendarWeekView extends ConsumerWidget {
         Container(
           decoration: BoxDecoration(
             color: AppColors.primaryBackground,
-            border: Border(bottom: BorderSide(color: Colors.black.withOpacity(0.05))),
+            border: Border(
+              bottom: BorderSide(color: Colors.black.withOpacity(0.05)),
+            ),
           ),
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Row(
@@ -35,7 +37,9 @@ class CalendarWeekView extends ConsumerWidget {
                       Text(
                         day.weekdayNameVi.toUpperCase(),
                         style: TextStyle(
-                          color: day.isSunday ? Colors.red.withOpacity(0.7) : Colors.black45,
+                          color: day.isSunday
+                              ? Colors.red.withOpacity(0.7)
+                              : Colors.black45,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
@@ -46,12 +50,13 @@ class CalendarWeekView extends ConsumerWidget {
                         isToday: day.isToday,
                         isSelected: isSelected,
                         size: 36,
-                        onTap: () => ref.read(calendarProvider.notifier).selectDay(day),
+                        onTap: () =>
+                            ref.read(calendarProvider.notifier).selectDay(day),
                       ),
                     ],
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),

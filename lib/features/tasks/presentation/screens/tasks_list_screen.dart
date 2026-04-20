@@ -9,7 +9,7 @@ import 'task_detail_screen.dart';
 import 'create_task_screen.dart';
 
 class TasksListScreen extends ConsumerStatefulWidget {
-  const TasksListScreen({Key? key}) : super(key: key);
+  const TasksListScreen({super.key});
 
   @override
   ConsumerState<TasksListScreen> createState() => _TasksListScreenState();
@@ -102,11 +102,13 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
                         );
                       },
                       onCompletionToggle: () {
-                        ref.read(taskRepositoryProvider).toggleTaskCompletion(
-                          task.id,
-                          task.projectId,
-                          !task.completed,
-                        );
+                        ref
+                            .read(taskRepositoryProvider)
+                            .toggleTaskCompletion(
+                              task.id,
+                              task.projectId,
+                              !task.completed,
+                            );
                       },
                     );
                   },
@@ -138,8 +140,7 @@ class _TaskTile extends StatelessWidget {
     required this.task,
     required this.onTap,
     required this.onCompletionToggle,
-    Key? key,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

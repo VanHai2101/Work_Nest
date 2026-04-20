@@ -5,10 +5,7 @@ import '../../domain/entities/project_entity.dart';
 class ProjectStats extends StatelessWidget {
   final ProjectEntity project;
 
-  const ProjectStats({
-    required this.project,
-    Key? key,
-  }) : super(key: key);
+  const ProjectStats({required this.project, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,9 +16,9 @@ class ProjectStats extends StatelessWidget {
       children: [
         Text(
           'Progress',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         AppLayout.gapMedium,
         Container(
@@ -29,9 +26,7 @@ class ProjectStats extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.05),
             borderRadius: AppBorderRadius.medium,
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.1)),
           ),
           child: Column(
             children: [
@@ -40,9 +35,7 @@ class ProjectStats extends StatelessWidget {
                 children: [
                   Text(
                     'Completion',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
-                    ),
+                    style: TextStyle(color: Colors.white.withOpacity(0.6)),
                   ),
                   Text(
                     '$progressPercent%',
