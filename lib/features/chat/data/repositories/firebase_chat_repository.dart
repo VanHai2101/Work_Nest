@@ -1,15 +1,14 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../models/chat_model.dart';
-import '../models/message_model.dart';
-import '../models/group_model.dart';
-import '../../domain/entities/chat_entity.dart';
-import '../../domain/entities/message_entity.dart';
-import '../../domain/entities/group_entity.dart';
-import '../../domain/repositories/chat_repository.dart';
+import '../models/index.dart';
+import '../../domain/entities/index.dart';
+import '../../domain/repositories/index.dart';
 
 class FirebaseChatRepository implements IChatRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   @override
   Stream<List<ChatEntity>> watchChats(String userId) {
@@ -84,9 +83,9 @@ class FirebaseChatRepository implements IChatRepository {
       final notifRef = _firestore.collection('notifications').doc();
       batch.set(notifRef, {
         'userId': userId,
-        'type': 'new_message',
-        'title': 'New Message',
-        'body': '$actorName: "$preview"',
+        'type': message.type == 'image' ? 'new_message' : 'new_message',
+        'title': message.type == 'image' ? 'Đã gửi một ảnh' : 'Tin nhắn mới',
+        'body': message.type == 'image' ? '$actorName đã gửi một ảnh' : '$actorName: "$preview"',
         'actorId': currentUser?.uid ?? '',
         'actorName': actorName,
         'actorPhotoURL': actorPhotoURL,
@@ -98,6 +97,20 @@ class FirebaseChatRepository implements IChatRepository {
     }
 
     await batch.commit();
+  }
+
+  @override
+  Future<String> uploadImage(File file, String path) async {
+    try {
+      final ref = _storage.ref().child(path);
+      final uploadTask = await ref.putFile(
+        file,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      return await uploadTask.ref.getDownloadURL();
+    } catch (e) {
+      throw Exception('Failed to upload image: $e');
+    }
   }
 
   @override

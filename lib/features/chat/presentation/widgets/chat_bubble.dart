@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../domain/entities/message_entity.dart';
+import '../../domain/entities/index.dart';
 import '../../../../core/theme/index.dart';
 import '../../../../core/components/index.dart';
 import 'package:intl/intl.dart';
@@ -26,7 +26,9 @@ class ChatMessageBubble extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isMe && showAvatar) ...[
@@ -35,10 +37,12 @@ class ChatMessageBubble extends StatelessWidget {
           ] else if (!isMe && !showAvatar) ...[
             const SizedBox(width: 40), // Placeholder for alignment
           ],
-          
+
           Flexible(
             child: Column(
-              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isMe
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 if (!isMe && showAvatar && senderName != null)
                   Padding(
@@ -52,18 +56,26 @@ class ChatMessageBubble extends StatelessWidget {
                       ),
                     ),
                   ),
-                
+
                 _buildMessageContainer(context),
               ],
             ),
           ),
-          
+
           if (isMe) ...[
-             const SizedBox(width: 6),
-             if (message.readBy.length > 1)
-               const Icon(Icons.done_all_rounded, size: 14, color: AppColors.darkAccent)
-             else
-               const Icon(Icons.done_rounded, size: 14, color: AppColors.darkTextSecondary),
+            const SizedBox(width: 6),
+            if (message.readBy.length > 1)
+              const Icon(
+                Icons.done_all_rounded,
+                size: 14,
+                color: AppColors.darkAccent,
+              )
+            else
+              const Icon(
+                Icons.done_rounded,
+                size: 14,
+                color: AppColors.darkTextSecondary,
+              ),
           ],
         ],
       ),
@@ -71,8 +83,9 @@ class ChatMessageBubble extends StatelessWidget {
   }
 
   Widget _buildMessageContainer(BuildContext context) {
+    final hasImage = message.type == 'image' && message.attachments.isNotEmpty;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: isMe ? AppColors.darkAccent : AppColors.darkCard,
         borderRadius: BorderRadius.only(
@@ -83,26 +96,103 @@ class ChatMessageBubble extends StatelessWidget {
         ),
         border: isMe ? null : Border.all(color: AppColors.darkBorder),
       ),
-      child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Text(
-            message.text,
-            style: TextStyle(
-              color: isMe ? Colors.white : Colors.white.withOpacity(0.9),
-              fontSize: 14,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            DateFormat('HH:mm').format(message.sentAt),
-            style: TextStyle(
-              color: isMe ? Colors.white.withOpacity(0.6) : AppColors.darkTextSecondary,
-              fontSize: 10,
-            ),
-          ),
-        ],
+      child: ClipRRect(
+        borderRadius: BorderRadius.only(
+          topLeft: const Radius.circular(18),
+          topRight: const Radius.circular(18),
+          bottomLeft: Radius.circular(isMe ? 18 : 4),
+          bottomRight: Radius.circular(isMe ? 4 : 18),
+        ),
+        child: Column(
+          crossAxisAlignment: isMe
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
+          children: [
+            if (hasImage)
+              Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: Image.network(
+                    message.attachments.first,
+                    width: 240,
+                    height: 240,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        width: 240,
+                        height: 240,
+                        color: Colors.black26,
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      );
+                    },
+                    errorBuilder: (_, _, _) => Container(
+                      width: 240,
+                      height: 120,
+                      color: Colors.red.withOpacity(0.1),
+                      child: const Center(
+                        child: Icon(
+                          Icons.broken_image_rounded,
+                          color: Colors.redAccent,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            if (message.text.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                child: Column(
+                  crossAxisAlignment: isMe
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      message.text,
+                      style: TextStyle(
+                        color: isMe
+                            ? Colors.white
+                            : Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      DateFormat('HH:mm').format(message.sentAt),
+                      style: TextStyle(
+                        color: isMe
+                            ? Colors.white.withOpacity(0.6)
+                            : AppColors.darkTextSecondary,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (hasImage)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+                child: Text(
+                  DateFormat('HH:mm').format(message.sentAt),
+                  style: TextStyle(
+                    color: isMe
+                        ? Colors.white.withOpacity(0.6)
+                        : AppColors.darkTextSecondary,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

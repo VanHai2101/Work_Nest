@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/repositories/calendar_repository.dart';
-import '../../domain/entities/calendar_event.dart';
+import '../../domain/repositories/index.dart';
+import '../../domain/entities/index.dart';
 import '../../data/repositories/firebase_calendar_repository.dart';
 
 enum CalendarViewMode { day, week, month }

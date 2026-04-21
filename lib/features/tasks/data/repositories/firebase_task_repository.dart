@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../domain/entities/task_entity.dart';
-import '../../domain/repositories/task_repository.dart';
-import '../models/task_model.dart';
+import '../../domain/entities/index.dart';
+import '../../domain/repositories/index.dart';
+import '../models/index.dart';
 
 class FirebaseTaskRepository implements TaskRepository {
   final FirebaseFirestore _firestore;

@@ -3,10 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:work_nest/core/theme/index.dart' show AppColors;
 import '../../../../core/constants/index.dart';
-import '../../domain/entities/project_entity.dart';
-import '../providers/projects_provider.dart';
-import 'project_detail_screen.dart';
-import 'create_project_screen.dart';
+import '../../domain/entities/index.dart';
+import '../providers/index.dart';
+import 'index.dart';
 
 class ProjectsListScreen extends ConsumerStatefulWidget {
   const ProjectsListScreen({super.key});

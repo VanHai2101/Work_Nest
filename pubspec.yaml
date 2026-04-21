@@ -48,6 +48,8 @@ dependencies:
   intl: ^0.20.2
   auto_translator: ^2.3.5
   go_router: ^14.0.0
+  firebase_storage: 12.4.10
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

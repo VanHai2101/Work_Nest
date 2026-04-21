@@ -20,7 +20,9 @@ class FirebaseUserRepository implements IUserRepository {
 
   @override
   Stream<UserEntity?> getUserStream(String uid) {
-    return _firestore.collection(_usersCollection).doc(uid).snapshots().map((doc) {
+    return _firestore.collection(_usersCollection).doc(uid).snapshots().map((
+      doc,
+    ) {
       if (!doc.exists) return null;
       return UserModel.fromJson(doc.data(), id: doc.id).toEntity();
     });
@@ -71,6 +73,17 @@ class FirebaseUserRepository implements IUserRepository {
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  Future<void> updateUserStatus(String uid, bool isOnline) async {
+    try {
+      await _firestore.collection(_usersCollection).doc(uid).update({
+        'isOnline': isOnline,
+        'lastSeen': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {}
   }
 
   @override

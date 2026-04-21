@@ -4,10 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/components/index.dart';
 import '../../../../core/constants/index.dart';
 import '../../../../core/theme/index.dart';
-import '../../domain/entities/group_entity.dart';
-import '../providers/chat_providers.dart';
-import 'group_chat_screen.dart';
-import '../../../search/presentation/screens/search_screen.dart';
+import '../../domain/entities/index.dart';
+import '../providers/index.dart';
+import 'index.dart';
+import '../../../search/presentation/screens/index.dart';
 
 class GroupsListScreen extends ConsumerWidget {
   const GroupsListScreen({super.key});

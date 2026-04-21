@@ -4,10 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/theme/index.dart';
 import '../../../../core/components/index.dart';
 import 'package:uuid/uuid.dart';
-import '../../domain/entities/message_entity.dart';
-import '../providers/chat_providers.dart';
-import '../widgets/chat_bubble.dart';
-import '../widgets/chat_input_editor.dart';
+import '../../domain/entities/index.dart';
+import '../providers/index.dart';
+import '../widgets/index.dart';
+import 'dart:io';
 
 class ChatDetailScreen extends ConsumerStatefulWidget {
   final String chatId;
@@ -42,6 +42,40 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     }
     
     _scrollToBottom();
+  }
+
+  Future<void> _handleImageSelected(File file) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    try {
+      final repo = ref.read(chatRepositoryProvider);
+      final path = widget.isGroup ? 'groups/${widget.chatId}' : 'chats/${widget.chatId}';
+      final fileName = '$path/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final imageUrl = await repo.uploadImage(file, fileName);
+
+      final newMsg = MessageEntity(
+        id: const Uuid().v4(),
+        senderId: currentUser.uid,
+        text: '',
+        sentAt: DateTime.now(),
+        type: 'image',
+        attachments: [imageUrl],
+      );
+
+      if (widget.isGroup) {
+        await repo.sendGroupMessage(widget.chatId, newMsg);
+      } else {
+        await repo.sendMessage(widget.chatId, newMsg);
+      }
+      _scrollToBottom();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi tải ảnh: $e')),
+        );
+      }
+    }
   }
 
   void _scrollToBottom() {
@@ -108,8 +142,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
           
           ChatInputEditor(
             onSend: _sendMessage,
-            onAttach: () {},
-            onCamera: () {},
+            onImageSelected: _handleImageSelected,
             onVoice: () {},
           ),
         ],

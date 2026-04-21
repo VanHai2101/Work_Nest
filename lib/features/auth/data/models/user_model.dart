@@ -14,6 +14,8 @@ class UserModel {
   final List<String> fcmTokens;
   final Timestamp? planExpiresAt;
   final Timestamp? planUpdatedAt;
+  final bool isOnline;
+  final Timestamp? lastSeen;
 
   UserModel({
     required this.id,
@@ -27,6 +29,8 @@ class UserModel {
     this.fcmTokens = const [],
     this.planExpiresAt,
     this.planUpdatedAt,
+    this.isOnline = false,
+    this.lastSeen,
   });
 
   factory UserModel.fromJson(Map<String, dynamic>? json, {String? id}) {
@@ -47,6 +51,10 @@ class UserModel {
       planUpdatedAt: json['planUpdatedAt'] != null 
           ? Parser.parseTimestamp(json['planUpdatedAt']) 
           : null,
+      isOnline: json['isOnline'] as bool? ?? false,
+      lastSeen: json['lastSeen'] != null 
+          ? Parser.parseTimestamp(json['lastSeen']) 
+          : null,
     );
   }
 
@@ -65,6 +73,10 @@ class UserModel {
         : null,
     planUpdatedAt: entity.planUpdatedAt != null 
         ? Timestamp.fromDate(entity.planUpdatedAt!) 
+        : null,
+    isOnline: entity.isOnline,
+    lastSeen: entity.lastSeen != null 
+        ? Timestamp.fromDate(entity.lastSeen!) 
         : null,
   );
 
@@ -89,6 +101,8 @@ class UserModel {
     'fcmTokens': fcmTokens,
     'planExpiresAt': planExpiresAt,
     'planUpdatedAt': planUpdatedAt,
+    'isOnline': isOnline,
+    'lastSeen': lastSeen,
   };
 
   UserEntity toEntity() => UserEntity(
@@ -103,6 +117,8 @@ class UserModel {
     fcmTokens: fcmTokens,
     planExpiresAt: planExpiresAt?.toDate(),
     planUpdatedAt: planUpdatedAt?.toDate(),
+    isOnline: isOnline,
+    lastSeen: lastSeen?.toDate(),
   );
 
   UserModel copyWith({
@@ -117,6 +133,8 @@ class UserModel {
     List<String>? fcmTokens,
     Timestamp? planExpiresAt,
     Timestamp? planUpdatedAt,
+    bool? isOnline,
+    Timestamp? lastSeen,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -130,6 +148,8 @@ class UserModel {
       fcmTokens: fcmTokens ?? this.fcmTokens,
       planExpiresAt: planExpiresAt ?? this.planExpiresAt,
       planUpdatedAt: planUpdatedAt ?? this.planUpdatedAt,
+      isOnline: isOnline ?? this.isOnline,
+      lastSeen: lastSeen ?? this.lastSeen,
     );
   }
 

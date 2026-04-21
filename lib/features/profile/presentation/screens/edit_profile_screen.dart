@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:work_nest/core/constants/index.dart';
 import '../../../../core/theme/index.dart';
-import '../../../../features/auth/presentation/providers/auth_providers.dart';
+import '../../../../features/auth/presentation/providers/index.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});

@@ -1,17 +1,17 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/index.dart';
 
 class ChatInputEditor extends StatefulWidget {
   final Function(String) onSend;
-  final VoidCallback? onAttach;
-  final VoidCallback? onCamera;
+  final Function(File)? onImageSelected;
   final VoidCallback? onVoice;
 
   const ChatInputEditor({
     super.key,
     required this.onSend,
-    this.onAttach,
-    this.onCamera,
+    this.onImageSelected,
     this.onVoice,
   });
 
@@ -45,6 +45,18 @@ class _ChatInputEditorState extends State<ChatInputEditor> {
     }
   }
 
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: source,
+      imageQuality: 70,
+    );
+    
+    if (pickedFile != null && widget.onImageSelected != null) {
+      widget.onImageSelected!(File(pickedFile.path));
+    }
+  }
+
   void _handleSend() {
     final text = _controller.text.trim();
     if (text.isNotEmpty) {
@@ -64,8 +76,8 @@ class _ChatInputEditorState extends State<ChatInputEditor> {
       child: SafeArea(
         child: Row(
           children: [
-            _buildActionButton(Icons.add_circle_rounded, widget.onAttach),
-            _buildActionButton(Icons.camera_alt_rounded, widget.onCamera),
+            _buildActionButton(Icons.add_circle_rounded, () => _pickImage(ImageSource.gallery)),
+            _buildActionButton(Icons.camera_alt_rounded, () => _pickImage(ImageSource.camera)),
             
             Expanded(
               child: Container(

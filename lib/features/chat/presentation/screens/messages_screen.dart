@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:work_nest/core/theme/index.dart';
 import 'package:work_nest/app/index.dart';
-import '../providers/chat_providers.dart';
+import '../providers/index.dart';
 
 class MessagesScreen extends ConsumerWidget {
   const MessagesScreen({super.key});

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io';
 import '../../../../core/theme/index.dart';
 import '../../../../core/components/index.dart';
-import '../../domain/entities/message_entity.dart';
-import '../providers/chat_providers.dart';
+import '../widgets/index.dart';
+import '../../domain/entities/index.dart';
+import '../providers/index.dart';
 
 class GroupChatScreen extends ConsumerStatefulWidget {
   final String groupId;
@@ -16,24 +18,18 @@ class GroupChatScreen extends ConsumerStatefulWidget {
 }
 
 class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
-  late TextEditingController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
     super.dispose();
   }
 
-  Future<void> _handleSend() async {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
-
+  Future<void> _handleSend(String text) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
 
@@ -44,27 +40,60 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
       sentAt: DateTime.now(),
     );
 
+    await _sendMessage(newMessage);
+  }
+
+  Future<void> _handleImageSelected(File file) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    try {
+      // 1. Upload ảnh
+      final repo = ref.read(chatRepositoryProvider);
+      final fileName = 'groups/${widget.groupId}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final imageUrl = await repo.uploadImage(file, fileName);
+
+      // 2. Gửi tin nhắn ảnh
+      final newMessage = MessageEntity(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        senderId: currentUser.uid,
+        text: '',
+        sentAt: DateTime.now(),
+        type: 'image',
+        attachments: [imageUrl],
+      );
+
+      await _sendMessage(newMessage);
+    } catch (e) {
+      _showError('Lỗi upload ảnh: $e');
+    }
+  }
+
+  Future<void> _sendMessage(MessageEntity message) async {
     try {
       await ref
           .read(chatRepositoryProvider)
-          .sendGroupMessage(widget.groupId, newMessage);
-      _controller.clear();
+          .sendGroupMessage(widget.groupId, message);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: const Color(0xFF2A1A1A),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            content: Text(
-              'Error: $e',
-              style: const TextStyle(color: Colors.redAccent),
-            ),
+      _showError('Lỗi gửi tin nhắn: $e');
+    }
+  }
+
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: const Color(0xFF2A1A1A),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-        );
-      }
+          content: Text(
+            message,
+            style: const TextStyle(color: Colors.redAccent),
+          ),
+        ),
+      );
     }
   }
 
@@ -99,14 +128,10 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
                   itemBuilder: (context, index) {
                     final message = messages[index];
                     final isOwn = message.senderId == currentUser?.uid;
-                    final showTime =
-                        index == 0 ||
-                        messages[index - 1].sentAt
-                                .difference(message.sentAt)
-                                .abs()
-                                .inMinutes >
-                            5;
-                    return _buildBubble(message, isOwn, showTime);
+                    return ChatMessageBubble(
+                      message: message,
+                      isMe: isOwn,
+                    );
                   },
                 );
               },
@@ -121,176 +146,15 @@ class _GroupChatScreenState extends ConsumerState<GroupChatScreen> {
               ),
             ),
           ),
-          _buildInput(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBubble(MessageEntity message, bool isOwn, bool showTime) {
-    final timeStr =
-        '${message.sentAt.hour}:${message.sentAt.minute.toString().padLeft(2, '0')}';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Column(
-        children: [
-          if (showTime)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              child: Text(
-                timeStr,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: AppColors.darkTextSecondary,
-                ),
-              ),
-            ),
-          Align(
-            alignment: isOwn ? Alignment.centerRight : Alignment.centerLeft,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (!isOwn) ...[
-                  AppAvatar(id: message.senderId, size: 28),
-                  const SizedBox(width: 8),
-                ],
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.65,
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isOwn ? AppColors.darkAccent : AppColors.darkCard,
-                      borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(18),
-                        topRight: const Radius.circular(18),
-                        bottomLeft: Radius.circular(isOwn ? 18 : 4),
-                        bottomRight: Radius.circular(isOwn ? 4 : 18),
-                      ),
-                      border: isOwn
-                          ? null
-                          : Border.all(color: AppColors.darkBorder),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: isOwn
-                          ? CrossAxisAlignment.end
-                          : CrossAxisAlignment.start,
-                      children: [
-                        if (!isOwn)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(
-                              'User ${message.senderId.substring(0, 4)}',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.darkAccent.withOpacity(0.8),
-                              ),
-                            ),
-                          ),
-                        Text(
-                          message.text,
-                          style: TextStyle(
-                            color: isOwn
-                                ? Colors.white
-                                : Colors.white.withOpacity(0.9),
-                            fontSize: 14,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          ChatInputEditor(
+            onSend: _handleSend,
+            onImageSelected: _handleImageSelected,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInput() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      decoration: BoxDecoration(
-        color: AppColors.darkSurface,
-        border: Border(top: BorderSide(color: AppColors.darkBorder)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.darkCard,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.darkBorder),
-              ),
-              child: const Icon(
-                Icons.add_rounded,
-                color: AppColors.darkTextSecondary,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Container(
-                constraints: const BoxConstraints(maxHeight: 120),
-                decoration: BoxDecoration(
-                  color: AppColors.darkCard,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.darkBorder),
-                ),
-                child: TextField(
-                  controller: _controller,
-                  onSubmitted: (_) => _handleSend(),
-                  maxLines: null,
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
-                  decoration: const InputDecoration(
-                    hintText: 'Nhập tin nhắn...',
-                    hintStyle: TextStyle(
-                      color: AppColors.darkTextHint,
-                      fontSize: 14,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: _handleSend,
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: AppColors.darkAccent,
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: const Icon(
-                  Icons.send_rounded,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   PreferredSizeWidget _buildAppBar(AsyncValue groupAsync) {
     return AppBar(

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/index.dart';
 import '../../../../core/constants/index.dart';
 import '../../application/exceptions/auth_exceptions.dart';
-import '../providers/auth_providers.dart';
-import 'login_screen.dart';
+import '../providers/index.dart';
+import 'index.dart';
 
 /// Signup screen for user registration
 class SignupScreen extends ConsumerStatefulWidget {

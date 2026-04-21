@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../domain/entities/user_entity.dart';
-import '../../domain/repositories/auth_repository.dart';
+import '../../domain/entities/index.dart';
+import '../../domain/repositories/index.dart';
 import '../../application/exceptions/auth_exceptions.dart';
-import '../models/user_model.dart';
+import '../models/index.dart';
 
 class FirebaseAuthRepository implements IAuthRepository {
   final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;

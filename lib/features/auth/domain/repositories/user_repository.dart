@@ -14,5 +14,6 @@ abstract class IUserRepository {
     required DateTime expiresAt,
   });
   Future<void> addFCMToken(String uid, String token);
+  Future<void> updateUserStatus(String uid, bool isOnline);
   Future<void> deleteUser(String uid);
 }

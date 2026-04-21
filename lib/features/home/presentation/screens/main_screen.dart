@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:work_nest/core/theme/index.dart';
 import 'package:work_nest/features/calendar/presentation/screens/calendar_screen.dart';
 import 'package:work_nest/features/home/presentation/widgets/index.dart';
+import 'package:work_nest/features/chat/presentation/screens/chats_list_screen.dart';
 import 'package:work_nest/features/profile/presentation/screens/profile_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -17,9 +18,7 @@ class _MainScreenState extends State<MainScreen> {
 
   static final List<Widget> _screens = [
     const HomeDashboardView(),
-    const Center(
-      child: Text('Chat Screen', style: TextStyle(color: Colors.white)),
-    ),
+    const ChatsListScreen(),
     const CalendarScreen(),
     const ProfileScreen(),
   ];

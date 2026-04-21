@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/core/theme/index.dart';
-import 'package:work_nest/features/search/data/repositories/search_repository.dart';
-import 'package:work_nest/features/search/presentation/providers/search_providers.dart';
-import 'package:work_nest/features/search/presentation/widgets/search_result_tile.dart';
+import '../../data/repositories/index.dart';
+import '../providers/index.dart';
+import '../widgets/index.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});

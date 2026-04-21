@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/index.dart';
 import '../../../../core/constants/index.dart';
-import '../providers/auth_providers.dart';
-import 'signup_screen.dart';
+import '../providers/index.dart';
+import 'index.dart';
 
 /// Login screen for user authentication
 class LoginScreen extends ConsumerStatefulWidget {

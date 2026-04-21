@@ -1,10 +1,9 @@
-// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/index.dart';
 import '../../../../core/theme/index.dart';
-import '../../domain/entities/project_entity.dart';
-import '../providers/projects_provider.dart';
+import '../../domain/entities/index.dart';
+import '../providers/index.dart';
 import '../widgets/index.dart';
 
 class ProjectDetailScreen extends ConsumerStatefulWidget {

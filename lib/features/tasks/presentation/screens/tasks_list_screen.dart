@@ -3,10 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:work_nest/core/theme/index.dart' show AppColors;
 import '../../../../core/constants/index.dart';
-import '../../domain/entities/task_entity.dart';
-import '../providers/tasks_provider.dart';
-import 'task_detail_screen.dart';
-import 'create_task_screen.dart';
+import '../../domain/entities/index.dart';
+import '../providers/index.dart';
+import 'index.dart';
 
 class TasksListScreen extends ConsumerStatefulWidget {
   const TasksListScreen({super.key});

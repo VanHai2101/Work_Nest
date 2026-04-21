@@ -29,8 +29,8 @@ class SearchResult {
     if (type == SearchResultType.user) {
       return SearchResult(
         id: doc.id,
-        title: data['displayName'] ?? 'Unknown User',
-        subtitle: data['plan'] ?? 'free',
+        title: data['displayName'] ?? 'Người dùng không tên',
+        subtitle: data['plan'] ?? 'Gói miễn phí',
         photoURL: data['photoURL'],
         type: type,
         rawData: data,
@@ -38,8 +38,17 @@ class SearchResult {
     } else if (type == SearchResultType.project) {
       return SearchResult(
         id: doc.id,
-        title: data['title'] ?? 'Unnamed Project',
+        title: data['title'] ?? 'Dự án không tên',
         subtitle: data['description'],
+        type: type,
+        rawData: data,
+      );
+    } else if (type == SearchResultType.group) {
+      return SearchResult(
+        id: doc.id,
+        title: data['name'] ?? 'Nhóm không tên',
+        subtitle: data['description'],
+        photoURL: data['photoURL'],
         type: type,
         rawData: data,
       );
@@ -47,7 +56,7 @@ class SearchResult {
       // Task
       return SearchResult(
         id: doc.id,
-        title: data['title'] ?? 'Unnamed Task',
+        title: data['title'] ?? 'Công việc không tên',
         subtitle: data['description'],
         type: type,
         rawData: data,
@@ -73,69 +82,152 @@ class SearchRepository {
 
     final results = <SearchResult>[];
 
-    // Search Users - Scoped globally (all users are discoverable by signed-in users)
+    // Parallel search execution
+    final searchFutures = <Future<void>>[];
+
+    // 1. Search Users
     if (filterType == null || filterType == SearchResultType.user) {
-      try {
-        final userSnap = await _firestore
+      searchFutures.add(
+        _firestore
             .collection('users')
             .where('displayName', isGreaterThanOrEqualTo: trimmedQuery)
             .where('displayName', isLessThanOrEqualTo: '$trimmedQuery\uf8ff')
             .limit(10)
-            .get();
-        results.addAll(
-          userSnap.docs.map(
-            (doc) => SearchResult.fromFirestore(doc, SearchResultType.user),
-          ),
-        );
-      } catch (e) {
-        print('Search users error: $e');
-        // Continue to other queries
-      }
+            .get()
+            .then((snap) {
+          results.addAll(
+            snap.docs.map(
+              (doc) => SearchResult.fromFirestore(doc, SearchResultType.user),
+            ),
+          );
+        }).catchError((_) {}),
+      );
     }
 
-    // Search Projects - Scoped to user's projects to satisfy security rules
+    // 2. Search Projects
     if (filterType == null || filterType == SearchResultType.project) {
-      try {
-        final projectSnap = await _firestore
+      searchFutures.add(
+        _firestore
             .collection('projects')
             .where('memberIds', arrayContains: currentUser.uid)
             .where('title', isGreaterThanOrEqualTo: trimmedQuery)
             .where('title', isLessThanOrEqualTo: '$trimmedQuery\uf8ff')
             .limit(10)
-            .get();
-        results.addAll(
-          projectSnap.docs.map(
-            (doc) => SearchResult.fromFirestore(doc, SearchResultType.project),
-          ),
-        );
-      } catch (e) {
-        print('Search projects error: $e');
-        // Continue if projects fail (e.g. index missing)
-      }
+            .get()
+            .then((snap) {
+          results.addAll(
+            snap.docs.map(
+              (doc) => SearchResult.fromFirestore(doc, SearchResultType.project),
+            ),
+          );
+        }).catchError((_) {}),
+      );
     }
 
-    // Search Tasks - Scoped globally across projects via collectionGroup
+    // 3. Search Groups
+    if (filterType == null || filterType == SearchResultType.group) {
+      searchFutures.add(
+        _firestore
+            .collection('groups')
+            .where('memberIds', arrayContains: currentUser.uid)
+            .where('name', isGreaterThanOrEqualTo: trimmedQuery)
+            .where('name', isLessThanOrEqualTo: '$trimmedQuery\uf8ff')
+            .limit(10)
+            .get()
+            .then((snap) {
+          results.addAll(
+            snap.docs.map(
+              (doc) => SearchResult.fromFirestore(doc, SearchResultType.group),
+            ),
+          );
+        }).catchError((e) {
+          print('Error searching groups: $e');
+        }),
+      );
+    }
+
+    // 4. Search Tasks (Member of Project OR Creator OR Assignee)
     if (filterType == null || filterType == SearchResultType.task) {
-      try {
-        // Use collectionGroup to find tasks where user is creator
-        final taskSnap = await _firestore
+      // Step 4a: Get all project IDs where user is a member
+      final projectsSnap = await _firestore
+          .collection('projects')
+          .where('memberIds', arrayContains: currentUser.uid)
+          .limit(30) // Firestore whereIn limit
+          .get();
+      
+      final projectIds = projectsSnap.docs.map((doc) => doc.id).toList();
+
+      if (projectIds.isNotEmpty) {
+        searchFutures.add(
+          _firestore
+              .collectionGroup('tasks')
+              .where('projectId', whereIn: projectIds)
+              .where('title', isGreaterThanOrEqualTo: trimmedQuery)
+              .where('title', isLessThanOrEqualTo: '$trimmedQuery\uf8ff')
+              .limit(20)
+              .get()
+              .then((snap) {
+            results.addAll(
+              snap.docs.map(
+                (doc) => SearchResult.fromFirestore(doc, SearchResultType.task),
+              ),
+            );
+          }).catchError((e) {
+            print('Error searching project tasks: $e');
+          }),
+        );
+      }
+
+      // Query 1: Tasks created by user (in case some are not in projects or cross-project logic differs)
+      searchFutures.add(
+        _firestore
             .collectionGroup('tasks')
             .where('creatorId', isEqualTo: currentUser.uid)
             .where('title', isGreaterThanOrEqualTo: trimmedQuery)
             .where('title', isLessThanOrEqualTo: '$trimmedQuery\uf8ff')
             .limit(10)
-            .get();
-        results.addAll(
-          taskSnap.docs.map(
-            (doc) => SearchResult.fromFirestore(doc, SearchResultType.task),
-          ),
-        );
-      } catch (e) {
-        print('Search tasks error: $e');
-      }
+            .get()
+            .then((snap) {
+          results.addAll(
+            snap.docs.map(
+              (doc) => SearchResult.fromFirestore(doc, SearchResultType.task),
+            ),
+          );
+        }).catchError((e) {
+          print('Error searching created tasks: $e');
+        }),
+      );
+
+      // Query 2: Tasks assigned to user
+      searchFutures.add(
+        _firestore
+            .collectionGroup('tasks')
+            .where('assigneeIds', arrayContains: currentUser.uid) // Updated field name (assigneeIds)
+            .where('title', isGreaterThanOrEqualTo: trimmedQuery)
+            .where('title', isLessThanOrEqualTo: '$trimmedQuery\uf8ff')
+            .limit(10)
+            .get()
+            .then((snap) {
+          results.addAll(
+            snap.docs.map(
+              (doc) => SearchResult.fromFirestore(doc, SearchResultType.task),
+            ),
+          );
+        }).catchError((e) {
+          print('Error searching assigned tasks: $e');
+        }),
+      );
     }
 
-    return results;
+    await Future.wait(searchFutures);
+
+    // Simple de-duplication based on ID (especially for tasks where user might be both creator and assignee)
+    final uniqueResults = <String, SearchResult>{};
+    for (var res in results) {
+      uniqueResults[res.id] = res;
+    }
+
+    return uniqueResults.values.toList();
   }
 }
 

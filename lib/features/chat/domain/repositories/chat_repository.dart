@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../entities/chat_entity.dart';
 import '../entities/message_entity.dart';
 import '../entities/group_entity.dart';
@@ -40,4 +41,7 @@ abstract class IChatRepository {
   
   /// Đánh dấu đã đọc tin nhắn
   Future<void> markMessageAsRead(String chatId, String messageId, String userId, {bool isGroup = false});
+
+  /// Upload ảnh lên storage
+  Future<String> uploadImage(File file, String path);
 }

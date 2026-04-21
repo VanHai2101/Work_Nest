@@ -10,6 +10,8 @@ class UserEntity {
   final List<String> fcmTokens;
   final DateTime? planExpiresAt;
   final DateTime? planUpdatedAt;
+  final bool isOnline;
+  final DateTime? lastSeen;
 
   UserEntity({
     required this.id,
@@ -23,6 +25,8 @@ class UserEntity {
     this.fcmTokens = const [],
     this.planExpiresAt,
     this.planUpdatedAt,
+    this.isOnline = false,
+    this.lastSeen,
   });
 
   bool get isPro => plan == 'pro' || plan == 'business';

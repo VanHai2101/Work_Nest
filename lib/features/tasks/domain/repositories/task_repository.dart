@@ -1,4 +1,4 @@
-import '../entities/task_entity.dart';
+import '../entities/index.dart';
 
 abstract class TaskRepository {
   Stream<List<TaskEntity>> getProjectTasks(String projectId);

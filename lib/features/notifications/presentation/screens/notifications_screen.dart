@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/core/constants/index.dart';
 import '../../../../core/theme/index.dart';
 import '../../../../core/utils/index.dart';
-import '../../../../features/notifications/domain/entities/notification_entity.dart';
-import '../../../../features/notifications/presentation/providers/notification_providers.dart';
+import '../../domain/entities/index.dart';
+import '../providers/index.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
@@ -15,6 +15,18 @@ class NotificationsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: Navigator.canPop(context)
+          ? AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              iconTheme: const IconThemeData(color: Colors.black87),
+              title: const Text(
+                'Thông báo',
+                style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
+              ),
+              centerTitle: true,
+            )
+          : null,
       body: notificationsAsync.when(
         data: (notifications) {
           if (notifications.isEmpty) {

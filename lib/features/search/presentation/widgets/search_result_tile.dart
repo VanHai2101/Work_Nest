@@ -16,6 +16,7 @@ class SearchResultTile extends StatelessWidget {
     final isUser = result.type == SearchResultType.user;
     final isProject = result.type == SearchResultType.project;
     final isTask = result.type == SearchResultType.task;
+    final isGroup = result.type == SearchResultType.group;
 
     return ListTile(
       onTap:
@@ -34,12 +35,20 @@ class SearchResultTile extends StatelessWidget {
                       ProjectDetailScreen(projectId: result.id),
                 ),
               );
+            } else if (isGroup) {
+              // Add group navigation
             }
             // Add task navigation if needed
           },
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      leading: isUser
-          ? AppAvatar(id: result.title, photoURL: result.photoURL, size: 44)
+      leading: (isUser || isGroup)
+          ? AppAvatar(
+              id: result.title,
+              userId: isUser ? result.id : null,
+              photoURL: result.photoURL,
+              size: 44,
+              showOnline: isUser,
+            )
           : Container(
               width: 44,
               height: 44,
@@ -76,9 +85,22 @@ class SearchResultTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
-          isUser ? 'Người' : isTask ? 'Công việc' : 'Dự án',
+          isUser
+              ? 'Người'
+              : isTask
+                  ? 'Nhiệm vụ'
+                  : isGroup
+                      ? 'Nhóm'
+                      : 'Dự án',
           style: TextStyle(
-            color: isUser ? Colors.blue : isTask ? Colors.green : Colors.orange,
+            color:
+                isUser
+                    ? Colors.blue
+                    : isTask
+                        ? Colors.green
+                        : isGroup
+                            ? Colors.purple
+                            : Colors.orange,
             fontSize: 10,
             fontWeight: FontWeight.bold,
           ),

@@ -4,12 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/components/index.dart';
 import '../../../../core/constants/index.dart';
 import '../../../../core/theme/index.dart';
-import '../../../../features/auth/domain/entities/user_entity.dart';
-import '../../../../features/auth/presentation/providers/auth_providers.dart';
-import '../../../projects/domain/entities/project_entity.dart';
-import '../../../projects/presentation/providers/projects_provider.dart';
-import '../../../tasks/domain/entities/task_entity.dart';
-import '../../../tasks/presentation/providers/tasks_provider.dart';
+import '../../../../features/auth/domain/entities/index.dart';
+import '../../../../features/auth/presentation/providers/index.dart';
+import '../../../profile/presentation/screens/index.dart';
+import '../../../projects/domain/entities/index.dart';
+import '../../../projects/presentation/providers/index.dart';
+import '../../../tasks/domain/entities/index.dart';
+import '../../../tasks/presentation/providers/index.dart';
 import '../../../projects/presentation/screens/index.dart';
 import '../../../tasks/presentation/screens/index.dart';
 
@@ -33,18 +34,15 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
   Widget build(BuildContext context) {
     final userProfile = ref.watch(userProfileProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: userProfile.when(
-        data: (user) => _buildContent(user),
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.darkAccent),
-        ),
-        error: (err, stack) => Center(
-          child: Text(
-            'Error: $err',
-            style: const TextStyle(color: AppColors.darkTextSecondary),
-          ),
+    return userProfile.when(
+      data: (user) => _buildContent(user),
+      loading: () => const Center(
+        child: CircularProgressIndicator(color: AppColors.darkAccent),
+      ),
+      error: (err, stack) => Center(
+        child: Text(
+          'Error: $err',
+          style: const TextStyle(color: AppColors.darkTextSecondary),
         ),
       ),
     );
@@ -95,63 +93,75 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
         ? 'Chào buổi chiều'
         : 'Chào buổi tối';
 
-    return Row(
-      children: [
-        AppAvatar(
-          id: user?.displayName ?? 'U',
-          photoURL: user?.photoURL,
-          size: 52,
-          showOnline: false,
+    return InkWell(
+      onTap: () => Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const ProfileScreen())),
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            AppAvatar(
+              id: user?.displayName ?? 'U',
+              photoURL: user?.photoURL,
+              size: 52,
+              showOnline: false,
+            ),
+            AppLayout.horizontalGapMedium,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    greeting,
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    name,
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Today date pill
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calendar_today_rounded,
+                    color: AppColors.darkAccent,
+                    size: 13,
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    _todayLabel(),
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        AppLayout.horizontalGapMedium,
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                greeting,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                name,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Today date pill
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppColors.border),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.calendar_today_rounded,
-                color: AppColors.darkAccent,
-                size: 13,
-              ),
-              const SizedBox(width: 5),
-              Text(
-                _todayLabel(),
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 

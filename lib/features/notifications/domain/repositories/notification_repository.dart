@@ -1,4 +1,4 @@
-import '../entities/notification_entity.dart';
+import '../entities/index.dart';
 
 abstract class INotificationRepository {
   Stream<List<NotificationEntity>> getUserNotifications(String userId);

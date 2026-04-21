@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/index.dart';
+import '../../../../core/providers/index.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../chat/presentation/screens/index.dart';
-import '../../../notifications/presentation/screens/notifications_screen.dart';
+import '../../../notifications/presentation/screens/index.dart';
 import '../../../projects/presentation/screens/index.dart';
-import '../../../tasks/presentation/screens/tasks_list_screen.dart';
-import 'package:work_nest/features/calendar/presentation/screens/calendar_screen.dart'
-    as cal;
+import '../../../tasks/presentation/screens/index.dart';
+import 'package:work_nest/features/calendar/presentation/screens/calendar_screen.dart' as cal;
 import '../../../profile/presentation/screens/index.dart';
 import '../widgets/index.dart';
 import '../../../../core/theme/index.dart';
 import '../../../../core/components/index.dart';
-import '../../../search/presentation/screens/search_screen.dart';
+import '../../../search/presentation/screens/index.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -53,12 +53,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: Colors.white,
       extendBody: true,
       appBar: _buildAppBar(),
-      endDrawer: ProfileMenuDrawer(
-        onLogout: () {
-          FirebaseAuth.instance.signOut();
-          Navigator.of(context).pushReplacementNamed('/login');
-        },
-      ),
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
         child: KeyedSubtree(
@@ -74,6 +68,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
+    final userAsync = ref.watch(userProfileProvider);
+    final user = userAsync.value;
+
     return AppBar(
       automaticallyImplyLeading: false,
       backgroundColor: Colors.white,
@@ -103,32 +100,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _appBarBtn(Icons.done_all_rounded, () {})
         else
           _notificationBtn(),
-        const SizedBox(width: 4),
-        GestureDetector(
-          onTap: () => _scaffoldKey.currentState?.openEndDrawer(),
-          child: Container(
-            width: 38,
-            height: 38,
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.menu_rounded,
-              color: Colors.black87,
-              size: 20,
-            ),
-          ),
-        ),
+        const SizedBox(width: 8),
       ],
     );
   }

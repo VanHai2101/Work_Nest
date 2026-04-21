@@ -303,8 +303,37 @@ service cloud.firestore {
       allow read: if isSignedIn()
         && resource.data.userId == request.auth.uid;
 
-      // Mở quyền tạm thời (Cách 2) do chưa dùng được Cloud Function
-      allow create: if isSignedIn();
+      // 🔒 Bảo mật dựa trên ngữ cảnh (Cập nhật để tương thích với code hiện tại)
+      allow create: if isSignedIn()
+        && request.resource.data.actorId == request.auth.uid
+        && request.resource.data.isRead == false
+        && hasValidFields(
+          ['userId', 'type', 'title', 'body', 'actorId', 'actorName', 'isRead', 'createdAt'],
+          ['actorPhotoURL', 'relatedEntityId', 'relatedEntityType']
+        )
+        && (
+          // 1. Thông báo Task/Project (Hỗ trợ cả snake_case và camelCase)
+          (request.resource.data.type in ['taskAssigned', 'taskCompleted', 'task_completed', 'projectCreated', 'projectInvited'] &&
+           (request.resource.data.relatedEntityId == null || 
+            // Nếu là projectId thì check member, nếu là taskId thì tạm thời cho phép vì code hiện tại chưa gửi projectId kèm theo
+            request.resource.data.relatedEntityType == 'task' ||
+            isProjectMember(request.resource.data.relatedEntityId)))
+          ||
+          // 2. Thông báo Tin nhắn (Hỗ trợ new_message, group_message)
+          (request.resource.data.type in ['messageReceived', 'new_message', 'group_message', 'groupMessageReceived'] &&
+           (
+             // Chat 1-1
+             (request.resource.data.type in ['messageReceived', 'new_message'] &&
+              request.resource.data.userId in get(/databases/$(database)/documents/chats/$(request.resource.data.relatedEntityId)).data.participantIds)
+             ||
+             // Chat nhóm
+             (request.resource.data.type in ['groupMessageReceived', 'group_message'] &&
+              request.resource.data.userId in get(/databases/$(database)/documents/groups/$(request.resource.data.relatedEntityId)).data.memberIds)
+           ))
+          ||
+          // 3. Các loại khác
+          (request.resource.data.type in ['callIncoming', 'callMissed', 'planUpgraded', 'other'])
+        );
 
       // 🔒 Chỉ được đánh dấu đã đọc, không đổi nội dung
       allow update: if isSignedIn()
