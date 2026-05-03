@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/domain/index.dart';
 import '../../../../core/theme/index.dart';
 import '../../../../core/constants/index.dart';
+import '../../application/usecases/index.dart';
 import '../providers/index.dart';
 import 'index.dart';
 
@@ -37,15 +39,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     try {
-      final authRepo = ref.read(authRepositoryProvider);
-      await authRepo.signIn(
-        _emailController.text.trim(),
-        _passwordController.text,
+      final signInUseCase = ref.read(signInUseCaseProvider);
+      final result = await signInUseCase.call(
+        SignInParams(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        ),
       );
 
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
-      }
+      result.fold(
+        (failure) {
+          setState(() {
+            _errorMessage = (failure as OperationError).message;
+          });
+        },
+        (user) {
+          if (mounted) {
+            Navigator.of(context).pushReplacementNamed('/home');
+          }
+        },
+      );
     } catch (e) {
       setState(() {
         _errorMessage = e.toString().replaceAll('Exception: ', '');

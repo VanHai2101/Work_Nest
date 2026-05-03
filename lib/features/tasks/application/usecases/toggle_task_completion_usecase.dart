@@ -1,4 +1,4 @@
-import '../repositories/task_repository.dart';
+import 'package:work_nest/features/tasks/domain/repositories/index.dart';
 
 /// UseCase toggle hoàn thành task
 class ToggleTaskCompletionUseCase {

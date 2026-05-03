@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:work_nest/core/theme/index.dart';
 import 'dart:io';
 import '../../../../core/components/index.dart';
+import '../../../auth/presentation/providers/index.dart';
 import '../widgets/index.dart';
 import '../providers/index.dart';
 import '../../domain/entities/index.dart';
@@ -100,11 +101,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final messagesAsync = ref.watch(chatMessagesProvider(widget.chatId));
+    final chatAsync = ref.watch(chatByIdProvider(widget.chatId));
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       backgroundColor: AppColors.darkBg,
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(chatAsync),
       body: Column(
         children: [
           Expanded(
@@ -151,7 +153,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(AsyncValue<ChatEntity?> chatAsync) {
     return AppBar(
       backgroundColor: AppColors.darkSurface,
       elevation: 0,
@@ -168,28 +170,83 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ),
         onPressed: () => Navigator.pop(context),
       ),
-      title: const Row(
-        children: [
-          AppAvatar(id: 'Chat', size: 36),
-          SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Chat',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+      title: chatAsync.when(
+        data: (chat) {
+          if (chat == null) {
+            return const Text(
+              'Chat',
+              style: TextStyle(color: Colors.white, fontSize: 14),
+            );
+          }
+
+          final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+          final otherUserId = chat.participantIds.firstWhere(
+            (id) => id != currentUserId,
+            orElse: () => chat.participantIds[0],
+          );
+
+          final otherUserAsync = ref.watch(
+            userProfileByIdProvider(otherUserId),
+          );
+          final isOnlineAsync = ref.watch(
+            userOnlineStatusProvider(otherUserId),
+          );
+
+          return otherUserAsync.when(
+            data: (user) => Row(
+              children: [
+                AppAvatar(
+                  id: user?.displayName ?? '?',
+                  userId: otherUserId,
+                  photoURL: user?.photoURL,
+                  size: 36,
+                  showOnline: true,
                 ),
-              ),
-              Text(
-                'Đang hoạt động',
-                style: TextStyle(color: Color(0xFF34D399), fontSize: 11),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user?.displayName ?? 'Người dùng',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      (isOnlineAsync.value ?? false)
+                          ? 'Đang hoạt động'
+                          : 'Ngoại tuyến',
+                      style: TextStyle(
+                        color: (isOnlineAsync.value ?? false)
+                            ? AppColors.darkSuccess
+                            : AppColors.darkTextSecondary,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            loading: () => const Text(
+              'Đang tải...',
+              style: TextStyle(color: Colors.white, fontSize: 14),
+            ),
+            error: (_, _) => const Text(
+              'Lỗi',
+              style: TextStyle(color: Colors.white, fontSize: 14),
+            ),
+          );
+        },
+        loading: () => const Text(
+          'Đang tải...',
+          style: TextStyle(color: Colors.white, fontSize: 14),
+        ),
+        error: (_, _) => const Text(
+          'Lỗi',
+          style: TextStyle(color: Colors.white, fontSize: 14),
+        ),
       ),
       actions: [
         IconButton(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/core/theme/index.dart';
-import '../../data/repositories/index.dart';
+import '../../domain/entities/search_result_entity.dart';
 import '../providers/index.dart';
 import '../widgets/index.dart';
 

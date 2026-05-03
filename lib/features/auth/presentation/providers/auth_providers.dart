@@ -1,48 +1,40 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/repositories/auth_repository.dart';
-import '../../domain/repositories/user_repository.dart';
-import '../../data/repositories/firebase_auth_repository.dart';
-import '../../data/repositories/firebase_user_repository.dart';
+import 'package:work_nest/core/usecases/usecase.dart';
 import '../../domain/entities/user_entity.dart';
+import 'auth_use_case_providers.dart';
 
-// 1. Repository Providers
-final authRepositoryProvider = Provider<IAuthRepository>((ref) {
-  return FirebaseAuthRepository();
-});
+// RE-EXPORT for convenience in UI
+export 'auth_repository_providers.dart';
+export 'auth_use_case_providers.dart';
 
-final userRepositoryProvider = Provider<IUserRepository>((ref) {
-  return FirebaseUserRepository();
-});
-
-// 2. Auth State Stream
-// Sử dụng select để chỉ lắng nghe sự thay đổi của uid, giảm thiểu re-render
+// 1. Auth State Stream
 final authStateProvider = StreamProvider<UserEntity?>((ref) {
-  return ref.watch(authRepositoryProvider).authStateChanges;
+  return ref.watch(getAuthStateUseCaseProvider).call(NoParams());
 });
 
-// 3. User Profile Stream
-// Tự động cập nhật khi authState thay đổi hoặc dữ liệu Firestore thay đổi
+// 2. User Profile Stream
 final userProfileProvider = StreamProvider<UserEntity?>((ref) {
   final authState = ref.watch(authStateProvider);
   
   return authState.when(
     data: (user) {
       if (user == null) return Stream.value(null);
-      // Lắng nghe stream profile từ Firestore
-      return ref.watch(userRepositoryProvider).getUserStream(user.uid);
+      return ref.watch(getUserProfileUseCaseProvider).call(user.uid);
     },
     loading: () => const Stream.empty(),
     error: (err, stack) => Stream.error(err, stack),
   );
 });
 
-// 4. Specific User Profile Stream
-// Lấy thông tin profile của bất kỳ user nào qua UID
-final userProfileByIdProvider = StreamProvider.family<UserEntity?, String>((ref, userId) {
-  return ref.watch(userRepositoryProvider).getUserStream(userId);
-});
-
-// 5. Current User UID Provider (Helper)
+// 3. Current User UID Provider (Helper)
 final userIdProvider = Provider<String?>((ref) {
   return ref.watch(authStateProvider).value?.uid;
 });
+
+// 4. User Profile by ID (Stream)
+final userProfileByIdProvider = StreamProvider.family<UserEntity?, String>((ref, userId) {
+  return ref.watch(getUserProfileUseCaseProvider).call(userId);
+});
+
+// Alias for compatibility
+final currentUserProvider = userProfileProvider;

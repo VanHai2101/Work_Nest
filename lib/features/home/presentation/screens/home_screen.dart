@@ -48,21 +48,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: Colors.white,
-      extendBody: true,
-      appBar: _buildAppBar(),
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        child: KeyedSubtree(
-          key: ValueKey(_selectedIndex),
-          child: _screens[_selectedIndex],
+    return PopScope(
+      canPop: _selectedIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        setState(() => _selectedIndex = 0);
+      },
+      child: Scaffold(
+        key: _scaffoldKey,
+        backgroundColor: Colors.white,
+        extendBody: true,
+        appBar: _buildAppBar(),
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: KeyedSubtree(
+            key: ValueKey(_selectedIndex),
+            child: _screens[_selectedIndex],
+          ),
         ),
-      ),
-      bottomNavigationBar: AppBottomNavbar(
-        currentIndex: _selectedIndex,
-        onTap: _onNavItemTapped,
+        bottomNavigationBar: AppBottomNavbar(
+          currentIndex: _selectedIndex,
+          onTap: _onNavItemTapped,
+        ),
       ),
     );
   }

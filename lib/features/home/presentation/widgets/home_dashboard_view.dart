@@ -13,6 +13,8 @@ import '../../../tasks/domain/entities/index.dart';
 import '../../../tasks/presentation/providers/index.dart';
 import '../../../projects/presentation/screens/index.dart';
 import '../../../tasks/presentation/screens/index.dart';
+import '../../../../core/components/dynamic_island/island_models.dart';
+import '../../../../core/components/dynamic_island/island_provider.dart';
 
 class HomeDashboardView extends ConsumerStatefulWidget {
   const HomeDashboardView({super.key});
@@ -22,12 +24,11 @@ class HomeDashboardView extends ConsumerStatefulWidget {
 }
 
 class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
-  late String currentUserId;
+  // Removing static currentUserId to use reactive userId from build
 
   @override
   void initState() {
     super.initState();
-    currentUserId = FirebaseAuth.instance.currentUser?.uid ?? '';
   }
 
   @override
@@ -73,6 +74,9 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
           }),
           const SizedBox(height: 12),
           _buildRecentTasks(),
+          _buildSectionHeader('Dynamic Island Demo', null),
+          const SizedBox(height: 12),
+          _buildIslandDemoActions(),
           const SizedBox(height: 24),
           _buildSectionHeader(AppStrings.quickActions, null),
           const SizedBox(height: 12),
@@ -185,80 +189,85 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
   }
 
   Widget _buildStatsGrid() {
-    final projectsAsync = ref.watch(userProjectsProvider(currentUserId));
-    final tasksAsync = ref.watch(userAssignedTasksProvider(currentUserId));
+    final userId = ref.watch(userIdProvider) ?? '';
+    debugPrint('HomeDashboard: Fetching stats for userId: "$userId"');
+    final projectsAsync = ref.watch(userProjectsProvider(userId));
+    final tasksAsync = ref.watch(userAssignedTasksProvider(userId));
 
-    return Row(
-      children: [
-        Expanded(
-          child: projectsAsync.when(
-            data: (projects) => _buildStatCard(
-              AppStrings.projectsCount,
-              projects.length.toString(),
-              Icons.folder_copy_rounded,
-              AppColors.darkAccent,
-            ),
-            loading: () => _buildStatCard(
-              AppStrings.projectsCount,
-              '—',
-              Icons.folder_copy_rounded,
-              AppColors.darkAccent,
-            ),
-            error: (_, _) => _buildStatCard(
-              AppStrings.projectsCount,
-              '!',
-              Icons.folder_copy_rounded,
-              AppColors.error,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: tasksAsync.when(
-            data: (tasks) => _buildStatCard(
-              AppStrings.tasksInProgress,
-              tasks.where((t) => !t.completed).length.toString(),
-              Icons.task_alt_rounded,
-              AppColors.success,
-            ),
-            loading: () => _buildStatCard(
-              AppStrings.tasksInProgress,
-              '—',
-              Icons.task_alt_rounded,
-              AppColors.success,
-            ),
-            error: (_, _) => _buildStatCard(
-              AppStrings.tasksInProgress,
-              '!',
-              Icons.task_alt_rounded,
-              AppColors.error,
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: projectsAsync.when(
+              data: (projects) => _buildStatCard(
+                AppStrings.projectsCount,
+                projects.length.toString(),
+                Icons.folder_copy_rounded,
+                AppColors.darkAccent,
+              ),
+              loading: () => _buildStatCard(
+                AppStrings.projectsCount,
+                '—',
+                Icons.folder_copy_rounded,
+                AppColors.darkAccent,
+              ),
+              error: (_, _) => _buildStatCard(
+                AppStrings.projectsCount,
+                '!',
+                Icons.folder_copy_rounded,
+                AppColors.error,
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: tasksAsync.when(
-            data: (tasks) => _buildStatCard(
-              AppStrings.tasksCompleted,
-              tasks.where((t) => t.completed).length.toString(),
-              Icons.check_circle_rounded,
-              const Color(0xFF8B5CF6),
-            ),
-            loading: () => _buildStatCard(
-              AppStrings.tasksCompleted,
-              '—',
-              Icons.check_circle_rounded,
-              const Color(0xFF8B5CF6),
-            ),
-            error: (_, _) => _buildStatCard(
-              AppStrings.tasksCompleted,
-              '!',
-              Icons.check_circle_rounded,
-              AppColors.error,
+          const SizedBox(width: 12),
+          Expanded(
+            child: tasksAsync.when(
+              data: (tasks) => _buildStatCard(
+                AppStrings.tasksInProgress,
+                tasks.where((t) => !t.completed).length.toString(),
+                Icons.task_alt_rounded,
+                AppColors.success,
+              ),
+              loading: () => _buildStatCard(
+                AppStrings.tasksInProgress,
+                '—',
+                Icons.task_alt_rounded,
+                AppColors.success,
+              ),
+              error: (_, _) => _buildStatCard(
+                AppStrings.tasksInProgress,
+                '!',
+                Icons.task_alt_rounded,
+                AppColors.error,
+              ),
             ),
           ),
-        ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: tasksAsync.when(
+              data: (tasks) => _buildStatCard(
+                AppStrings.tasksCompleted,
+                tasks.where((t) => t.completed).length.toString(),
+                Icons.check_circle_rounded,
+                const Color(0xFF8B5CF6),
+              ),
+              loading: () => _buildStatCard(
+                AppStrings.tasksCompleted,
+                '—',
+                Icons.check_circle_rounded,
+                const Color(0xFF8B5CF6),
+              ),
+              error: (_, _) => _buildStatCard(
+                AppStrings.tasksCompleted,
+                '!',
+                Icons.check_circle_rounded,
+                AppColors.error,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -301,6 +310,8 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
           const SizedBox(height: 10),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: AppColors.textPrimary,
               fontSize: 22,
@@ -310,6 +321,8 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
           const SizedBox(height: 2),
           Text(
             title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
           ),
         ],
@@ -353,7 +366,9 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
   }
 
   Widget _buildRecentProjects() {
-    final projectsAsync = ref.watch(userProjectsProvider(currentUserId));
+    final userId = ref.watch(userIdProvider) ?? '';
+    debugPrint('HomeDashboard: Fetching recent projects for userId: "$userId"');
+    final projectsAsync = ref.watch(userProjectsProvider(userId));
 
     return projectsAsync.when(
       data: (projects) {
@@ -373,10 +388,11 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
       loading: () => const Center(
         child: CircularProgressIndicator(color: AppColors.darkAccent),
       ),
-      error: (err, _) => const Center(
+      error: (err, _) => Center(
         child: Text(
-          'Error loading projects',
-          style: TextStyle(color: AppColors.darkTextSecondary),
+          'Error loading projects: $err',
+          style: TextStyle(color: AppColors.error, fontSize: 12),
+          textAlign: TextAlign.center,
         ),
       ),
     );
@@ -477,7 +493,9 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
   }
 
   Widget _buildRecentTasks() {
-    final tasksAsync = ref.watch(userAssignedTasksProvider(currentUserId));
+    final userId = ref.watch(userIdProvider) ?? '';
+    debugPrint('HomeDashboard: Fetching recent tasks for userId: "$userId"');
+    final tasksAsync = ref.watch(userAssignedTasksProvider(userId));
 
     return tasksAsync.when(
       data: (tasks) {
@@ -506,10 +524,11 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
       loading: () => const Center(
         child: CircularProgressIndicator(color: AppColors.darkAccent),
       ),
-      error: (err, _) => const Center(
+      error: (err, _) => Center(
         child: Text(
-          'Error loading tasks',
-          style: TextStyle(color: AppColors.darkTextSecondary),
+          'Error loading tasks: $err',
+          style: TextStyle(color: AppColors.error, fontSize: 12),
+          textAlign: TextAlign.center,
         ),
       ),
     );
@@ -598,6 +617,64 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
                     style: TextStyle(
                       color: color,
                       fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildIslandDemoActions() {
+    final actions = [
+      (
+        'Music',
+        Icons.music_note_rounded,
+        const Color(0xFF9B59B6),
+        IslandState.musicPlayer,
+      ),
+      (
+        'Call',
+        Icons.call_rounded,
+        const Color(0xFF30D158),
+        IslandState.phoneCall,
+      ),
+      (
+        'Notify',
+        Icons.notifications_rounded,
+        const Color(0xFF0A84FF),
+        IslandState.notification,
+      ),
+    ];
+
+    return Row(
+      children: actions.asMap().entries.map((e) {
+        final i = e.key;
+        final (title, icon, color, state) = e.value;
+        return Expanded(
+          child: GestureDetector(
+            onTap: () => ref.read(islandProvider.notifier).changeState(state),
+            child: Container(
+              margin: EdgeInsets.only(right: i < actions.length - 1 ? 10 : 0),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: color.withOpacity(0.3)),
+              ),
+              child: Column(
+                children: [
+                  Icon(icon, color: color, size: 20),
+                  const SizedBox(height: 6),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: color,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

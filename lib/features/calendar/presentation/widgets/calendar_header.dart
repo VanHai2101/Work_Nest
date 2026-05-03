@@ -20,9 +20,9 @@ class CalendarHeader extends ConsumerWidget {
         final start = week.first;
         final end = week.last;
         if (start.month == end.month) {
-          return '${start.day} — ${end.day} Tháng ${start.month}, ${start.year}';
+          return '${start.day}-${end.day} Thg ${start.month}, ${start.year}';
         } else {
-          return '${start.day} Tháng ${start.month} — ${end.day} Tháng ${end.month}, ${start.year}';
+          return '${start.day}/${start.month} - ${end.day}/${end.month}, ${start.year}';
         }
       case CalendarViewMode.month:
         return 'Tháng ${focused.month} ${focused.year}';
@@ -66,9 +66,11 @@ class CalendarHeader extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildDateText(state.viewMode, focused, selected, isMini: true),
+                    Expanded(
+                      child: _buildDateText(state.viewMode, focused, selected, isMini: true),
+                    ),
+                    const SizedBox(width: 8),
                     _buildNavigation(state, notifier, focused, selected, isMini: true),
                   ],
                 ),
@@ -92,10 +94,12 @@ class CalendarHeader extends ConsumerWidget {
     return Text(
       _getDateString(mode, focused, selected),
       style: TextStyle(
-        fontSize: isMini ? 15 : 18,
+        fontSize: isMini ? 14 : 18,
         fontWeight: FontWeight.bold,
         color: Colors.black87,
       ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 

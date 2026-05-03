@@ -15,5 +15,6 @@ abstract class IUserRepository {
   });
   Future<void> addFCMToken(String uid, String token);
   Future<void> updateUserStatus(String uid, bool isOnline);
+  Future<void> updateMfaStatus(String uid, bool enabled);
   Future<void> deleteUser(String uid);
 }

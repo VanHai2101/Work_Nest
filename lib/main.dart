@@ -5,6 +5,7 @@ import 'firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/features/auth/presentation/providers/index.dart';
 import 'package:work_nest/features/calls/presentation/widgets/incoming_call_overlay.dart';
+import 'package:work_nest/core/components/dynamic_island/dynamic_island_overlay.dart';
 import 'package:work_nest/app/index.dart';
 
 void main() async {
@@ -26,6 +27,7 @@ class MainApp extends ConsumerWidget {
       title: 'Work Nest',
       theme: ThemeData(
         useMaterial3: true,
+        fontFamily: 'Poppins',
         brightness: Brightness.light,
         scaffoldBackgroundColor: AppColors.primaryBackground,
         primaryColor: AppColors.accent,
@@ -54,7 +56,9 @@ class MainApp extends ConsumerWidget {
       ),
       initialRoute: '/splash',
       onGenerateRoute: AppRouter.generateRoute,
-      builder: (context, child) => IncomingCallOverlay(child: child!),
+      builder: (context, child) => DynamicIslandOverlay(
+        child: IncomingCallOverlay(child: child!),
+      ),
     );
   }
 }

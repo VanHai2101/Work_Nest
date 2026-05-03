@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/features/tasks/domain/repositories/task_repository.dart';
 import 'package:work_nest/features/tasks/data/repositories/firebase_task_repository.dart';
-import '../../domain/usecases/index.dart';
+import '../usecases/index.dart';
 
 /// Provider cung cấp TaskRepository
 final taskRepositoryProvider = Provider<TaskRepository>((ref) {

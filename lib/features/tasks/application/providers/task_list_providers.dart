@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../domain/entities/task_entity.dart';
+import '../../domain/entities/index.dart';
 import 'index.dart';
 
 /// Provider lấy tất cả tasks của user hiện tại
@@ -15,29 +15,25 @@ final userTasksProvider = StreamProvider.autoDispose<List<TaskEntity>>((ref) {
 });
 
 /// Provider lấy tasks theo project (tham số là projectId)
-final projectTasksProvider = StreamProvider.autoDispose.family<
-  List<TaskEntity>,
-  String
->((ref, projectId) {
-  final useCase = ref.watch(getTasksByProjectUseCaseProvider);
-  return useCase(projectId);
-});
+final projectTasksProvider = StreamProvider.autoDispose
+    .family<List<TaskEntity>, String>((ref, projectId) {
+      final useCase = ref.watch(getTasksByProjectUseCaseProvider);
+      return useCase(projectId);
+    });
 
 /// Provider lấy completed tasks (filter từ userTasksProvider)
 final completedTasksProvider = Provider.autoDispose<List<TaskEntity>>((ref) {
-  final tasks = ref.watch(userTasksProvider).maybeWhen(
-    data: (data) => data,
-    orElse: () => <TaskEntity>[],
-  );
+  final tasks = ref
+      .watch(userTasksProvider)
+      .maybeWhen(data: (data) => data, orElse: () => <TaskEntity>[]);
   return tasks.where((t) => t.completed).toList();
 });
 
 /// Provider lấy incomplete tasks (filter từ userTasksProvider)
 final incompleteTasksProvider = Provider.autoDispose<List<TaskEntity>>((ref) {
-  final tasks = ref.watch(userTasksProvider).maybeWhen(
-    data: (data) => data,
-    orElse: () => <TaskEntity>[],
-  );
+  final tasks = ref
+      .watch(userTasksProvider)
+      .maybeWhen(data: (data) => data, orElse: () => <TaskEntity>[]);
   return tasks.where((t) => !t.completed).toList();
 });
 
@@ -50,10 +46,9 @@ final overdueTasksProvider = Provider.autoDispose<List<TaskEntity>>((ref) {
 
 /// Provider đếm tasks
 final taskCountProvider = Provider.autoDispose<int>((ref) {
-  final tasks = ref.watch(userTasksProvider).maybeWhen(
-    data: (data) => data,
-    orElse: () => <TaskEntity>[],
-  );
+  final tasks = ref
+      .watch(userTasksProvider)
+      .maybeWhen(data: (data) => data, orElse: () => <TaskEntity>[]);
   return tasks.length;
 });
 

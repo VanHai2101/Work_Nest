@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/index.dart' show AppColors;
 import '../../../../core/constants/index.dart';
 import '../providers/auth_providers.dart';
+import '../../../../core/providers/service_providers.dart';
+import '../../../../app/app_routes.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -46,21 +48,27 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     if (!mounted) return;
 
+    final localStorage = ref.read(localStorageServiceProvider);
+    final onboardingDone = await localStorage.isOnboardingCompleted();
     final authState = ref.read(authStateProvider);
 
     authState.when(
       data: (user) {
         if (user != null) {
-          Navigator.of(context).pushReplacementNamed('/home');
+          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
         } else {
-          Navigator.of(context).pushReplacementNamed('/welcome');
+          if (onboardingDone) {
+            Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+          } else {
+            Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
+          }
         }
       },
       loading: () {
-        _checkAuthState();
+        // Just wait
       },
       error: (_, _) {
-        Navigator.of(context).pushReplacementNamed('/welcome');
+        Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
       },
     );
   }

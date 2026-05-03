@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/index.dart';
-import '../../domain/repositories/index.dart';
+import '../../domain/repositories/auth_repository.dart';
 import '../../application/exceptions/auth_exceptions.dart';
 import '../models/index.dart';
 
@@ -9,19 +9,25 @@ class FirebaseAuthRepository implements IAuthRepository {
   final firebase_auth.FirebaseAuth _auth = firebase_auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  firebase_auth.User get _currentUser {
+    final user = _auth.currentUser;
+    if (user == null) throw const UserNotFoundException();
+    return user;
+  }
+
   @override
   Stream<UserEntity?> get authStateChanges => _auth.authStateChanges().map(
-        (user) => user != null
-            ? UserEntity(
-                id: user.uid,
-                uid: user.uid,
-                email: user.email ?? '',
-                displayName: user.displayName ?? 'User',
-                createdAt: DateTime.now(), // Fallback
-                updatedAt: DateTime.now(),
-              )
-            : null,
-      );
+    (user) => user != null
+        ? UserEntity(
+            id: user.uid,
+            uid: user.uid,
+            email: user.email ?? '',
+            displayName: user.displayName ?? 'User',
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          )
+        : null,
+  );
 
   @override
   Future<UserEntity?> signUp(
@@ -34,22 +40,18 @@ class FirebaseAuthRepository implements IAuthRepository {
         email: email,
         password: password,
       );
-
-      final userUid = credential.user!.uid;
-      final userData = {
-        'uid': userUid,
+      final uid = credential.user!.uid;
+      await _firestore.collection('users').doc(uid).set({
+        'uid': uid,
         'displayName': fullName,
         'email': email,
         'plan': 'free',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-      };
-
-      await _firestore.collection('users').doc(userUid).set(userData);
-
+      });
       return UserEntity(
-        id: userUid,
-        uid: userUid,
+        id: uid,
+        uid: uid,
         email: email,
         displayName: fullName,
         createdAt: DateTime.now(),
@@ -61,11 +63,10 @@ class FirebaseAuthRepository implements IAuthRepository {
       }
       if (e.code == 'weak-password') throw const WeakPasswordException();
       throw UnknownAuthException();
-    } catch (e) {
-      throw UnknownAuthException();
     }
   }
 
+  /// signIn xử lý cả trường hợp user bật 2FA
   @override
   Future<UserEntity?> signIn(String email, String password) async {
     try {
@@ -73,12 +74,13 @@ class FirebaseAuthRepository implements IAuthRepository {
         email: email,
         password: password,
       );
-
-      final userDoc = await _firestore.collection('users').doc(credential.user!.uid).get();
+      final userDoc = await _firestore
+          .collection('users')
+          .doc(credential.user!.uid)
+          .get();
       if (userDoc.exists) {
         return UserModel.fromJson(userDoc.data(), id: userDoc.id).toEntity();
       }
-
       return UserEntity(
         id: credential.user!.uid,
         uid: credential.user!.uid,
@@ -87,6 +89,15 @@ class FirebaseAuthRepository implements IAuthRepository {
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
+    } on firebase_auth.FirebaseAuthMultiFactorException catch (e) {
+      // User đã bật 2FA — trả resolver về cho Notifier để UI mở màn hình TOTP
+      final totpFactor = e.resolver.hints.firstWhere(
+        (h) => h.factorId == 'totp',
+      );
+      throw MfaRequiredException(
+        resolver: e.resolver,
+        enrollmentId: totpFactor.uid,
+      );
     } on firebase_auth.FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' ||
           e.code == 'wrong-password' ||
@@ -94,11 +105,153 @@ class FirebaseAuthRepository implements IAuthRepository {
         throw const InvalidCredentialsException();
       }
       throw UnknownAuthException();
-    } catch (e) {
-      throw UnknownAuthException();
     }
   }
 
   @override
   Future<void> signOut() => _auth.signOut();
+
+  @override
+  Future<void> reauthenticate(String email, String password) async {
+    try {
+      final credential = firebase_auth.EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+      await _currentUser.reauthenticateWithCredential(credential);
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      if (e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        throw const WrongPasswordException();
+      }
+      throw UnknownAuthException(e.message);
+    }
+  }
+
+  @override
+  Future<void> changePassword(String newPassword) async {
+    try {
+      await _currentUser.updatePassword(newPassword);
+      await _firestore.collection('users').doc(_currentUser.uid).update({
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        throw const RequiresRecentLoginException();
+      }
+      if (e.code == 'weak-password') throw const WeakPasswordException();
+      throw UnknownAuthException(e.message);
+    }
+  }
+
+  @override
+  Future<void> deleteAccount() async {
+    try {
+      final uid = _currentUser.uid;
+      await _firestore.collection('users').doc(uid).delete();
+      await _currentUser.delete();
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        throw const RequiresRecentLoginException();
+      }
+      throw UnknownAuthException(e.message);
+    }
+  }
+
+  // ─── TOTP ────────────────────────────────────────────────────────────────────
+
+  @override
+  Future<bool> isTotpEnabled() async {
+    final factors = await _currentUser.multiFactor.getEnrolledFactors();
+    return factors.any((f) => f.factorId == 'totp');
+  }
+
+  @override
+  Future<TotpSecretEntity> beginTotpEnrollment(String appName) async {
+    try {
+      final session = await _currentUser.multiFactor.getSession();
+      final secret =
+          await firebase_auth.TotpMultiFactorGenerator.generateSecret(session);
+      final qrCodeUrl = await secret.generateQrCodeUrl(
+        accountName: _currentUser.email ?? '',
+        issuer: appName,
+      );
+      return TotpSecretEntity(
+        secretKey: secret.secretKey,
+        qrCodeUrl: qrCodeUrl,
+        firebaseSecret: secret,
+      );
+    } catch (e) {
+      throw UnknownAuthException('Không thể khởi tạo 2FA. Vui lòng thử lại.');
+    }
+  }
+
+  @override
+  Future<void> verifyAndActivateTotp(
+    TotpSecretEntity secret,
+    String otp,
+  ) async {
+    try {
+      final assertion =
+          await firebase_auth
+              .TotpMultiFactorGenerator.getAssertionForEnrollment(
+            secret.firebaseSecret,
+            otp,
+          );
+      await _currentUser.multiFactor.enroll(
+        assertion,
+        displayName: 'Google Authenticator',
+      );
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-verification-code') {
+        throw const InvalidOtpException();
+      }
+      throw UnknownAuthException(e.message);
+    }
+  }
+
+  @override
+  Future<void> disableTotp() async {
+    try {
+      final factors = await _currentUser.multiFactor.getEnrolledFactors();
+      final totpFactor = factors.firstWhere((f) => f.factorId == 'totp');
+      await _currentUser.multiFactor.unenroll(multiFactorInfo: totpFactor);
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        throw const RequiresRecentLoginException();
+      }
+      throw UnknownAuthException(e.message);
+    }
+  }
+
+  @override
+  Future<UserEntity?> completeMfaSignIn(
+    dynamic resolver,
+    String enrollmentId,
+    String otp,
+  ) async {
+    try {
+      final mfaResolver = resolver as firebase_auth.MultiFactorResolver;
+      final assertion = await firebase_auth
+          .TotpMultiFactorGenerator.getAssertionForSignIn(enrollmentId, otp);
+      final credential = await mfaResolver.resolveSignIn(assertion);
+      final uid = credential.user!.uid;
+      final userDoc = await _firestore.collection('users').doc(uid).get();
+      if (userDoc.exists) {
+        return UserModel.fromJson(userDoc.data(), id: userDoc.id).toEntity();
+      }
+      return UserEntity(
+        id: uid,
+        uid: uid,
+        email: credential.user!.email ?? '',
+        displayName: credential.user!.displayName ?? 'User',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-verification-code') {
+        throw const InvalidOtpException();
+      }
+      throw UnknownAuthException(e.message);
+    }
+  }
 }

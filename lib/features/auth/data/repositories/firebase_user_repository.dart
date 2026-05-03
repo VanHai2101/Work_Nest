@@ -83,7 +83,20 @@ class FirebaseUserRepository implements IUserRepository {
         'lastSeen': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
+      // ignore: empty_catches
     } catch (e) {}
+  }
+
+  @override
+  Future<void> updateMfaStatus(String uid, bool enabled) async {
+    try {
+      await _firestore.collection(_usersCollection).doc(uid).update({
+        'isEmailMfaEnabled': enabled,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      rethrow;
+    }
   }
 
   @override

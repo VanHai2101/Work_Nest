@@ -1,4 +1,4 @@
-import '../repositories/task_repository.dart';
+import '../../domain/repositories/index.dart';
 
 /// UseCase xóa task
 class DeleteTaskUseCase {

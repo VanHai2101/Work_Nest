@@ -1,35 +1,56 @@
 abstract class AuthException implements Exception {
-  const AuthException(this.message, {this.code});
   final String message;
-  final String? code;
-
-  @override
-  String toString() => 'AuthException:$message';
+  const AuthException(this.message);
 }
 
-// lỗi sai email/password
-class InvalidCredentialsException extends AuthException {
-  const InvalidCredentialsException()
-    : super(
-        'email hoặc mật khẩu không chính xác',
-        code: 'invalid-credentials',
-      );
-}
-
-// email đã tồn tại
 class EmailAlreadyInUseException extends AuthException {
   const EmailAlreadyInUseException()
-    : super('email đã tồn tại', code: 'email-already-in-use');
+      : super('Email này đã được sử dụng cho tài khoản khác.');
 }
 
-// mật khẩu yếu
 class WeakPasswordException extends AuthException {
   const WeakPasswordException()
-    : super('mật khẩu quá yếu', code: 'weak-password');
+      : super('Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn.');
 }
 
-// lỗi không xác định
+class InvalidCredentialsException extends AuthException {
+  const InvalidCredentialsException()
+      : super('Email hoặc mật khẩu không đúng. Vui lòng thử lại.');
+}
+
+class WrongPasswordException extends AuthException {
+  const WrongPasswordException()
+      : super('Mật khẩu hiện tại không đúng. Vui lòng kiểm tra lại.');
+}
+
+class RequiresRecentLoginException extends AuthException {
+  const RequiresRecentLoginException()
+      : super('Phiên đăng nhập đã hết hạn. Vui lòng xác thực lại để tiếp tục.');
+}
+
+class UserNotFoundException extends AuthException {
+  const UserNotFoundException()
+      : super('Không tìm thấy tài khoản. Vui lòng đăng nhập lại.');
+}
+
+class InvalidOtpException extends AuthException {
+  const InvalidOtpException()
+      : super('Mã xác thực không đúng hoặc đã hết hạn. Vui lòng thử lại.');
+}
+
+/// Ném ra khi đăng nhập nhưng tài khoản đã bật 2FA.
+/// Chứa [resolver] và [enrollmentId] để hoàn thành xác thực TOTP.
+class MfaRequiredException extends AuthException {
+  final dynamic resolver;
+  final String enrollmentId;
+
+  MfaRequiredException({
+    required this.resolver,
+    required this.enrollmentId,
+  }) : super('Tài khoản của bạn đã bật xác thực 2 yếu tố.');
+}
+
 class UnknownAuthException extends AuthException {
-  const UnknownAuthException()
-    : super('lỗi không xác định', code: 'unknown');
+  UnknownAuthException([String? msg])
+      : super(msg ?? 'Đã có lỗi không xác định. Vui lòng thử lại.');
 }

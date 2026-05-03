@@ -37,7 +37,7 @@ class AppBottomNavbar extends ConsumerWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(30),
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                   child: Container(
                     height: 64,
                     decoration: BoxDecoration(

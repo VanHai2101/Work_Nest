@@ -136,6 +136,3 @@ class FirebaseCalendarRepository implements ICalendarRepository {
   }
 }
 
-final calendarRepositoryProvider = Provider<ICalendarRepository>((ref) {
-  return FirebaseCalendarRepository();
-});

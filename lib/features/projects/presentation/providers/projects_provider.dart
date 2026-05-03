@@ -1,18 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/project_entity.dart';
-import '../../domain/repositories/project_repository.dart';
-import '../../data/repositories/firebase_project_repository.dart';
+import 'project_use_case_providers.dart';
+import 'project_repository_providers.dart';
 
-final projectRepositoryProvider = Provider<ProjectRepository>((ref) {
-  return FirebaseProjectRepository();
-});
+// RE-EXPORT
+export 'project_repository_providers.dart';
+export 'project_use_case_providers.dart';
 
-// Provider lấy danh sách Dự án của User cụ thể (Có filter nên không bị chặn bởi Rules)
 final userProjectsProvider = StreamProvider.family<List<ProjectEntity>, String>((ref, userId) {
-  final repository = ref.watch(projectRepositoryProvider);
-  return repository.getProjectsByMember(userId);
+  return ref.watch(getProjectsByMemberUseCaseProvider).call(userId);
 });
 
+// For now, marked for refactoring
 final projectByIdProvider = FutureProvider.family<ProjectEntity?, String>((ref, projectId) {
   final repository = ref.watch(projectRepositoryProvider);
   return repository.getProjectById(projectId);

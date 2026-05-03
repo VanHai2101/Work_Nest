@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 class AppTextStyles {
   AppTextStyles._();
 
-  static const String _headingFont = 'Inter';
-  static const String _bodyFont = 'Inter';
+  static const String _headingFont = 'Poppins';
+  static const String _bodyFont = 'Poppins';
 
   static const TextStyle _headingBase = TextStyle(
     fontFamily: _headingFont,

@@ -11,6 +11,7 @@ class UserEntity {
   final DateTime? planExpiresAt;
   final DateTime? planUpdatedAt;
   final bool isOnline;
+  final bool isEmailMfaEnabled;
   final DateTime? lastSeen;
 
   UserEntity({
@@ -26,6 +27,7 @@ class UserEntity {
     this.planExpiresAt,
     this.planUpdatedAt,
     this.isOnline = false,
+    this.isEmailMfaEnabled = false,
     this.lastSeen,
   });
 

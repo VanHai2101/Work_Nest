@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/repositories/index.dart';
 import '../../domain/entities/index.dart';
-import '../../data/repositories/firebase_calendar_repository.dart';
+import 'calendar_use_case_providers.dart';
+import '../../application/usecases/get_calendar_events_use_case.dart';
+
+// RE-EXPORT
+export 'calendar_repository_providers.dart';
+export 'calendar_use_case_providers.dart';
 
 enum CalendarViewMode { day, week, month }
 
@@ -73,8 +77,9 @@ final calendarProvider =
   (ref) => CalendarNotifier(),
 );
 
-// Provider lấy danh sách sự kiện từ repository
+// Provider lấy danh sách sự kiện từ repository qua UseCase
 final calendarEventsProvider = StreamProvider.family<List<CalendarEvent>, ({DateTime start, DateTime end})>((ref, range) {
-  final repository = ref.watch(calendarRepositoryProvider);
-  return repository.getEvents(range.start, range.end);
+  return ref.watch(getCalendarEventsUseCaseProvider).call(
+    GetCalendarEventsParams(start: range.start, end: range.end),
+  );
 });

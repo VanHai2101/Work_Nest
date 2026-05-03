@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:work_nest/core/components/app_avatar.dart';
 import 'package:work_nest/core/theme/index.dart';
-import 'package:work_nest/features/search/data/repositories/search_repository.dart';
+import 'package:work_nest/features/search/domain/entities/search_result_entity.dart';
 import 'package:work_nest/features/profile/presentation/screens/profile_screen.dart';
 import 'package:work_nest/features/projects/presentation/screens/project_detail_screen.dart';
 
 class SearchResultTile extends StatelessWidget {
-  final SearchResult result;
+  final SearchResultEntity result;
   final VoidCallback? onTap;
 
   const SearchResultTile({required this.result, this.onTap, super.key});

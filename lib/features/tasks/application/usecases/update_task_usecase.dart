@@ -1,4 +1,5 @@
-import '../entities/task_entity.dart';
+import 'package:work_nest/features/tasks/domain/entities/index.dart';
+import '../../domain/repositories/index.dart';
 import '../repositories/task_repository.dart';
 
 /// UseCase cập nhật task

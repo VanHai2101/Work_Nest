@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/domain/states/index.dart';
 import '../../../../core/theme/index.dart';
 import '../../../../core/constants/index.dart';
-import '../../application/exceptions/auth_exceptions.dart';
+import '../../application/usecases/index.dart';
 import '../providers/index.dart';
 import 'index.dart';
 
@@ -48,20 +49,27 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     });
 
     try {
-      final authRepo = ref.read(authRepositoryProvider);
-      await authRepo.signUp(
-        _emailController.text.trim(),
-        _passwordController.text,
-        _nameController.text.trim(),
+      final signUpUseCase = ref.read(signUpUseCaseProvider);
+      final result = await signUpUseCase.call(
+        SignUpParams(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          fullName: _nameController.text.trim(),
+        ),
       );
 
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
-      }
-    } on EmailAlreadyInUseException {
-      setState(() => _errorMessage = 'Email already in use');
-    } on WeakPasswordException {
-      setState(() => _errorMessage = 'Password is too weak');
+      result.fold(
+        (failure) {
+          setState(() {
+            _errorMessage = (failure as OperationError).message;
+          });
+        },
+        (user) {
+          if (mounted) {
+            Navigator.of(context).pushReplacementNamed('/home');
+          }
+        },
+      );
     } catch (e) {
       setState(() {
         _errorMessage = e.toString().replaceAll('Exception: ', '');

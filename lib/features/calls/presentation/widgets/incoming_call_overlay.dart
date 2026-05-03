@@ -5,6 +5,8 @@ import '../../../../features/notifications/presentation/providers/notification_p
 import '../../../../features/calls/domain/entities/call_entity.dart'
     show CallType;
 
+import 'package:work_nest/core/components/dynamic_island/island_models.dart';
+import 'package:work_nest/core/components/dynamic_island/island_provider.dart';
 import '../screens/incoming_call_screen.dart';
 
 class IncomingCallOverlay extends ConsumerWidget {
@@ -28,6 +30,9 @@ class IncomingCallOverlay extends ConsumerWidget {
         }
 
         if (incomingCall != null && incomingCall.relatedEntityId != null) {
+          // Trigger Dynamic Island
+          ref.read(islandProvider.notifier).changeState(IslandState.phoneCall);
+
           final call = incomingCall;
           showGeneralDialog(
             context: context,

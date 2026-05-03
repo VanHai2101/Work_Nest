@@ -1,5 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:work_nest/features/search/data/repositories/search_repository.dart';
+import '../../domain/entities/search_result_entity.dart';
+import '../../application/usecases/search_global_use_case.dart';
+import 'search_use_case_providers.dart';
+
+// RE-EXPORT
+export 'search_repository_providers.dart';
+export 'search_use_case_providers.dart';
 
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
@@ -7,10 +13,10 @@ final searchTypeFilterProvider = StateProvider<SearchResultType?>(
   (ref) => null,
 );
 
-final searchResultsProvider = FutureProvider<List<SearchResult>>((ref) async {
+final searchResultsProvider = FutureProvider<List<SearchResultEntity>>((ref) async {
   final query = ref.watch(searchQueryProvider);
   final filterType = ref.watch(searchTypeFilterProvider);
-  final repository = ref.watch(searchRepositoryProvider);
+  final searchGlobalUseCase = ref.watch(searchGlobalUseCaseProvider);
 
   if (query.length < 2) return [];
 
@@ -20,5 +26,12 @@ final searchResultsProvider = FutureProvider<List<SearchResult>>((ref) async {
   // Re-check query after delay
   if (query != ref.read(searchQueryProvider)) return [];
 
-  return repository.searchGlobal(query, filterType: filterType);
+  final result = await searchGlobalUseCase.call(
+    SearchGlobalParams(query: query, filterType: filterType),
+  );
+
+  return result.fold(
+    (failure) => [], // Trả về list rỗng nếu lỗi
+    (results) => results,
+  );
 });

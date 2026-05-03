@@ -15,6 +15,7 @@ class UserModel {
   final Timestamp? planExpiresAt;
   final Timestamp? planUpdatedAt;
   final bool isOnline;
+  final bool isEmailMfaEnabled;
   final Timestamp? lastSeen;
 
   UserModel({
@@ -30,6 +31,7 @@ class UserModel {
     this.planExpiresAt,
     this.planUpdatedAt,
     this.isOnline = false,
+    this.isEmailMfaEnabled = false,
     this.lastSeen,
   });
 
@@ -52,6 +54,7 @@ class UserModel {
           ? Parser.parseTimestamp(json['planUpdatedAt']) 
           : null,
       isOnline: json['isOnline'] as bool? ?? false,
+      isEmailMfaEnabled: json['isEmailMfaEnabled'] as bool? ?? false,
       lastSeen: json['lastSeen'] != null 
           ? Parser.parseTimestamp(json['lastSeen']) 
           : null,
@@ -75,6 +78,7 @@ class UserModel {
         ? Timestamp.fromDate(entity.planUpdatedAt!) 
         : null,
     isOnline: entity.isOnline,
+    isEmailMfaEnabled: entity.isEmailMfaEnabled,
     lastSeen: entity.lastSeen != null 
         ? Timestamp.fromDate(entity.lastSeen!) 
         : null,
@@ -102,6 +106,7 @@ class UserModel {
     'planExpiresAt': planExpiresAt,
     'planUpdatedAt': planUpdatedAt,
     'isOnline': isOnline,
+    'isEmailMfaEnabled': isEmailMfaEnabled,
     'lastSeen': lastSeen,
   };
 
@@ -118,6 +123,7 @@ class UserModel {
     planExpiresAt: planExpiresAt?.toDate(),
     planUpdatedAt: planUpdatedAt?.toDate(),
     isOnline: isOnline,
+    isEmailMfaEnabled: isEmailMfaEnabled,
     lastSeen: lastSeen?.toDate(),
   );
 
@@ -134,6 +140,7 @@ class UserModel {
     Timestamp? planExpiresAt,
     Timestamp? planUpdatedAt,
     bool? isOnline,
+    bool? isEmailMfaEnabled,
     Timestamp? lastSeen,
   }) {
     return UserModel(
@@ -149,6 +156,7 @@ class UserModel {
       planExpiresAt: planExpiresAt ?? this.planExpiresAt,
       planUpdatedAt: planUpdatedAt ?? this.planUpdatedAt,
       isOnline: isOnline ?? this.isOnline,
+      isEmailMfaEnabled: isEmailMfaEnabled ?? this.isEmailMfaEnabled,
       lastSeen: lastSeen ?? this.lastSeen,
     );
   }

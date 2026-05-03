@@ -1,33 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/entities/search_result_entity.dart';
+import '../../domain/repositories/search_repository.dart';
 
-enum SearchResultType { user, project, task, group }
-
-class SearchResult {
-  final String id;
-  final String title;
-  final String? subtitle;
-  final String? photoURL;
-  final SearchResultType type;
-  final Map<String, dynamic> rawData;
-
-  SearchResult({
-    required this.id,
-    required this.title,
-    this.subtitle,
-    this.photoURL,
-    required this.type,
-    required this.rawData,
+class SearchResultModel extends SearchResultEntity {
+  SearchResultModel({
+    required super.id,
+    required super.title,
+    super.subtitle,
+    super.photoURL,
+    required super.type,
+    required super.rawData,
   });
 
-  factory SearchResult.fromFirestore(
+  factory SearchResultModel.fromFirestore(
     DocumentSnapshot doc,
     SearchResultType type,
   ) {
     final data = doc.data() as Map<String, dynamic>;
     if (type == SearchResultType.user) {
-      return SearchResult(
+      return SearchResultModel(
         id: doc.id,
         title: data['displayName'] ?? 'Người dùng không tên',
         subtitle: data['plan'] ?? 'Gói miễn phí',
@@ -36,7 +28,7 @@ class SearchResult {
         rawData: data,
       );
     } else if (type == SearchResultType.project) {
-      return SearchResult(
+      return SearchResultModel(
         id: doc.id,
         title: data['title'] ?? 'Dự án không tên',
         subtitle: data['description'],
@@ -44,7 +36,7 @@ class SearchResult {
         rawData: data,
       );
     } else if (type == SearchResultType.group) {
-      return SearchResult(
+      return SearchResultModel(
         id: doc.id,
         title: data['name'] ?? 'Nhóm không tên',
         subtitle: data['description'],
@@ -54,7 +46,7 @@ class SearchResult {
       );
     } else {
       // Task
-      return SearchResult(
+      return SearchResultModel(
         id: doc.id,
         title: data['title'] ?? 'Công việc không tên',
         subtitle: data['description'],
@@ -65,10 +57,11 @@ class SearchResult {
   }
 }
 
-class SearchRepository {
+class FirebaseSearchRepository implements ISearchRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<List<SearchResult>> searchGlobal(
+  @override
+  Future<List<SearchResultEntity>> searchGlobal(
     String query, {
     SearchResultType? filterType,
   }) async {
@@ -80,7 +73,7 @@ class SearchRepository {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return [];
 
-    final results = <SearchResult>[];
+    final results = <SearchResultEntity>[];
 
     // Parallel search execution
     final searchFutures = <Future<void>>[];
@@ -95,12 +88,14 @@ class SearchRepository {
             .limit(10)
             .get()
             .then((snap) {
-          results.addAll(
-            snap.docs.map(
-              (doc) => SearchResult.fromFirestore(doc, SearchResultType.user),
-            ),
-          );
-        }).catchError((_) {}),
+              results.addAll(
+                snap.docs.map(
+                  (doc) =>
+                      SearchResultModel.fromFirestore(doc, SearchResultType.user),
+                ),
+              );
+            })
+            .catchError((_) {}),
       );
     }
 
@@ -115,12 +110,14 @@ class SearchRepository {
             .limit(10)
             .get()
             .then((snap) {
-          results.addAll(
-            snap.docs.map(
-              (doc) => SearchResult.fromFirestore(doc, SearchResultType.project),
-            ),
-          );
-        }).catchError((_) {}),
+              results.addAll(
+                snap.docs.map(
+                  (doc) =>
+                      SearchResultModel.fromFirestore(doc, SearchResultType.project),
+                ),
+              );
+            })
+            .catchError((_) {}),
       );
     }
 
@@ -135,14 +132,14 @@ class SearchRepository {
             .limit(10)
             .get()
             .then((snap) {
-          results.addAll(
-            snap.docs.map(
-              (doc) => SearchResult.fromFirestore(doc, SearchResultType.group),
-            ),
-          );
-        }).catchError((e) {
-          print('Error searching groups: $e');
-        }),
+              results.addAll(
+                snap.docs.map(
+                  (doc) =>
+                      SearchResultModel.fromFirestore(doc, SearchResultType.group),
+                ),
+              );
+            })
+            .catchError((_) {}),
       );
     }
 
@@ -154,7 +151,7 @@ class SearchRepository {
           .where('memberIds', arrayContains: currentUser.uid)
           .limit(30) // Firestore whereIn limit
           .get();
-      
+
       final projectIds = projectsSnap.docs.map((doc) => doc.id).toList();
 
       if (projectIds.isNotEmpty) {
@@ -167,14 +164,14 @@ class SearchRepository {
               .limit(20)
               .get()
               .then((snap) {
-            results.addAll(
-              snap.docs.map(
-                (doc) => SearchResult.fromFirestore(doc, SearchResultType.task),
-              ),
-            );
-          }).catchError((e) {
-            print('Error searching project tasks: $e');
-          }),
+                results.addAll(
+                  snap.docs.map(
+                    (doc) =>
+                        SearchResultModel.fromFirestore(doc, SearchResultType.task),
+                  ),
+                );
+              })
+              .catchError((_) {}),
         );
       }
 
@@ -188,41 +185,44 @@ class SearchRepository {
             .limit(10)
             .get()
             .then((snap) {
-          results.addAll(
-            snap.docs.map(
-              (doc) => SearchResult.fromFirestore(doc, SearchResultType.task),
-            ),
-          );
-        }).catchError((e) {
-          print('Error searching created tasks: $e');
-        }),
+              results.addAll(
+                snap.docs.map(
+                  (doc) =>
+                      SearchResultModel.fromFirestore(doc, SearchResultType.task),
+                ),
+              );
+            })
+            .catchError((_) {}),
       );
 
       // Query 2: Tasks assigned to user
       searchFutures.add(
         _firestore
             .collectionGroup('tasks')
-            .where('assigneeIds', arrayContains: currentUser.uid) // Updated field name (assigneeIds)
+            .where(
+              'assigneeIds',
+              arrayContains: currentUser.uid,
+            ) // Updated field name (assigneeIds)
             .where('title', isGreaterThanOrEqualTo: trimmedQuery)
             .where('title', isLessThanOrEqualTo: '$trimmedQuery\uf8ff')
             .limit(10)
             .get()
             .then((snap) {
-          results.addAll(
-            snap.docs.map(
-              (doc) => SearchResult.fromFirestore(doc, SearchResultType.task),
-            ),
-          );
-        }).catchError((e) {
-          print('Error searching assigned tasks: $e');
-        }),
+              results.addAll(
+                snap.docs.map(
+                  (doc) =>
+                      SearchResultModel.fromFirestore(doc, SearchResultType.task),
+                ),
+              );
+            })
+            .catchError((_) {}),
       );
     }
 
     await Future.wait(searchFutures);
 
     // Simple de-duplication based on ID (especially for tasks where user might be both creator and assignee)
-    final uniqueResults = <String, SearchResult>{};
+    final uniqueResults = <String, SearchResultEntity>{};
     for (var res in results) {
       uniqueResults[res.id] = res;
     }
@@ -230,7 +230,3 @@ class SearchRepository {
     return uniqueResults.values.toList();
   }
 }
-
-final searchRepositoryProvider = Provider<SearchRepository>(
-  (ref) => SearchRepository(),
-);

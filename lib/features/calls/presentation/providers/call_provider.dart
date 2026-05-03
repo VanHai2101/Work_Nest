@@ -5,11 +5,21 @@ import 'dart:async';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/index.dart';
-import '../../domain/repositories/call_repository.dart';
-import '../../data/repositories/firebase_call_repository.dart';
 import '../../data/models/ice_candidate_model.dart';
 import '../../../../core/providers/index.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import 'call_provider.dart';
+import 'call_use_case_providers.dart';
+import '../../domain/repositories/call_repository.dart';
+import '../../application/usecases/accept_call_use_case.dart';
+import '../../application/usecases/end_call_use_case.dart';
+import '../../application/usecases/reject_call_use_case.dart';
+import '../../application/usecases/start_call_use_case.dart';
+import '../../application/usecases/watch_call_use_case.dart';
+
+// RE-EXPORT
+export 'call_repository_providers.dart';
+export 'call_use_case_providers.dart';
 
 /// State of the active call, including streams and connection status.
 class CallState {
@@ -41,35 +51,63 @@ class CallState {
 final incomingCallStreamProvider = StreamProvider.autoDispose<CallEntity?>((
   ref,
 ) {
-  final repository = ref.watch(callRepositoryProvider);
+  final watchIncomingCallsUseCase = ref.watch(
+    watchIncomingCallsUseCaseProvider,
+  );
   final userId = ref.watch(userIdProvider);
   if (userId == null) return const Stream.empty();
-  return repository.watchIncomingCalls(userId);
+  return watchIncomingCallsUseCase.call(userId);
 });
 
-final callRepositoryProvider = Provider<CallRepository>((ref) {
-  return FirebaseCallRepository();
-});
+// Note: callRepositoryProvider is now exported from call_repository_providers.dart
 
 final callProvider = StateNotifierProvider<CallNotifier, CallState>((ref) {
-  final repository = ref.watch(callRepositoryProvider);
-  return CallNotifier(repository);
+  return CallNotifier(
+    startCallUseCase: ref.watch(startCallUseCaseProvider),
+    acceptCallUseCase: ref.watch(acceptCallUseCaseProvider),
+    endCallUseCase: ref.watch(endCallUseCaseProvider),
+    rejectCallUseCase: ref.watch(rejectCallUseCaseProvider),
+    watchCallUseCase: ref.watch(watchCallUseCaseProvider),
+    repository: ref.watch(
+      callRepositoryProvider,
+    ), // Still needed for ICE candidates for now until fully refactored
+  );
 });
 
 class CallNotifier extends StateNotifier<CallState> {
+  final StartCallUseCase _startCallUseCase;
+  final AcceptCallUseCase _acceptCallUseCase;
+  final EndCallUseCase _endCallUseCase;
+  final RejectCallUseCase _rejectCallUseCase;
+  final WatchCallUseCase _watchCallUseCase;
+
+  // TODO: Refactor ICE candidates logic to UseCases
   final CallRepository _repository;
+
   RTCPeerConnection? _peerConnection;
   MediaStream? _localStream;
   StreamSubscription? _callSubscription;
   StreamSubscription? _iceSubscription;
 
-  CallNotifier(this._repository)
-    : super(
-        CallState(
-          localRenderer: RTCVideoRenderer(),
-          remoteRenderer: RTCVideoRenderer(),
-        ),
-      ) {
+  CallNotifier({
+    required StartCallUseCase startCallUseCase,
+    required AcceptCallUseCase acceptCallUseCase,
+    required EndCallUseCase endCallUseCase,
+    required RejectCallUseCase rejectCallUseCase,
+    required WatchCallUseCase watchCallUseCase,
+    required CallRepository repository,
+  }) : _startCallUseCase = startCallUseCase,
+       _acceptCallUseCase = acceptCallUseCase,
+       _endCallUseCase = endCallUseCase,
+       _rejectCallUseCase = rejectCallUseCase,
+       _watchCallUseCase = watchCallUseCase,
+       _repository = repository,
+       super(
+         CallState(
+           localRenderer: RTCVideoRenderer(),
+           remoteRenderer: RTCVideoRenderer(),
+         ),
+       ) {
     _initRenderers();
   }
 
@@ -102,15 +140,22 @@ class CallNotifier extends StateNotifier<CallState> {
     });
     await _peerConnection!.setLocalDescription(offer);
 
-    final callId = await _repository.startCall(
+    final result = await _startCallUseCase.call(
       call.copyWith(offer: offer.toMap()),
     );
-    state = state.copyWith(
-      call: call.copyWith(id: callId, offer: offer.toMap()),
-    );
 
-    _listenToCallUpdates(callId);
-    _listenToIceCandidates(callId, false);
+    result.fold(
+      (failure) {
+        // Handle failure (e.g. show toast, or update state with error)
+      },
+      (callId) {
+        state = state.copyWith(
+          call: call.copyWith(id: callId, offer: offer.toMap()),
+        );
+        _listenToCallUpdates(callId);
+        _listenToIceCandidates(callId, false);
+      },
+    );
   }
 
   Future<void> acceptCall(CallEntity call) async {
@@ -123,10 +168,22 @@ class CallNotifier extends StateNotifier<CallState> {
     final answer = await _peerConnection!.createAnswer();
     await _peerConnection!.setLocalDescription(answer);
 
-    await _repository.acceptCall(call.id, answer.toMap());
+    final result = await _acceptCallUseCase.call(
+      AcceptCallParams(callId: call.id, answer: answer.toMap()),
+    );
 
-    _listenToCallUpdates(call.id);
-    _listenToIceCandidates(call.id, true); // Listen for candidates from caller
+    result.fold(
+      (failure) {
+        // Handle failure
+      },
+      (_) {
+        _listenToCallUpdates(call.id);
+        _listenToIceCandidates(
+          call.id,
+          true,
+        ); // Listen for candidates from caller
+      },
+    );
   }
 
   Future<void> _setupPeerConnection(CallEntity call, bool isCaller) async {
@@ -177,7 +234,7 @@ class CallNotifier extends StateNotifier<CallState> {
 
   void _listenToCallUpdates(String callId) {
     _callSubscription?.cancel();
-    _callSubscription = _repository.watchCall(callId).listen((call) {
+    _callSubscription = _watchCallUseCase.call(callId).listen((call) {
       if (call == null) return;
 
       if (call.status == CallStatus.ended ||
@@ -214,7 +271,7 @@ class CallNotifier extends StateNotifier<CallState> {
 
   Future<void> hangUp() async {
     if (state.call != null) {
-      await _repository.endCall(state.call!.id);
+      await _endCallUseCase.call(state.call!.id);
     }
 
     await _callSubscription?.cancel();
@@ -229,7 +286,7 @@ class CallNotifier extends StateNotifier<CallState> {
   }
 
   Future<void> rejectCall(String callId) async {
-    await _repository.rejectCall(callId);
+    await _rejectCallUseCase.call(callId);
     if (mounted) state = state.copyWith(call: null);
   }
 

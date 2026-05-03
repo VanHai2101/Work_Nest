@@ -195,6 +195,7 @@ class ConversationListTile extends ConsumerWidget {
           children: [
             AppAvatar(
               id: id,
+              userId: isGroup ? null : id,
               photoURL: photoURL,
               size: 52,
               isGroup: isGroup,

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:work_nest/features/search/data/repositories/search_repository.dart';
+import 'package:work_nest/features/search/domain/entities/search_result_entity.dart';
+import 'package:work_nest/features/search/presentation/providers/search_repository_providers.dart';
 
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
@@ -7,7 +8,7 @@ final searchTypeFilterProvider = StateProvider<SearchResultType?>(
   (ref) => null,
 );
 
-final searchResultsProvider = FutureProvider<List<SearchResult>>((ref) async {
+final searchResultsProvider = FutureProvider<List<SearchResultEntity>>((ref) async {
   final query = ref.watch(searchQueryProvider);
   final filterType = ref.watch(searchTypeFilterProvider);
   final repository = ref.watch(searchRepositoryProvider);
