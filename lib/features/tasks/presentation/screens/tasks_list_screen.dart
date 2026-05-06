@@ -29,10 +29,12 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
     final tasksAsync = ref.watch(userAssignedTasksProvider(currentUserId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My Tasks'), centerTitle: true),
+      appBar: AppBar(title: const Text('Công việc của tôi'), centerTitle: true),
+
       body: tasksAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, stack) => Center(child: Text('Lỗi: $err')),
+
         data: (allTasks) {
           if (allTasks.isEmpty) {
             return Center(
@@ -46,9 +48,10 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
                   ),
                   AppLayout.gapMedium,
                   Text(
-                    'No tasks assigned',
+                    'Chưa có công việc nào được giao',
                     style: TextStyle(color: Colors.white.withOpacity(0.5)),
                   ),
+
                 ],
               ),
             );
@@ -62,6 +65,12 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
             tasks = tasks.where((t) => t.completed).toList();
           }
 
+          final statusMap = {
+            'Tất cả': 'all',
+            'Chưa xong': 'pending',
+            'Hoàn thành': 'completed'
+          };
+
           return Column(
             children: [
               // Filter chips
@@ -69,15 +78,15 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
                 scrollDirection: Axis.horizontal,
                 padding: AppLayout.paddingMedium,
                 child: Row(
-                  children: ['all', 'pending', 'completed']
+                  children: statusMap.keys
                       .map(
-                        (status) => Padding(
+                        (statusLabel) => Padding(
                           padding: EdgeInsets.only(right: AppPadding.small),
                           child: FilterChip(
-                            label: Text(status),
-                            selected: _filterStatus == status,
+                            label: Text(statusLabel),
+                            selected: _filterStatus == statusMap[statusLabel],
                             onSelected: (selected) {
-                              setState(() => _filterStatus = status);
+                              setState(() => _filterStatus = statusMap[statusLabel]!);
                             },
                           ),
                         ),
@@ -85,6 +94,7 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
                       .toList(),
                 ),
               ),
+
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
@@ -119,7 +129,8 @@ class _TasksListScreenState extends ConsumerState<TasksListScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
-        label: const Text('New Task'),
+        label: const Text('Công việc mới'),
+
         onPressed: () {
           Navigator.of(
             context,

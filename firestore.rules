@@ -85,6 +85,11 @@ service cloud.firestore {
       match /settings/{settingId} {
         allow read, write: if isOwner(userId);
       }
+
+      // Quản lý thiết bị
+      match /devices/{deviceId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // ========================================
@@ -481,6 +486,14 @@ service cloud.firestore {
       
       // Chặn mọi hành động ghi trực tiếp qua collection group
       allow write: if false;
+    }
+
+    // ========================================
+    // OTP VERIFICATIONS COLLECTION
+    // ========================================
+    match /otp_verifications/{userId} {
+      // Chỉ chủ sở hữu mới đọc và ghi được mã OTP của mình
+      allow read, write: if isOwner(userId);
     }
 
     // ========================================

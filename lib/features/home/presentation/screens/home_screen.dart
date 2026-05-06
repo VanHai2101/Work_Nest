@@ -6,9 +6,11 @@ import '../../../../core/providers/index.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../chat/presentation/screens/index.dart';
 import '../../../notifications/presentation/screens/index.dart';
+import '../../../notifications/presentation/providers/notification_providers.dart';
 import '../../../projects/presentation/screens/index.dart';
 import '../../../tasks/presentation/screens/index.dart';
-import 'package:work_nest/features/calendar/presentation/screens/calendar_screen.dart' as cal;
+import 'package:work_nest/features/calendar/presentation/screens/calendar_screen.dart'
+    as cal;
 import '../../../profile/presentation/screens/index.dart';
 import '../widgets/index.dart';
 import '../../../../core/theme/index.dart';
@@ -137,6 +139,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _notificationBtn() {
+    final unreadCountAsync = ref.watch(unreadNotificationsCountProvider);
+
     return GestureDetector(
       onTap: () => setState(() => _selectedIndex = 4),
       child: Container(
@@ -156,6 +160,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
             const Center(
               child: Icon(
@@ -164,18 +169,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 size: 20,
               ),
             ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Colors.redAccent,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1.5),
-                ),
-              ),
+            unreadCountAsync.when(
+              data: (count) {
+                if (count <= 0) return const SizedBox.shrink();
+                return Positioned(
+                  right: -4,
+                  top: -4,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppColors.accent,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    child: Center(
+                      child: Text(
+                        count > 9 ? '9+' : '$count',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
             ),
           ],
         ),

@@ -5,12 +5,48 @@ import '../../../../core/theme/index.dart';
 import '../../../auth/application/notifiers/auth_notifier.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../widgets/email_otp_dialog.dart';
+import 'device_management_screen.dart';
 
-class SecurityScreen extends ConsumerWidget {
+class SecurityScreen extends ConsumerStatefulWidget {
   const SecurityScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SecurityScreen> createState() => _SecurityScreenState();
+}
+
+class _SecurityScreenState extends ConsumerState<SecurityScreen> {
+  bool _autoTriggered = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _handleAutoTrigger();
+  }
+
+  void _handleAutoTrigger() {
+    if (_autoTriggered) return;
+
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map<String, dynamic> && args.containsKey('auto_trigger')) {
+      _autoTriggered = true;
+      final purpose = args['auto_trigger'] as String;
+      
+      // Đợi frame tiếp theo để show dialog
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (purpose == 'change_password') {
+          _onChangePassword(context, ref);
+        } else if (purpose == 'toggle_2fa') {
+          final currentUser = ref.read(currentUserProvider).value;
+          _onToggle2FA(context, ref, currentUser?.isEmailMfaEnabled ?? false);
+        } else if (purpose == 'delete_account') {
+          _onDeleteAccount(context, ref);
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentUserState = ref.watch(currentUserProvider);
     final currentUser = currentUserState.value;
 
@@ -52,8 +88,10 @@ class SecurityScreen extends ConsumerWidget {
             icon: Icons.devices_rounded,
             title: 'Các thiết bị đã đăng nhập',
             subtitle: 'Quản lý phiên đăng nhập của bạn',
-            badge: 'Sắp ra mắt',
-            onTap: () => _showComingSoon(context),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DeviceManagementScreen()),
+            ),
           ),
           const SizedBox(height: 32),
           Text(

@@ -70,7 +70,7 @@ class AppColors {
   static const Color darkBorder = Color(0xFF252D3D);
   static const Color darkTextSecondary = Color(0xFF6B7A99);
   static const Color darkTextHint = Color(0xFF3A4560);
-  static const Color darkAccent = Color(0xFF3B82F6);
+  static const Color darkAccent = Color(0xFF4F46E5);
   static const Color darkAccentLight = Color(0xFF60A5FA);
   static const Color darkSuccess = Color(0xFF34D399);
   static const Color darkWarning = Color(0xFFFBBF24);
@@ -135,29 +135,29 @@ extension _AppColorExtension on _AppColor {
       case _AppColor.primaryBackground:
         return const Color(0xFFFFFFFF);
       case _AppColor.accent:
-        return const Color(0xFFFACC15);
+        return const Color(0xFF4F46E5); // Modern Indigo
       case _AppColor.accentLight:
-        return const Color(0xFFFEF08A);
+        return const Color(0xFFEEF2FF); // Indigo 50
       case _AppColor.accentDark:
-        return const Color(0xFFEAB308);
+        return const Color(0xFF3730A3); // Indigo 800
       case _AppColor.textPrimary:
-        return const Color(0xFF111827);
+        return const Color(0xFF0F172A); // Slate 900
       case _AppColor.textSecondary:
-        return const Color(0xFF4B5563);
+        return const Color(0xFF64748B); // Slate 500
       case _AppColor.textTertiary:
-        return const Color(0xFF9CA3AF);
+        return const Color(0xFF94A3B8); // Slate 400
       case _AppColor.surface:
-        return const Color(0xFFF9FAFB);
+        return const Color(0xFFF8FAFC); // Slate 50
       case _AppColor.surfaceVariant:
-        return const Color(0xFFF3F4F6);
+        return const Color(0xFFF1F5F9); // Slate 100
       case _AppColor.card:
         return const Color(0xFFFFFFFF);
       case _AppColor.border:
-        return const Color(0xFFE5E7EB);
+        return const Color(0xFFE2E8F0); // Slate 200
       case _AppColor.borderLight:
-        return const Color(0xFFF3F4F6);
+        return const Color(0xFFF1F5F9);
       case _AppColor.divider:
-        return const Color(0xFFF3F4F6);
+        return const Color(0xFFF1F5F9);
       case _AppColor.success:
         return const Color(0xFF10B981);
       case _AppColor.warning:
@@ -167,19 +167,19 @@ extension _AppColorExtension on _AppColor {
       case _AppColor.info:
         return const Color(0xFF3B82F6);
       case _AppColor.disabled:
-        return const Color(0xFFD1D5DB);
+        return const Color(0xFFCBD5E1);
       case _AppColor.disabledBackground:
-        return const Color(0xFFF3F4F6);
+        return const Color(0xFFF1F5F9);
       case _AppColor.overlay:
-        return const Color(0x66111827);
+        return const Color(0x660F172A);
       case _AppColor.inputBackground:
-        return const Color(0xFFF9FAFB);
+        return const Color(0xFFF8FAFC);
       case _AppColor.inputFocus:
-        return const Color(0xFFE5E7EB);
+        return const Color(0xFFE2E8F0);
       case _AppColor.chipBackground:
-        return const Color(0xFFF3F4F6);
+        return const Color(0xFFF1F5F9);
       case _AppColor.skeleton:
-        return const Color(0xFFF3F4F6);
+        return const Color(0xFFF1F5F9);
     }
   }
 }

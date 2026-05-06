@@ -39,9 +39,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_passwordController.text != _confirmPasswordController.text) {
-      setState(() => _errorMessage = 'Passwords do not match');
+      setState(() => _errorMessage = 'Mật khẩu không khớp');
       return;
     }
+
 
     setState(() {
       _isLoading = true;
@@ -94,7 +95,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               AppLayout.gapXLarge,
               // Title
               Text(
-                'Create Account',
+                'Tạo tài khoản',
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w900,
@@ -102,9 +103,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               ),
               AppLayout.gapSmall,
               Text(
-                'Join us today',
+                'Tham gia với chúng tôi ngay hôm nay',
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
               ),
+
               AppLayout.gapXLarge,
 
               // Form
@@ -116,36 +118,38 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     // Name field
                     _buildTextFormField(
                       controller: _nameController,
-                      label: 'Full Name',
-                      hint: 'Enter your full name',
+                      label: 'Họ và tên',
+                      hint: 'Nhập họ và tên của bạn',
                       icon: Icons.person_outlined,
                       validator: (value) {
-                        if (value?.isEmpty ?? true) return 'Name is required';
+                        if (value?.isEmpty ?? true) return 'Vui lòng nhập tên';
                         return null;
                       },
                     ),
+
                     AppLayout.gapMedium,
 
                     // Email field
                     _buildTextFormField(
                       controller: _emailController,
                       label: 'Email',
-                      hint: 'Enter your email',
+                      hint: 'Nhập email của bạn',
                       icon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
-                        if (value?.isEmpty ?? true) return 'Email is required';
-                        if (!value!.contains('@')) return 'Invalid email';
+                        if (value?.isEmpty ?? true) return 'Vui lòng nhập email';
+                        if (!value!.contains('@')) return 'Email không hợp lệ';
                         return null;
                       },
                     ),
+
                     AppLayout.gapMedium,
 
                     // Password field
                     _buildTextFormField(
                       controller: _passwordController,
-                      label: 'Password',
-                      hint: 'Enter your password',
+                      label: 'Mật khẩu',
+                      hint: 'Nhập mật khẩu của bạn',
                       icon: Icons.lock_outlined,
                       obscureText: _obscurePassword,
                       suffixIcon: IconButton(
@@ -161,21 +165,22 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       ),
                       validator: (value) {
                         if (value?.isEmpty ?? true) {
-                          return 'Password is required';
+                          return 'Vui lòng nhập mật khẩu';
                         }
                         if (value!.length < 6) {
-                          return 'Password must be at least 6 characters';
+                          return 'Mật khẩu phải có ít nhất 6 ký tự';
                         }
                         return null;
                       },
                     ),
+
                     AppLayout.gapMedium,
 
                     // Confirm Password field
                     _buildTextFormField(
                       controller: _confirmPasswordController,
-                      label: 'Confirm Password',
-                      hint: 'Re-enter your password',
+                      label: 'Xác nhận mật khẩu',
+                      hint: 'Nhập lại mật khẩu của bạn',
                       icon: Icons.lock_outlined,
                       obscureText: _obscureConfirmPassword,
                       suffixIcon: IconButton(
@@ -194,11 +199,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       ),
                       validator: (value) {
                         if (value?.isEmpty ?? true) {
-                          return 'Please confirm password';
+                          return 'Vui lòng xác nhận mật khẩu';
                         }
                         return null;
                       },
                     ),
+
                     AppLayout.gapLarge,
 
                     // Error message
@@ -247,12 +253,13 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                 ),
                               )
                             : const Text(
-                                'Create Account',
+                                'Tạo tài khoản',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
+
                       ),
                     ),
                   ],
@@ -266,7 +273,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Already have an account? ',
+                      'Đã có tài khoản? ',
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
                     GestureDetector(
@@ -278,13 +285,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         );
                       },
                       child: Text(
-                        'Sign In',
+                        'Đăng nhập',
                         style: TextStyle(
                           color: AppColors.info,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
+
                   ],
                 ),
               ),

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+
 import '../../../../core/constants/index.dart';
 import '../../../../core/theme/index.dart';
 import '../../domain/entities/index.dart';
@@ -42,6 +45,32 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         actions: [
           IconButton(
             icon: Icon(
+              Icons.qr_code_2_rounded,
+              color: AppColors.textPrimary,
+              size: 22,
+            ),
+            onPressed: () {
+              _showQRCode(context, 'worknest://project/${widget.projectId}');
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.share_rounded,
+
+              color: AppColors.textPrimary,
+              size: 22,
+            ),
+            onPressed: () {
+              final link = 'worknest://project/${widget.projectId}';
+              Clipboard.setData(ClipboardData(text: link));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Đã sao chép liên kết dự án!')),
+              );
+
+            },
+          ),
+          IconButton(
+            icon: Icon(
               Icons.edit_outlined,
               color: AppColors.textPrimary,
               size: 22,
@@ -64,12 +93,12 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
           ),
         ],
       ),
+
       body: projectAsync.when(
         loading: () => const Center(
           child: CircularProgressIndicator(color: AppColors.darkAccent),
         ),
-        error: (err, stack) =>
-            Center(child: Text('${AppErrors.loadingFailed}: $err')),
+        error: (err, stack) => Center(child: Text('Lỗi: $err')),
         data: (project) {
           if (project == null) {
             return Center(child: Text(AppErrors.genericError));
@@ -155,6 +184,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
+
                           ),
                         )
                         .toList(),
@@ -212,4 +242,33 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
       ),
     );
   }
+
+  void _showQRCode(BuildContext context, String data) {
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Project QR Code'),
+        content: SizedBox(
+          width: 250,
+          height: 250,
+          child: Center(
+            child: QrImageView(
+              data: data,
+              version: QrVersions.auto,
+              size: 200.0,
+              backgroundColor: Colors.white,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
 }
+

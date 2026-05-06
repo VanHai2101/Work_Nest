@@ -31,7 +31,8 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
       backgroundColor: AppColors.primaryBackground,
       body: projectsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, stack) => Center(child: Text('Lỗi: $err')),
+
         data: (projects) {
           if (projects.isEmpty) {
             return Center(
@@ -186,12 +187,13 @@ class _ProjectTile extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Progress',
+                            'Tiến độ',
                             style: TextStyle(
                               color: AppColors.textTertiary,
                               fontSize: 12,
                             ),
                           ),
+
                           Text(
                             '$progressPercent%',
                             style: TextStyle(

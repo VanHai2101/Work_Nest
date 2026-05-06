@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+
 import '../../../../core/constants/index.dart';
+import '../../../../core/components/dynamic_island/island_provider.dart';
 import '../../domain/entities/index.dart';
+
 import '../providers/index.dart';
+
 
 class TaskDetailScreen extends ConsumerStatefulWidget {
   final String taskId;
@@ -23,15 +29,35 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Task Details'),
+        title: const Text('Chi tiết công việc'),
+
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.qr_code_2_rounded),
+            onPressed: () {
+              _showQRCode(context, 'worknest://task/${widget.taskId}');
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.share_rounded),
+
+            onPressed: () {
+              final link = 'worknest://task/${widget.taskId}';
+              Clipboard.setData(ClipboardData(text: link));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Đã sao chép liên kết!')),
+              );
+
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Edit feature coming soon')),
+                const SnackBar(content: Text('Tính năng chỉnh sửa sắp ra mắt')),
               );
+
             },
           ),
           IconButton(
@@ -40,9 +66,11 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
           ),
         ],
       ),
+
       body: taskAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, stack) => Center(child: Text('Lỗi: $err')),
+
         data: (task) {
           if (task == null) {
             return Center(child: Text(AppErrors.genericError));
@@ -80,7 +108,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                       },
                     ),
                     Text(
-                      task.completed ? 'Completed' : 'Pending',
+                      task.completed ? 'Hoàn thành' : 'Chưa xong',
+
                       style: TextStyle(
                         color: task.completed ? Colors.green : Colors.orange,
                         fontWeight: FontWeight.w600,
@@ -96,7 +125,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     Expanded(
                       child: _buildInfoBox(
                         icon: Icons.flag,
-                        label: 'Priority',
+                        label: 'Mức độ',
+
                         value: task.priority.toUpperCase(),
                         valueColor: _getPriorityColor(task.priority),
                       ),
@@ -105,7 +135,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                     Expanded(
                       child: _buildInfoBox(
                         icon: Icons.calendar_today,
-                        label: 'Due Date',
+                        label: 'Hạn chót',
+
                         value: _formatDate(task.dueDate),
                       ),
                     ),
@@ -115,7 +146,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
 
                 // Description
                 Text(
-                  'Description',
+                  'Mô tả',
+
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -141,7 +173,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                 // Assignees
                 if (task.assigneeIds.isNotEmpty) ...[
                   Text(
-                    'Assignees',
+                    'Người thực hiện',
+
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -175,7 +208,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                 // Tags
                 if (task.tags.isNotEmpty) ...[
                   Text(
-                    'Tags',
+                    'Thẻ',
+
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -207,15 +241,43 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                         .toList(),
                   ),
                 ],
+
+                AppLayout.gapXLarge,
+
+                // Start Working Button
+                ElevatedButton.icon(
+                  onPressed: () {
+                    ref.read(islandProvider.notifier).startTask(task.title);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Đã bắt đầu bộ đếm thời gian công việc'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: const Text('Start Working on this Task'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.all(16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                AppLayout.gapMedium,
               ],
             ),
           );
         },
       ),
+
     );
   }
 
   Widget _buildInfoBox({
+
     required IconData icon,
     required String label,
     required String value,
@@ -311,4 +373,33 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
       ),
     );
   }
+
+  void _showQRCode(BuildContext context, String data) {
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Task QR Code'),
+        content: SizedBox(
+          width: 250,
+          height: 250,
+          child: Center(
+            child: QrImageView(
+              data: data,
+              version: QrVersions.auto,
+              size: 200.0,
+              backgroundColor: Colors.white,
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
 }
+

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/core/theme/index.dart';
 import 'package:work_nest/core/extensions/index.dart';
+import '../../domain/entities/index.dart';
 import '../providers/calendar_provider.dart';
+
 import 'calendar_day_circle.dart';
 
 class CalendarDayView extends ConsumerStatefulWidget {
@@ -48,6 +50,13 @@ class _CalendarDayViewState extends ConsumerState<CalendarDayView> {
 
     final dayLabel = selectedDay.weekdayFullVi.toUpperCase();
 
+    final startOfDay =
+        DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+    final eventsAsync = ref.watch(
+      calendarEventsProvider((start: startOfDay, end: endOfDay)),
+    );
+
     return Column(
       children: [
         // ── Header ngày ──
@@ -59,15 +68,27 @@ class _CalendarDayViewState extends ConsumerState<CalendarDayView> {
             controller: _scrollController,
             child: Container(
               color: AppColors.primaryBackground,
-              child: Stack(
-                children: [
-                  // Các hàng giờ
-                  Column(
-                    children: List.generate(24, (hour) => _buildHourRow(hour)),
+              child: eventsAsync.when(
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: CircularProgressIndicator(),
                   ),
+                ),
+                error: (err, _) => Center(child: Text('Lỗi: $err')),
+                data: (events) => Stack(
+                  children: [
+                    // Các hàng giờ
+                    Column(
+                      children: List.generate(24, (hour) => _buildHourRow(hour)),
+                    ),
 
-                  if (isToday) _buildCurrentTimeLine(today),
-                ],
+                    // Vẽ các sự kiện
+                    ...events.map((event) => _buildEventCard(event)),
+
+                    if (isToday) _buildCurrentTimeLine(today),
+                  ],
+                ),
               ),
             ),
           ),
@@ -75,6 +96,80 @@ class _CalendarDayViewState extends ConsumerState<CalendarDayView> {
       ],
     );
   }
+
+  Widget _buildEventCard(CalendarEvent event) {
+    final start = event.startTime;
+    final end = event.endTime ?? start.add(const Duration(hours: 1));
+
+    final top = (start.hour + (start.minute / 60)) * _hourHeight;
+    final durationInMinutes = end.difference(start).inMinutes;
+    final height = (durationInMinutes / 60) * _hourHeight;
+
+    return Positioned(
+      top: top,
+      left: 60,
+      right: 16,
+      height: height.clamp(24.0, 1000.0),
+      child: Container(
+        margin: const EdgeInsets.only(left: 4, top: 1, bottom: 1),
+        padding: EdgeInsets.symmetric(
+          horizontal: 8,
+          vertical: height > 40 ? 8 : 2,
+        ),
+        decoration: BoxDecoration(
+          color: event.color.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: event.color.withOpacity(0.3), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final showDescription =
+                constraints.maxHeight > 30 && event.description != null;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  event.title,
+                  style: TextStyle(
+                    color: event.color.withOpacity(0.9),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (showDescription) ...[
+                  const SizedBox(height: 2),
+                  Flexible(
+                    child: Text(
+                      event.description ?? '',
+                      style: TextStyle(
+                        color: event.color.withOpacity(0.7),
+                        fontSize: 10,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+
 
   Widget _buildDayHeader(
     DateTime day,

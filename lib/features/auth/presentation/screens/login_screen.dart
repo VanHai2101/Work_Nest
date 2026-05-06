@@ -83,7 +83,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               AppLayout.gapXLarge,
               // Title
               Text(
-                'Welcome Back',
+                'Chào mừng trở lại',
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w900,
@@ -91,9 +91,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               AppLayout.gapSmall,
               Text(
-                'Sign in to your account',
+                'Đăng nhập vào tài khoản của bạn',
                 style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
               ),
+
               AppLayout.gapXLarge,
 
               // Form
@@ -106,22 +107,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     _buildTextFormField(
                       controller: _emailController,
                       label: 'Email',
-                      hint: 'Enter your email',
+                      hint: 'Nhập email của bạn',
                       icon: Icons.email_outlined,
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
-                        if (value?.isEmpty ?? true) return 'Email is required';
-                        if (!value!.contains('@')) return 'Invalid email';
+                        if (value?.isEmpty ?? true) return 'Vui lòng nhập email';
+                        if (!value!.contains('@')) return 'Email không hợp lệ';
                         return null;
                       },
                     ),
+
                     AppLayout.gapMedium,
 
                     // Password field
                     _buildTextFormField(
                       controller: _passwordController,
-                      label: 'Password',
-                      hint: 'Enter your password',
+                      label: 'Mật khẩu',
+                      hint: 'Nhập mật khẩu của bạn',
                       icon: Icons.lock_outlined,
                       obscureText: _obscurePassword,
                       suffixIcon: IconButton(
@@ -137,14 +139,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       validator: (value) {
                         if (value?.isEmpty ?? true) {
-                          return 'Password is required';
+                          return 'Vui lòng nhập mật khẩu';
                         }
                         if (value!.length < 6) {
-                          return 'Password must be at least 6 characters';
+                          return 'Mật khẩu phải có ít nhất 6 ký tự';
                         }
                         return null;
                       },
                     ),
+
                     AppLayout.gapSmall,
 
                     Align(
@@ -152,12 +155,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: TextButton(
                         onPressed: () {},
                         child: Text(
-                          'Forgot Password?',
+                          'Quên mật khẩu?',
                           style: TextStyle(
                             color: AppColors.info,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+
                       ),
                     ),
                     AppLayout.gapLarge,
@@ -207,12 +211,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               )
                             : const Text(
-                                'Sign In',
+                                'Đăng nhập',
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
+
                       ),
                     ),
                   ],
@@ -226,7 +231,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "Don't have an account? ",
+                      "Chưa có tài khoản? ",
                       style: TextStyle(color: AppColors.textSecondary),
                     ),
                     GestureDetector(
@@ -238,13 +243,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         );
                       },
                       child: Text(
-                        'Sign Up',
+                        'Đăng ký',
                         style: TextStyle(
                           color: AppColors.info,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
+
                   ],
                 ),
               ),

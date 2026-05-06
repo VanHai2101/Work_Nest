@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../domain/entities/otp_record.dart';
 
 class EmailJsConfig {
   static const serviceId = 'HoangHai@240104';
-  static const templateId = '6buob3g';
+  static const templateId = 'template_wrbe2qw';
   static const publicKey = 'UTmlWutX4mgZAYIiw';
 }
 
@@ -35,7 +36,13 @@ class EmailOtpService {
       purpose: purpose,
     );
 
-    await _firestore.collection(_collection).doc(userId).set(record.toMap());
+    try {
+      await _firestore.collection(_collection).doc(userId).set(record.toMap());
+      debugPrint('OTP saved successfully to Firestore');
+    } catch (e) {
+      debugPrint('Firestore Error saving OTP: $e');
+      rethrow;
+    }
 
     return code;
   }
@@ -48,25 +55,32 @@ class EmailOtpService {
   }) async {
     const url = 'https://api.emailjs.com/api/v1.0/email/send';
 
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'service_id': EmailJsConfig.serviceId,
-        'template_id': EmailJsConfig.templateId,
-        'user_id': EmailJsConfig.publicKey,
-        'template_params': {
-          'to_email': toEmail,
-          'to_name': displayName,
-          'otp_code': otpCode,
-          'purpose': purposeLabel,
-          'expiry_minutes': _otpTtlMinutes.toString(),
-        },
-      }),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'service_id': EmailJsConfig.serviceId,
+          'template_id': EmailJsConfig.templateId,
+          'user_id': EmailJsConfig.publicKey,
+          'template_params': {
+            'to_email': toEmail,
+            'to_name': displayName,
+            'otp_code': otpCode,
+            'purpose': purposeLabel,
+            'expiry_minutes': _otpTtlMinutes.toString(),
+          },
+        }),
+      );
 
-    if (response.statusCode != 200) {
-      throw Exception('Không thể gửi email. Vui lòng thử lại.');
+      if (response.statusCode != 200) {
+        debugPrint('EmailJS Error Status: ${response.statusCode}');
+        debugPrint('EmailJS Error Body: ${response.body}');
+        throw Exception('Không thể gửi email. Lỗi: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('Error in sendOtpEmail: $e');
+      rethrow;
     }
   }
 

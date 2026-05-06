@@ -13,8 +13,7 @@ import '../../../tasks/domain/entities/index.dart';
 import '../../../tasks/presentation/providers/index.dart';
 import '../../../projects/presentation/screens/index.dart';
 import '../../../tasks/presentation/screens/index.dart';
-import '../../../../core/components/dynamic_island/island_models.dart';
-import '../../../../core/components/dynamic_island/island_provider.dart';
+
 
 class HomeDashboardView extends ConsumerStatefulWidget {
   const HomeDashboardView({super.key});
@@ -74,11 +73,9 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
           }),
           const SizedBox(height: 12),
           _buildRecentTasks(),
-          _buildSectionHeader('Dynamic Island Demo', null),
-          const SizedBox(height: 12),
-          _buildIslandDemoActions(),
           const SizedBox(height: 24),
           _buildSectionHeader(AppStrings.quickActions, null),
+
           const SizedBox(height: 12),
           _buildQuickActions(),
           const SizedBox(height: 16),
@@ -628,62 +625,5 @@ class _HomeDashboardViewState extends ConsumerState<HomeDashboardView> {
       }).toList(),
     );
   }
-
-  Widget _buildIslandDemoActions() {
-    final actions = [
-      (
-        'Music',
-        Icons.music_note_rounded,
-        const Color(0xFF9B59B6),
-        IslandState.musicPlayer,
-      ),
-      (
-        'Call',
-        Icons.call_rounded,
-        const Color(0xFF30D158),
-        IslandState.phoneCall,
-      ),
-      (
-        'Notify',
-        Icons.notifications_rounded,
-        const Color(0xFF0A84FF),
-        IslandState.notification,
-      ),
-    ];
-
-    return Row(
-      children: actions.asMap().entries.map((e) {
-        final i = e.key;
-        final (title, icon, color, state) = e.value;
-        return Expanded(
-          child: GestureDetector(
-            onTap: () => ref.read(islandProvider.notifier).changeState(state),
-            child: Container(
-              margin: EdgeInsets.only(right: i < actions.length - 1 ? 10 : 0),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: color.withOpacity(0.3)),
-              ),
-              child: Column(
-                children: [
-                  Icon(icon, color: color, size: 20),
-                  const SizedBox(height: 6),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
 }
+

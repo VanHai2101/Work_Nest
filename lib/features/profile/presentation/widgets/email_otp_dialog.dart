@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/index.dart';
 import '../../../auth/application/notifiers/otp_notifier.dart';
+import '../../../../core/providers/incoming_otp_provider.dart';
 
 /// Dialog xác thực Email OTP gồm 2 giai đoạn:
 /// 1. Gửi mã → Hiển thị email đã che + nút "Gửi mã"
@@ -115,6 +116,24 @@ class _EmailOtpDialogState extends ConsumerState<EmailOtpDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Lắng nghe OTP từ Deep Link
+    ref.listen(incomingOtpProvider, (previous, next) {
+      if (next != null && next.purpose == widget.purpose && next.code.length == 6) {
+        debugPrint('EmailOtpDialog: Auto-filling OTP from Deep Link');
+        
+        // Điền mã vào các ô
+        for (int i = 0; i < 6; i++) {
+          _boxControllers[i].text = next.code[i];
+        }
+        
+        // Reset provider để không bị lặp lại
+        ref.read(incomingOtpProvider.notifier).state = null;
+        
+        // Tự động xác minh
+        _verify();
+      }
+    });
+
     final otpState = ref.watch(otpNotifierProvider);
     final isLoading = otpState is OtpLoading;
 

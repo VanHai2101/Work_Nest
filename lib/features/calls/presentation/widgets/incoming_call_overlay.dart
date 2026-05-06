@@ -30,21 +30,40 @@ class IncomingCallOverlay extends ConsumerWidget {
         }
 
         if (incomingCall != null && incomingCall.relatedEntityId != null) {
-          // Trigger Dynamic Island
-          ref.read(islandProvider.notifier).changeState(IslandState.phoneCall);
+          // Trigger Dynamic Island for Call
+          ref.read(islandProvider.notifier).changeState(
+            IslandState.phoneCall,
+            context: IslandContext(
+              title: incomingCall.actorName,
+              subtitle: 'Incoming Call...',
+            ),
+          );
 
-          final call = incomingCall;
           showGeneralDialog(
             context: context,
             barrierDismissible: false,
             pageBuilder: (context, _, _) => IncomingCallScreen(
-              callId: call.relatedEntityId!,
-              callerName: call.actorName,
-              callerId: call.actorId,
+              callId: incomingCall!.relatedEntityId!,
+              callerName: incomingCall.actorName,
+              callerId: incomingCall.actorId,
               callType: CallType.video,
             ),
           );
+        } else if (notifications.isNotEmpty) {
+          // Show the latest unread notification in Dynamic Island
+          final lastNotif = notifications.firstWhere(
+            (n) => !n.isRead,
+            orElse: () => notifications.first,
+          );
+          
+          if (!lastNotif.isRead) {
+            ref.read(islandProvider.notifier).showNotification(
+              title: lastNotif.title,
+              message: lastNotif.body,
+            );
+          }
         }
+
       });
     });
 

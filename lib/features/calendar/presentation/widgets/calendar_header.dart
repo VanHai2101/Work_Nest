@@ -78,10 +78,14 @@ class CalendarHeader extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildUserSelector(userProfile.asData?.value, isMini: true),
+                    Expanded(
+                      child: _buildUserSelector(userProfile.asData?.value, isMini: true),
+                    ),
+                    const SizedBox(width: 8),
                     _buildViewSwitcher(state, notifier, isMini: true),
                   ],
                 ),
+
               ],
             );
           }
@@ -166,10 +170,18 @@ class CalendarHeader extends ConsumerWidget {
                 : null,
           ),
           SizedBox(width: isMini ? 6 : 8),
-          Text(
-            user?.displayName ?? 'User',
-            style: TextStyle(fontSize: isMini ? 10 : 12, color: Colors.black87),
+          Flexible(
+            child: Text(
+              user?.displayName ?? 'User',
+              style: TextStyle(
+                fontSize: isMini ? 10 : 12,
+                color: Colors.black87,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
+
           const SizedBox(width: 4),
           Icon(Icons.unfold_more, size: isMini ? 12 : 14, color: Colors.grey),
         ],
@@ -249,7 +261,8 @@ class _PillButton extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: isMini ? 10 : 16, vertical: 8),
+        padding: EdgeInsets.symmetric(horizontal: isMini ? 8 : 16, vertical: 8),
+
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(20),

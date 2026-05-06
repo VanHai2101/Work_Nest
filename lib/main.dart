@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:work_nest/core/theme/index.dart' show AppColors;
+import 'package:work_nest/core/theme/index.dart' show AppColors, AppTheme;
 import 'firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/features/auth/presentation/providers/index.dart';
+import 'package:work_nest/features/auth/presentation/providers/device_providers.dart';
 import 'package:work_nest/features/calls/presentation/widgets/incoming_call_overlay.dart';
 import 'package:work_nest/core/components/dynamic_island/dynamic_island_overlay.dart';
+import 'package:work_nest/core/services/deep_link_service.dart';
 import 'package:work_nest/app/index.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,46 +17,23 @@ void main() async {
   runApp(const ProviderScope(child: MainApp()));
 }
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class MainApp extends ConsumerWidget {
   const MainApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Initialize presence tracking globally
     ref.watch(presenceProvider);
+    ref.watch(deepLinkServiceProvider);
+    ref.watch(deviceInitializerProvider);
 
     return MaterialApp(
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
+
       title: 'Work Nest',
-      theme: ThemeData(
-        useMaterial3: true,
-        fontFamily: 'Poppins',
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: AppColors.primaryBackground,
-        primaryColor: AppColors.accent,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.accent,
-          primary: AppColors.accent,
-          surface: AppColors.primaryBackground,
-          brightness: Brightness.light,
-        ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: AppColors.primaryBackground,
-          foregroundColor: AppColors.textPrimary,
-          elevation: 0,
-        ),
-        bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          backgroundColor: AppColors.primaryBackground,
-          selectedItemColor: AppColors.accent,
-          unselectedItemColor: AppColors.textTertiary,
-          type: BottomNavigationBarType.fixed,
-        ),
-        textTheme: TextTheme(
-          bodyLarge: TextStyle(color: AppColors.textPrimary),
-          bodyMedium: TextStyle(color: AppColors.textPrimary),
-          titleLarge: TextStyle(color: AppColors.textPrimary),
-        ),
-      ),
+      theme: AppTheme.lightTheme,
       initialRoute: '/splash',
       onGenerateRoute: AppRouter.generateRoute,
       builder: (context, child) => DynamicIslandOverlay(

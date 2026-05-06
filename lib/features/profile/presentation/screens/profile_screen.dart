@@ -197,7 +197,8 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '$plan ACCOUNT',
+                  'TÀI KHOẢN $plan',
+
                   style: const TextStyle(
                     color: AppColors.darkAccent,
                     fontSize: 11,

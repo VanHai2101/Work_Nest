@@ -33,7 +33,7 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 10),
                     Text(
-                      'MUSIC SHOW',
+                      'WORK NEST',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -41,23 +41,26 @@ class WelcomeScreen extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
+
                   ],
                 ),
                 const Spacer(),
                 const Text(
-                  'Welcome Back',
+                  'Chào mừng trở lại',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w500,
                     color: Colors.white,
                   ),
                 ),
+
                 const SizedBox(height: 40),
 
                 // Sign In Button
                 _buildGradientButton(
                   context,
-                  'SIGN IN',
+                  'ĐĂNG NHẬP',
+
                   () {
                     Navigator.push(
                       context,
@@ -72,7 +75,8 @@ class WelcomeScreen extends StatelessWidget {
                 // Sign Up Button
                 _buildOutlineButton(
                   context,
-                  'SIGN UP',
+                  'ĐĂNG KÝ',
+
                   () {
                     Navigator.push(
                       context,
@@ -85,9 +89,10 @@ class WelcomeScreen extends StatelessWidget {
                 const SizedBox(height: 30),
 
                 const Text(
-                  'Login with social media',
+                  'Đăng nhập với mạng xã hội',
                   style: TextStyle(color: Colors.white54, fontSize: 14),
                 ),
+
                 const SizedBox(height: 15),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,

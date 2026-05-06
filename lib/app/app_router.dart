@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/auth/presentation/screens/index.dart';
 import '../features/home/presentation/screens/index.dart';
 import '../features/profile/presentation/screens/index.dart';
@@ -27,6 +26,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
       case '/profile/edit':
         return MaterialPageRoute(builder: (_) => const EditProfileScreen());
+      case '/profile/security':
+        return MaterialPageRoute(builder: (_) => const SecurityScreen());
       case '/projects':
         return MaterialPageRoute(builder: (_) => const ProjectsListScreen());
       case '/projects/create':

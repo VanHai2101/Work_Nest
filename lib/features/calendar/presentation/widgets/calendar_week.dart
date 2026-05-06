@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/core/theme/index.dart';
 import 'package:work_nest/core/extensions/index.dart';
+import '../../domain/entities/index.dart';
 import '../providers/calendar_provider.dart';
 import 'calendar_day_circle.dart';
 
@@ -14,6 +15,12 @@ class CalendarWeekView extends ConsumerWidget {
     final today = DateTime.now();
     final focusedDay = state.selectedDay ?? today;
     final weekDays = focusedDay.daysInWeek;
+    final weekStart = weekDays.first;
+
+    final weekEnd = weekDays.last.add(const Duration(days: 1));
+    final eventsAsync = ref.watch(
+      calendarEventsProvider((start: weekStart, end: weekEnd)),
+    );
 
     return Column(
       children: [
@@ -34,13 +41,14 @@ class CalendarWeekView extends ConsumerWidget {
                   child: Column(
                     children: [
                       Text(
-                        day.weekdayNameVi.toUpperCase(),
+                        day.weekdayShortVi.toUpperCase(),
                         style: TextStyle(
                           color: day.isSunday
-                              ? Colors.red.withOpacity(0.7)
-                              : Colors.black45,
+                              ? Colors.red.withOpacity(0.8)
+                              : Colors.black38,
                           fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -62,27 +70,30 @@ class CalendarWeekView extends ConsumerWidget {
 
         // ── Khu vực sự kiện theo giờ ──
         Expanded(
-          child: SingleChildScrollView(
-            child: Container(
-              color: AppColors.primaryBackground,
-              child: Column(
-                children: List.generate(24, (hour) {
-                  return Container(
-                    height: 60,
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: Colors.black.withOpacity(0.03),
-                          width: 0.5,
-                        ),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        // Nhãn giờ
-                        Container(
+          child: eventsAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, _) => Center(child: Text('Lỗi: $err')),
+            data: (events) => SingleChildScrollView(
+              child: Container(
+                color: AppColors.primaryBackground,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Cột nhãn giờ
+                    Column(
+                      children: List.generate(24, (hour) {
+                        return Container(
                           width: 60,
+                          height: 60,
                           padding: const EdgeInsets.only(top: 8, right: 12),
+                          decoration: BoxDecoration(
+                            border: Border(
+                              bottom: BorderSide(
+                                color: Colors.black.withOpacity(0.03),
+                                width: 0.5,
+                              ),
+                            ),
+                          ),
                           child: Text(
                             '${hour.toString().padLeft(2, '0')}:00',
                             textAlign: TextAlign.right,
@@ -92,31 +103,48 @@ class CalendarWeekView extends ConsumerWidget {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
+                        );
+                      }),
+                    ),
 
-                        // Các cột ngày (7 cột)
-                        Expanded(
-                          child: Row(
-                            children: List.generate(7, (dayIndex) {
-                              return Expanded(
-                                child: Container(
+                    // 7 Cột ngày
+                    ...weekDays.map((day) {
+                      final dayEvents = events
+                          .where((e) => e.startTime.isSameDay(day))
+                          .toList();
+
+                      return Expanded(
+                        child: Stack(
+                          children: [
+                            // Lưới nền
+                            Column(
+                              children: List.generate(24, (hour) {
+                                return Container(
+                                  height: 60,
                                   decoration: BoxDecoration(
                                     border: Border(
+                                      bottom: BorderSide(
+                                        color: Colors.black.withOpacity(0.03),
+                                        width: 0.5,
+                                      ),
                                       left: BorderSide(
                                         color: Colors.black.withOpacity(0.03),
                                         width: 0.5,
                                       ),
                                     ),
                                   ),
-                                ),
-                              );
-                            }),
-                          ),
+                                );
+                              }),
+                            ),
+
+                            // Các sự kiện
+                            ...dayEvents.map((e) => _buildEventBar(e)),
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                }),
+                      );
+                    }),
+                  ],
+                ),
               ),
             ),
           ),
@@ -124,4 +152,27 @@ class CalendarWeekView extends ConsumerWidget {
       ],
     );
   }
+
+  Widget _buildEventBar(CalendarEvent event) {
+    final start = event.startTime;
+    final end = event.endTime ?? start.add(const Duration(hours: 1));
+
+    final top = (start.hour + (start.minute / 60)) * 60.0;
+    final durationInMinutes = end.difference(start).inMinutes;
+    final height = (durationInMinutes / 60) * 60.0;
+
+    return Positioned(
+      top: top,
+      left: 2,
+      right: 2,
+      height: height.clamp(4.0, 1000.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: event.color.withOpacity(0.7),
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    );
+  }
+
 }

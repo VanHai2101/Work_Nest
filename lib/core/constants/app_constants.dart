@@ -134,13 +134,13 @@ class AppStrings {
   static const String projectDeleted = 'Đã xóa dự án';
 
   // Time Format
-  static const String now = 'now';
-  static const String minuteShort = 'm';
-  static const String hourShort = 'h';
-  static const String dayShort = 'd';
+  static const String now = 'vừa xong';
+  static const String minuteShort = 'p';
+  static const String hourShort = 'g';
+  static const String dayShort = 'n';
 
   // Members label
-  static const String members = 'members';
+  static const String members = 'thành viên';
 }
 
 // ============================================================================
@@ -148,12 +148,13 @@ class AppStrings {
 // ============================================================================
 
 class AppErrors {
-  static const String genericError = 'Something went wrong';
-  static const String networkError = 'Network error';
-  static const String loadingFailed = 'Failed to load';
-  static const String saveFailed = 'Failed to save';
-  static const String deleteFailed = 'Failed to delete';
+  static const String genericError = 'Đã có lỗi xảy ra';
+  static const String networkError = 'Lỗi kết nối mạng';
+  static const String loadingFailed = 'Tải dữ liệu thất bại';
+  static const String saveFailed = 'Lưu thất bại';
+  static const String deleteFailed = 'Xóa thất bại';
 }
+
 
 // ============================================================================
 // NUMERIC CONSTANTS
