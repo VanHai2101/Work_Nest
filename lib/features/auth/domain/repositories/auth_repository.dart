@@ -40,4 +40,11 @@ abstract class IAuthRepository {
     String enrollmentId,
     String otp,
   );
+  // ─── EMAIL OTP ───────────────────────────────────────────────────────────────
+  
+  /// Gửi mã OTP xác thực đến email.
+  Future<void> sendEmailOTP(String email);
+
+  /// Xác minh mã OTP đã gửi đến email.
+  Future<void> verifyEmailOTP(String email, String otp);
 }

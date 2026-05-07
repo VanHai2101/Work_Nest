@@ -99,7 +99,7 @@ class _CalendarDayViewState extends ConsumerState<CalendarDayView> {
 
   Widget _buildEventCard(CalendarEvent event) {
     final start = event.startTime;
-    final end = event.endTime ?? start.add(const Duration(hours: 1));
+    final end = event.endTime;
 
     final top = (start.hour + (start.minute / 60)) * _hourHeight;
     final durationInMinutes = end.difference(start).inMinutes;

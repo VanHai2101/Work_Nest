@@ -190,13 +190,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                     // Login button
                     SizedBox(
-                      height: AppSize.buttonHeight,
+                      width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleLogin,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.accent,
-                          foregroundColor: Colors.black87,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 56),
                           elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: AppBorderRadius.medium,
                           ),
@@ -208,7 +210,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation(
-                                    Colors.black87,
+                                    Colors.white,
                                   ),
                                 ),
                               )

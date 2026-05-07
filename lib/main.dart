@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:work_nest/core/theme/index.dart' show AppColors, AppTheme;
+import 'package:work_nest/core/theme/index.dart' show AppTheme;
 import 'firebase_options.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/features/auth/presentation/providers/index.dart';
-import 'package:work_nest/features/auth/presentation/providers/device_providers.dart';
 import 'package:work_nest/features/calls/presentation/widgets/incoming_call_overlay.dart';
 import 'package:work_nest/core/components/dynamic_island/dynamic_island_overlay.dart';
 import 'package:work_nest/core/services/deep_link_service.dart';

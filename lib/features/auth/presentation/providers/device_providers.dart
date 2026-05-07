@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/user_device.dart';
 import '../../data/repositories/firebase_device_repository.dart';
@@ -18,18 +19,18 @@ final userDevicesProvider = StreamProvider<List<UserDevice>>((ref) {
 final deviceInitializerProvider = Provider<void>((ref) {
   final user = ref.watch(currentUserProvider).value;
   if (user == null) {
-    print('DeviceInitializer: No user logged in');
+    debugPrint('DeviceInitializer: No user logged in');
     return;
   }
 
-  print('DeviceInitializer: User logged in, registering device...');
+  debugPrint('DeviceInitializer: User logged in, registering device...');
   final repo = ref.read(deviceRepositoryProvider);
   repo.getDeviceInfo().then((device) {
-    print('DeviceInitializer: Device info retrieved: ${device.deviceName}');
+    debugPrint('DeviceInitializer: Device info retrieved: ${device.deviceName}');
     repo.updateDevice(user.uid, device).then((_) {
-      print('DeviceInitializer: Device registered successfully');
+      debugPrint('DeviceInitializer: Device registered successfully');
     }).catchError((e) {
-      print('DeviceInitializer: Error registering device: $e');
+      debugPrint('DeviceInitializer: Error registering device: $e');
     });
   });
 });

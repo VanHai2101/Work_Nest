@@ -1,7 +1,7 @@
 import 'package:work_nest/features/auth/presentation/providers/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/index.dart' show AppColors;
+import '../../../../core/theme/index.dart';
 import '../../../../core/constants/index.dart';
 import '../providers/auth_providers.dart';
 import '../../../../core/providers/service_providers.dart';
@@ -92,7 +92,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // App logo/icon
                 Container(
                   width: AppSize.iconXLarge * 1.5,
                   height: AppSize.iconXLarge * 1.5,
@@ -112,7 +111,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 ),
                 AppLayout.gapLarge,
                 Text(
-                  'Hải Tới Đây!',
+                  'Work Nest',
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 32,
@@ -122,7 +121,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 ),
                 AppLayout.gapSmall,
                 Text(
-                  'Collaborate, Connect, Achieve',
+                  "Tạo dự án - Quản lý công việc",
                   style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 14,

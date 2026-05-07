@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/states/index.dart';
 import '../../../../core/theme/index.dart';
 import '../../../auth/presentation/providers/index.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
 import '../widgets/email_otp_dialog.dart';
 import 'device_management_screen.dart';
 

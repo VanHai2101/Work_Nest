@@ -1,15 +1,15 @@
 import 'login_screen.dart';
+import 'otp_verification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/states/index.dart';
 import '../../../../core/theme/index.dart';
 import '../../../../core/constants/index.dart';
 import '../../domain/usecases/index.dart';
+import '../../domain/usecases/send_email_otp.dart';
 
 import '../providers/index.dart';
-// Removed circular index import
 
-/// Signup screen for user registration
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
@@ -45,43 +45,38 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       return;
     }
 
-
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    try {
-      final signUpUseCase = ref.read(signUpUseCaseProvider);
-      final result = await signUpUseCase.call(
-        SignUpParams(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          fullName: _nameController.text.trim(),
-        ),
-      );
+    // Bước 1: Gửi OTP trước, chưa tạo tài khoản
+    final sendOTPUseCase = ref.read(sendEmailOTPUseCaseProvider);
+    final result = await sendOTPUseCase.call(
+      SendEmailOTPParams(email: _emailController.text.trim()),
+    );
 
-      result.fold(
-        (failure) {
-          setState(() {
-            _errorMessage = (failure as OperationError).message;
-          });
-        },
-        (user) {
-          if (mounted) {
-            Navigator.of(context).pushReplacementNamed('/home');
-          }
-        },
-      );
-    } catch (e) {
-      setState(() {
-        _errorMessage = e.toString().replaceAll('Exception: ', '');
-      });
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
+    setState(() => _isLoading = false);
+
+    result.fold(
+      (failure) {
+        setState(() => _errorMessage = (failure as OperationError).message);
+      },
+      (_) {
+        // Bước 2: Chuyển sang màn hình nhập OTP
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => OTPVerificationScreen(
+                email: _emailController.text.trim(),
+                fullName: _nameController.text.trim(),
+                password: _passwordController.text,
+              ),
+            ),
+          );
+        }
+      },
+    );
   }
 
   @override
@@ -232,13 +227,15 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
                     // Signup button
                     SizedBox(
-                      height: AppSize.buttonHeight,
+                      width: double.infinity,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _handleSignup,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.accent,
-                          foregroundColor: Colors.black87,
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 56),
                           elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: AppBorderRadius.medium,
                           ),
@@ -250,7 +247,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation(
-                                    Colors.black87,
+                                    Colors.white,
                                   ),
                                 ),
                               )
@@ -261,7 +258,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-
                       ),
                     ),
                   ],

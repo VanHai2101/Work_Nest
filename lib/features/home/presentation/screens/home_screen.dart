@@ -1,4 +1,3 @@
-import '../../../auth/presentation/providers/index.dart';
 import 'package:work_nest/features/auth/presentation/providers/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -202,7 +201,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 );
               },
               loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              error: (_, _) => const SizedBox.shrink(),
             ),
           ],
         ),

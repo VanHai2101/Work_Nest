@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/email_otp_service.dart';
 import '../../domain/entities/index.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'package:work_nest/features/auth/domain/exceptions/auth_exceptions.dart';
@@ -254,5 +255,40 @@ class FirebaseAuthRepository implements IAuthRepository {
       }
       throw UnknownAuthException(e.message);
     }
+  }
+
+  // ─── EMAIL OTP ───────────────────────────────────────────────────────────────
+
+  final _otpService = EmailOtpService();
+
+  /// Dùng email hash làm key để hỗ trợ pre-signup (chưa có UID)
+  String _emailKey(String email) =>
+      email.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_');
+
+  @override
+  Future<void> sendEmailOTP(String email) async {
+    final key = _emailKey(email);
+    final code = await _otpService.createAndSaveOtp(
+      userId: key,
+      email: email,
+      purpose: 'signup',
+    );
+    await _otpService.sendOtpEmail(
+      toEmail: email,
+      displayName: email.split('@').first,
+      otpCode: code,
+      purposeLabel: 'Đăng ký tài khoản WorkNest',
+    );
+  }
+
+  @override
+  Future<void> verifyEmailOTP(String email, String otp) async {
+    final key = _emailKey(email);
+    final ok = await _otpService.verifyOtp(
+      userId: key,
+      inputCode: otp,
+      purpose: 'signup',
+    );
+    if (!ok) throw OtpNotFoundException();
   }
 }

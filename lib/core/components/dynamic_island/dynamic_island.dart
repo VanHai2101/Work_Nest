@@ -73,8 +73,9 @@ class _DynamicIslandWidgetState extends ConsumerState<DynamicIslandWidget>
 
   Future<void> _handleStateChange(IslandData newData) async {
     if (newData.state == _islandData.state &&
-        newData.context == _islandData.context)
+        newData.context == _islandData.context) {
       return;
+    }
 
     // Phase 1: Fade out old content
     if (_islandData.state != IslandState.none) {
@@ -354,7 +355,6 @@ class _TimerWidget extends StatefulWidget {
 
 class _TimerWidgetState extends State<_TimerWidget> {
   int _seconds = 0;
-  late final javaScriptTimer;
 
   @override
   void initState() {

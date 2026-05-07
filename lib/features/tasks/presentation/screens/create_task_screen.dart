@@ -1,4 +1,3 @@
-import '../providers/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,6 +22,7 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen>
     with SingleTickerProviderStateMixin {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+
   final _formKey = GlobalKey<FormState>();
 
   late String currentUserId;

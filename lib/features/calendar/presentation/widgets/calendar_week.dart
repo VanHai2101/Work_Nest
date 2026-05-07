@@ -155,7 +155,7 @@ class CalendarWeekView extends ConsumerWidget {
 
   Widget _buildEventBar(CalendarEvent event) {
     final start = event.startTime;
-    final end = event.endTime ?? start.add(const Duration(hours: 1));
+    final end = event.endTime;
 
     final top = (start.hour + (start.minute / 60)) * 60.0;
     final durationInMinutes = end.difference(start).inMinutes;

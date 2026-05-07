@@ -491,9 +491,9 @@ service cloud.firestore {
     // ========================================
     // OTP VERIFICATIONS COLLECTION
     // ========================================
-    match /otp_verifications/{userId} {
-      // Chỉ chủ sở hữu mới đọc và ghi được mã OTP của mình
-      allow read, write: if isOwner(userId);
+    match /otp_verifications/{emailKey} {
+      // Cho phép tạo và đọc mã OTP mà không cần đăng nhập (phục vụ đăng ký)
+      allow create, get, update, delete: if true;
     }
 
     // ========================================

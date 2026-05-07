@@ -38,6 +38,7 @@ abstract class OperationError extends OperationState {
   const OperationError();
 
   /// Get error message
+  @override
   String get message;
 }
 
