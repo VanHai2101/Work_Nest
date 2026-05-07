@@ -1,3 +1,4 @@
+import '../providers/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,7 +8,7 @@ import '../../../../core/theme/index.dart';
 import '../../../../core/components/index.dart';
 import '../../../../core/utils/index.dart';
 import '../../../../core/data/repositories/index.dart';
-import '../providers/tasks_provider.dart';
+import '../providers/index.dart';
 
 class CreateTaskScreen extends ConsumerStatefulWidget {
   final String? projectId;

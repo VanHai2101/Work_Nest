@@ -1,5 +1,7 @@
+import 'login_screen.dart';
+import 'signup_screen.dart';
 import 'package:flutter/material.dart';
-import 'index.dart';
+// Removed circular index import
 
 
 class WelcomeScreen extends StatelessWidget {

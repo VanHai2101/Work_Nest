@@ -1,1 +1,1 @@
-export 'event_entity.dart';
+﻿export 'event_entity.dart';

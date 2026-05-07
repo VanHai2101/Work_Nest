@@ -1,25 +1,17 @@
-/// Provider for managing the Video/Audio call state and WebRTC logic.
-library;
-
+import 'call_repo_providers.dart';
 import 'dart:async';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/index.dart';
 import '../../data/models/ice_candidate_model.dart';
 import '../../../../core/providers/index.dart';
-import '../../../auth/presentation/providers/auth_providers.dart';
-import 'call_provider.dart';
-import 'call_use_case_providers.dart';
+import '../../../auth/presentation/providers/index.dart';
+import 'call_uc_providers.dart';
 import '../../domain/repositories/call_repository.dart';
-import '../../application/usecases/accept_call_use_case.dart';
-import '../../application/usecases/end_call_use_case.dart';
-import '../../application/usecases/reject_call_use_case.dart';
-import '../../application/usecases/start_call_use_case.dart';
-import '../../application/usecases/watch_call_use_case.dart';
-
+import '../../domain/usecases/index.dart';
 // RE-EXPORT
-export 'call_repository_providers.dart';
-export 'call_use_case_providers.dart';
+export 'call_repo_providers.dart';
+export 'call_uc_providers.dart';
 
 /// State of the active call, including streams and connection status.
 class CallState {
@@ -59,7 +51,7 @@ final incomingCallStreamProvider = StreamProvider.autoDispose<CallEntity?>((
   return watchIncomingCallsUseCase.call(userId);
 });
 
-// Note: callRepositoryProvider is now exported from call_repository_providers.dart
+// Note: callRepositoryProvider is now exported from call_repo_providers.dart
 
 final callProvider = StateNotifierProvider<CallNotifier, CallState>((ref) {
   return CallNotifier(

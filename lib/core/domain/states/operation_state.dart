@@ -7,7 +7,11 @@ library;
 /// Base state for operations
 abstract class OperationState {
   const OperationState();
+
+  /// Optional message for the state (e.g., error message)
+  String? get message => null;
 }
+
 
 /// Initial state - nothing has been performed yet
 class OperationInitial extends OperationState {

@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/search_result_entity.dart';
-import '../../application/usecases/search_global_use_case.dart';
-import 'search_use_case_providers.dart';
+import '../../domain/usecases/search_global.dart';
+
+import 'search_uc_providers.dart';
 
 // RE-EXPORT
-export 'search_repository_providers.dart';
-export 'search_use_case_providers.dart';
+export 'search_repo_providers.dart';
+export 'search_uc_providers.dart';
 
 final searchQueryProvider = StateProvider<String>((ref) => '');
 

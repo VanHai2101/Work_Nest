@@ -1,11 +1,13 @@
+import 'signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/index.dart';
 import '../../../../core/theme/index.dart';
 import '../../../../core/constants/index.dart';
-import '../../application/usecases/index.dart';
+import '../../domain/usecases/index.dart';
+
 import '../providers/index.dart';
-import 'index.dart';
+// Removed circular index import
 
 /// Login screen for user authentication
 class LoginScreen extends ConsumerStatefulWidget {

@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/domain/states/index.dart';
 import '../../../../core/theme/index.dart';
-import '../../../auth/application/notifiers/totp_notifier.dart';
+import '../../../auth/presentation/providers/index.dart';
 import '../../../auth/domain/entities/totp_secret_entity.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 

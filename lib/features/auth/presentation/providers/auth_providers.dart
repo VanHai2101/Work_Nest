@@ -1,11 +1,12 @@
+import 'package:work_nest/features/auth/presentation/providers/index.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:work_nest/core/usecases/usecase.dart';
 import '../../domain/entities/user_entity.dart';
-import 'auth_use_case_providers.dart';
+import 'auth_uc_providers.dart';
 
 // RE-EXPORT for convenience in UI
-export 'auth_repository_providers.dart';
-export 'auth_use_case_providers.dart';
+export 'auth_repo_providers.dart';
+export 'auth_uc_providers.dart';
 
 // 1. Auth State Stream
 final authStateProvider = StreamProvider<UserEntity?>((ref) {

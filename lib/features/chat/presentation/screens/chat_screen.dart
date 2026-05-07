@@ -1,3 +1,4 @@
+import '../../domain/usecases/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -48,37 +49,45 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (currentUser == null) return;
 
     try {
-      // 1. Upload ảnh
-      final repo = ref.read(chatRepositoryProvider);
+      // 1. Upload ảnh qua UseCase
       final fileName =
           'chats/${widget.chatId}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final imageUrl = await repo.uploadImage(file, fileName);
-
-      // 2. Gửi tin nhắn ảnh
-      final newMessage = MessageEntity(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        senderId: currentUser.uid,
-        text: '', // Có thể thêm caption sau
-        sentAt: DateTime.now(),
-        type: 'image',
-        attachments: [imageUrl],
+      final result = await ref.read(uploadChatImageUseCaseProvider).call(
+        UploadChatImageParams(file: file, path: fileName),
       );
 
-      await _sendMessage(newMessage);
+      result.fold(
+        (failure) => _showError('Lỗi upload ảnh: ${failure.message}'),
+        (imageUrl) async {
+          // 2. Gửi tin nhắn ảnh qua UseCase
+          final newMessage = MessageEntity(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            senderId: currentUser.uid,
+            text: '',
+            sentAt: DateTime.now(),
+            type: 'image',
+            attachments: [imageUrl],
+          );
+
+          await _sendMessage(newMessage);
+        },
+      );
     } catch (e) {
-      _showError('Lỗi upload ảnh: $e');
+      _showError('Lỗi không xác định: $e');
     }
   }
 
   Future<void> _sendMessage(MessageEntity message) async {
-    try {
-      await ref
-          .read(chatRepositoryProvider)
-          .sendMessage(widget.chatId, message);
-    } catch (e) {
-      _showError('Lỗi gửi tin nhắn: $e');
-    }
+    final result = await ref.read(sendMessageUseCaseProvider).call(
+      SendMessageParams(chatId: widget.chatId, message: message),
+    );
+
+    result.fold(
+      (failure) => _showError('Lỗi gửi tin nhắn: ${failure.message}'),
+      (_) => null, // Thành công
+    );
   }
+
 
   void _showError(String message) {
     if (mounted) {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/domain/states/index.dart';
 import '../../../../core/theme/index.dart';
-import '../../../auth/application/notifiers/auth_notifier.dart';
+import '../../../auth/presentation/providers/index.dart';
 
 /// Dialog yêu cầu nhập lại mật khẩu trước khi thực hiện hành động nhạy cảm.
 ///

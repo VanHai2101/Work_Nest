@@ -1,10 +1,11 @@
+import 'package:work_nest/features/auth/presentation/providers/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/index.dart';
 import '../../../../core/theme/index.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../projects/presentation/providers/projects_provider.dart';
-import '../../../tasks/presentation/providers/tasks_provider.dart';
+import '../../../tasks/presentation/providers/index.dart';
 import '../../../chat/presentation/providers/chat_providers.dart';
 import '../../../notifications/presentation/providers/notification_providers.dart';
 

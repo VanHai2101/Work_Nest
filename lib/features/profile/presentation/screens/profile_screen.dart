@@ -1,3 +1,6 @@
+import 'help_center_screen.dart';
+import 'about_screen.dart';
+import 'security_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -10,7 +13,7 @@ import '../../../tasks/presentation/providers/index.dart';
 import '../../../chat/presentation/providers/index.dart';
 import '../../../notifications/presentation/providers/index.dart';
 import '../../../auth/presentation/providers/index.dart';
-import 'index.dart';
+// Removed circular index import
 
 class ProfileScreen extends ConsumerWidget {
   final String? userId;

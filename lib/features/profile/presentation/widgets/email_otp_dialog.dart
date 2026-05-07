@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/index.dart';
-import '../../../auth/application/notifiers/otp_notifier.dart';
+import '../../../auth/presentation/providers/index.dart';
 import '../../../../core/providers/incoming_otp_provider.dart';
 
 /// Dialog xác thực Email OTP gồm 2 giai đoạn:

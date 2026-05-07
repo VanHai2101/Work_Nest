@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/entities/notification_entity.dart';
-import 'notification_use_case_providers.dart';
+import 'noti_uc_providers.dart';
 
 // RE-EXPORT
-export 'notification_repository_providers.dart';
-export 'notification_use_case_providers.dart';
+export 'noti_repo_providers.dart';
+export 'noti_uc_providers.dart';
 
 final userNotificationsProvider = StreamProvider<List<NotificationEntity>>((
   ref,

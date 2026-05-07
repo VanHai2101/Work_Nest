@@ -1,11 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/index.dart';
-import 'calendar_use_case_providers.dart';
-import '../../application/usecases/get_calendar_events_use_case.dart';
-
-// RE-EXPORT
-export 'calendar_repository_providers.dart';
-export 'calendar_use_case_providers.dart';
+import 'cal_uc_providers.dart';
+import '../../domain/usecases/get_events.dart';
+export 'cal_repo_providers.dart';
+export 'cal_uc_providers.dart';
 
 enum CalendarViewMode { day, week, month }
 

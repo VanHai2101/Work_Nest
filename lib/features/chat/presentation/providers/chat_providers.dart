@@ -4,12 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/entities/chat_entity.dart';
 import '../../domain/entities/message_entity.dart';
 import '../../domain/entities/group_entity.dart';
-import 'chat_use_case_providers.dart';
-import 'index.dart';
+import 'chat_uc_providers.dart';
+// Removed circular index import
 
 // RE-EXPORT
-export 'chat_repository_providers.dart';
-export 'chat_use_case_providers.dart';
+export 'chat_repo_providers.dart';
+export 'chat_uc_providers.dart';
 
 // 1. Lắng nghe danh sách phòng Chat 1-1 của User
 final userChatsProvider = StreamProvider.family<List<ChatEntity>, String>((
@@ -31,16 +31,13 @@ final userGroupsProvider = StreamProvider.family<List<GroupEntity>, String>((
   ref,
   userId,
 ) {
-  // TODO: Refactor watchGroups to UseCase
-  final repository = ref.watch(chatRepositoryProvider);
-  return repository.watchGroups(userId);
+  return ref.watch(watchGroupsUseCaseProvider).call(userId);
 });
 
 // 4. Lắng nghe tin nhắn trong 1 Group Chat
 final groupMessagesProvider =
     StreamProvider.family<List<MessageEntity>, String>((ref, groupId) {
-      final repository = ref.watch(chatRepositoryProvider);
-      return repository.watchGroupMessages(groupId);
+      return ref.watch(watchGroupMessagesUseCaseProvider).call(groupId);
     });
 
 final unifiedConversationsProvider =
@@ -120,12 +117,14 @@ final totalUnreadCountProvider = Provider<int>((ref) {
   );
 });
 
+
 // 6. Lấy thông tin 1 phòng Chat 1-1 theo ID
 final chatByIdProvider = StreamProvider.family<ChatEntity?, String>((ref, chatId) {
-  return ref.watch(chatRepositoryProvider).watchChat(chatId);
+  return ref.watch(watchChatUseCaseProvider).call(chatId);
 });
 
 // 7. Lấy thông tin 1 Group Chat theo ID
 final groupByIdProvider = StreamProvider.family<GroupEntity?, String>((ref, groupId) {
-  return ref.watch(chatRepositoryProvider).watchGroup(groupId);
+  return ref.watch(watchGroupUseCaseProvider).call(groupId);
 });
+
